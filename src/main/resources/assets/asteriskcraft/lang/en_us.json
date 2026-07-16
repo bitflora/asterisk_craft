@@ -1,0 +1,10 @@
+{
+  "itemGroup.asteriskcraft": "AsteriskCraft",
+  "block.asteriskcraft.nexus_core": "Nexus",
+  "block.asteriskcraft.depleted_node": "Depleted Node",
+  "entity.asteriskcraft.probe": "Probe",
+  "message.asteriskcraft.nexus_location": "Your Nexus stands at %s, %s, %s. Protect it!",
+  "message.asteriskcraft.nexus.queued": "Probe warping in... (%s in queue)",
+  "message.asteriskcraft.nexus.queue_full": "Production queue is full",
+  "message.asteriskcraft.nexus.cannot_afford": "Not enough resources: a Probe costs %1$s wood or %1$s cobblestone (from a chest near the Nexus)"
+}
