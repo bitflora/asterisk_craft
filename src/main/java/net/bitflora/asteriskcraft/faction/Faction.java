@@ -1,4 +1,4 @@
-package com.timja.asteriskcraft.faction;
+package net.bitflora.asteriskcraft.faction;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.util.StringRepresentable;

@@ -8,7 +8,7 @@ shaping: true
 
 Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring the StarCraft loop — gather → build → produce units → destroy the enemy base — into Minecraft. The player (Protoss) starts with a Nexus; an AI Zerg starts with 3 Hives a few hundred blocks away. Both gather resources and produce units. Destroy all Hives to win; lose the Nexus and you lose. Later versions add race selection and PvP, so nothing may hardcode "player = Protoss".
 
-**Target:** Minecraft 26.1 + NeoForge 26.1 (current stable modding line, successor to 1.21.1). Mod id: `asteriskcraft`. Package root: `com.timja.asteriskcraft`.
+**Target:** Minecraft 26.1 + NeoForge 26.1 (current stable modding line, successor to 1.21.1). Mod id: `asteriskcraft`. Package root: `net.bitflora.asteriskcraft`.
 
 ## Requirements (R)
 
@@ -25,6 +25,25 @@ Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring 
 | R8 | Faction-generic architecture (race selection + PvP later) | Must-have |
 | — | Out of scope: air units, RTS camera, full tech tree, multiplayer balance | Out |
 
+### R5 detail — select + orders
+
+Expanded from the top-level R5 to pin down the exact control scheme (see shape A8, plan in [R5-command-plan.md](R5-command-plan.md)). "Friendly" means a unit whose `Faction` attachment equals the commanding player's controlled faction (PROTOSS for the human in MVP) — resolved generically, never by player/entity class.
+
+| ID | Requirement | Status |
+|----|-------------|--------|
+| R5.1 | Left-click a friendly unit → selection becomes exactly that unit | Must-have |
+| R5.2 | Shift+left-click a friendly unit → toggle it in/out of the current selection | Must-have |
+| R5.3 | Ctrl+left-click a friendly unit → select all friendly units of the same type within radius of the player | Must-have |
+| R5.4 | Ctrl+Shift+left-click a friendly unit → toggle all friendly units of that type within radius in/out of the selection | Must-have |
+| R5.5 | Right-click an enemy unit → all selected units attack (focus) that target | Must-have |
+| R5.6 | Right-click a block → all selected units move to that block | Must-have |
+| R5.7 | Right-click empty air → all selected units move toward the look direction, to the farthest point in view | Must-have |
+| R5.8 | Selection is per-player; only the commanding player's own-faction units are selectable | Must-have |
+| R5.9 | Selected units are visually distinguished (glow) | Must-have |
+| R5.10 | Ordered units path across chunk boundaries without freezing in unloaded chunks | Must-have |
+| R5.11 | Command inputs only fire while the Command Crystal is held, so normal mining/placing/attacking is untouched | Must-have |
+| R5.12 | Right-click a harvestable block with a Probe selected → the Probe mines that block | Must-have |
+
 ## Selected shape (A, with decided alternatives)
 
 | Part | Mechanism |
@@ -36,17 +55,17 @@ Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring 
 | **A5** | **Vanilla-item economy** (chosen: user variant of A5-B) — resources are real items in chests/building inventories; kits are crafted normally; production buildings consume items from their internal inventory or an adjacent chest |
 | **A6** | **Gateway** — production block entity; spawns **Zealots** (repurposed Zombie, melee) and **Dragoons** (repurposed Skeleton, ranged) with goal selectors replaced (faction targeting, no sunburn, no player aggression) + colored leather armor for team identity; rally point support |
 | **A7** | **Photon Cannon** — block entity ticker scans radius for nearest enemy-faction entity → fires a projectile; simple, no power system in MVP |
-| **A8** | **Command wand** (chosen: A8-A now, map GUI later) — shift-right-click unit or sweep radius = select; right-click ground = attack-move; right-click enemy entity/building = focus target; selection stored per-player |
+| **A8** | **Command Crystal + StarCraft click semantics** (chosen; revised from the earlier "command wand" sketch — see R5 detail + [R5-command-plan.md](R5-command-plan.md)) — a held marker item enables command mode; **left-click = select** (plain / Shift-toggle / Ctrl-all-of-type-in-radius / Ctrl+Shift-toggle-all-of-type), **right-click = order** (enemy = attack, block = move, air = move toward look). All input captured client-side (Ctrl is not server-known) and sent as one `CommandInputPacket`; selection is a per-player attachment; orders are a `CommandOrder` attachment read by commanded goals on each unit. Probes are commandable too: they honor MOVE and a **MINE** order (right-click a harvestable block) that reuses their existing harvest logic |
 | **A9** | **Zerg director with literal Drones** (chosen: A9-B) — per-Hive brain in `SavedData`: maintains Drone count, Drones mine `#asteriskcraft:harvestable` blocks into Hive inventory, director spends items on Zerglings (repurposed zombies), escalating wave timer issues attack-move at the Nexus; killing Drones starves it, killing Hives removes production |
 
 ## Architecture sketch
 
-Package root `com.timja.asteriskcraft`:
+Package root `net.bitflora.asteriskcraft`:
 
 - `faction/` — Faction, FactionSavedData, FactionAttachment, FactionRelations
 - `building/` — WarpInHandler, BuildingKitItem, NexusBlock(Entity), GatewayBlock(Entity), PhotonCannonBlock(Entity), HiveBlock(Entity), structure templates in `data/asteriskcraft/structure/`
 - `entity/` — ProbeEntity, DroneEntity; `ai/` goals: HarvestBlockGoal, DeliverToContainerGoal, FactionTargetGoal, CommandedMoveGoal
-- `command/` — CommandWandItem, PlayerSelection (per-player), order networking packets
+- `command/` — CommandCrystalItem (held marker), CommandInputPacket + client input handler, CommandInputResolver (server), PlayerSelection attachment, CommandOrder attachment + `ai/CommandedMoveGoal`/`ai/CommandedAttackGoal`
 - `director/` — ZergDirector (server tick handler, wave scheduler)
 - `game/` — GameState saved data (initialized/won/lost) + world bootstrap. Implemented as first-player-join placement rather than server start (see Status note below) — no slash commands anywhere in the MVP.
 
@@ -72,13 +91,15 @@ The whole economy runs on three vanilla resources Probes/Drones can harvest non-
 
 **V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus + starting chest on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore and delivers to the nearest chest; Probe costs 50 wood or 50 cobble from the Nexus's adjacent chest. Unit tests cover faction rules, the Nexus multiblock layout, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and fill a chest.*
 
-**V2 — Gateway + Zealots/Dragoons + command wand.** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, iron); command wand select + attack-move/focus orders (A8); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad, order it as a group to destroy a target.*
+**V2a — Gateway + Zealots/Dragoons. `[DONE]`** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, iron); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad.*
+
+**V2b — Command Crystal: select + orders (R5).** The A8 command scheme — held Command Crystal enables command mode; left-click select (plain / Shift-toggle / Ctrl-type-in-radius / Ctrl+Shift-toggle-type), right-click order (enemy=attack, block=move, air=move-toward-look). Client input capture → `CommandInputPacket` → per-player selection attachment + `CommandOrder` attachment read by commanded goals on units; selection glow; chunk-load ordered units. Detailed plan: [R5-command-plan.md](R5-command-plan.md). *Demo: hold the Crystal, click-select a mixed squad, right-click a Hive to send them attacking; Ctrl-click one Zealot to grab the whole group.*
 
 **V3 — Zerg AI + win/lose.** 3 Hive structures + creep placed at game start; ZergDirector: Drone mining loop, Zergling production, escalating attack waves at the Nexus (A9); victory on last Hive destroyed, defeat on Nexus core destroyed; "You are under attack!" ping. *Demo: full playable game loop, both outcomes reachable.*
 
 **V4 — Photon Cannon + real costs.** Cannon kit + auto-targeting (A7); wire all production/kit costs to actual item consumption (R7); first balance pass on wave scaling. *Demo: cannons repel a wave; production halts when the chest is empty.*
 
-**V5 — Polish + extensibility groundwork.** Control groups on the wand; unit team-color visuals, sounds, particles; document the faction/race registry for future Terran/player-Zerg + PvP; optional start on tactical map GUI. *Demo: comfortable command UX in a full match.*
+**V5 — Polish + extensibility groundwork.** Control groups (number-key bindings) on the Command Crystal; per-player client-only selection glow (replacing V2b's shared server glow); unit team-color visuals, sounds, particles; document the faction/race registry for future Terran/player-Zerg + PvP; optional start on tactical map GUI. *Demo: comfortable command UX in a full match.*
 
 ## Verification
 

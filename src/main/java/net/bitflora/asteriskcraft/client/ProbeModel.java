@@ -1,4 +1,4 @@
-package com.timja.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;

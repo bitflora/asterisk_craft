@@ -1,7 +1,7 @@
-package com.timja.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client;
 
-import com.timja.asteriskcraft.AsteriskCraft;
-import com.timja.asteriskcraft.entity.ProbeEntity;
+import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;

@@ -1,7 +1,7 @@
-package com.timja.asteriskcraft.game;
+package net.bitflora.asteriskcraft.game;
 
 import com.mojang.serialization.Codec;
-import com.timja.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.core.BlockPos;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;

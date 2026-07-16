@@ -1,9 +1,9 @@
-package com.timja.asteriskcraft.building;
+package net.bitflora.asteriskcraft.building;
 
-import com.timja.asteriskcraft.AsteriskCraft;
-import com.timja.asteriskcraft.entity.ProbeEntity;
-import com.timja.asteriskcraft.faction.Faction;
-import com.timja.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.ProbeEntity;
+import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -20,14 +20,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.transfer.ResourceHandler;
-import net.neoforged.neoforge.transfer.item.ItemResource;
-import net.neoforged.neoforge.transfer.transaction.Transaction;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * Production logic for the Nexus: a small Probe queue paid for out of nearby chests.
@@ -88,7 +80,7 @@ public class NexusBlockEntity extends BlockEntity {
         if (probe == null) {
             return;
         }
-        BlockPos spawnPos = findSpawnSpot(level, pos);
+        BlockPos spawnPos = SpawnSpots.findGroundSpot(level, pos);
         probe.snapTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
         probe.setHomePos(pos);
         FactionAttachments.set(probe, Faction.PROTOSS);
@@ -96,77 +88,12 @@ public class NexusBlockEntity extends BlockEntity {
         level.playSound(null, spawnPos, SoundEvents.PLAYER_TELEPORT, SoundSource.BLOCKS, 0.8f, 1.6f);
     }
 
-    private BlockPos findSpawnSpot(ServerLevel level, BlockPos pos) {
-        for (int r = 2; r <= 4; r++) {
-            for (int dx = -r; dx <= r; dx++) {
-                for (int dz = -r; dz <= r; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) {
-                        continue;
-                    }
-                    for (int dy = -3; dy <= 1; dy++) {
-                        BlockPos candidate = pos.offset(dx, dy, dz);
-                        if (level.getBlockState(candidate).isAir()
-                                && level.getBlockState(candidate.above()).isAir()
-                                && level.getBlockState(candidate.below()).isSolidRender()) {
-                            return candidate;
-                        }
-                    }
-                }
-            }
-        }
-        return pos.above();
-    }
-
     private boolean payProbeCost() {
-        return extractResource(stack -> stack.is(ItemTags.LOGS), PROBE_COST)
-                || extractResource(stack -> stack.is(Items.COBBLESTONE), PROBE_COST);
-    }
-
-    /**
-     * Counts matching items across all container handlers near the Nexus; if at least
-     * {@code amount} are present, extracts exactly that many (in one transaction) and
-     * returns true. Uses NeoForge 26.1's transactional ResourceHandler API.
-     */
-    private boolean extractResource(Predicate<ItemStack> matches, int amount) {
         if (!(this.level instanceof ServerLevel serverLevel)) {
             return false;
         }
-        List<ResourceHandler<ItemResource>> handlers = new ArrayList<>();
-        int available = 0;
-        for (BlockPos scanPos : BlockPos.betweenClosed(
-                this.worldPosition.offset(-CHEST_SCAN_RADIUS, -3, -CHEST_SCAN_RADIUS),
-                this.worldPosition.offset(CHEST_SCAN_RADIUS, 3, CHEST_SCAN_RADIUS))) {
-            ResourceHandler<ItemResource> handler = serverLevel.getCapability(Capabilities.Item.BLOCK, scanPos.immutable(), null);
-            if (handler == null) {
-                continue;
-            }
-            handlers.add(handler);
-            for (int i = 0; i < handler.size(); i++) {
-                ItemResource res = handler.getResource(i);
-                if (!res.isEmpty() && matches.test(res.toStack(1))) {
-                    available += handler.getAmountAsInt(i);
-                }
-            }
-        }
-        if (available < amount) {
-            return false;
-        }
-        try (Transaction tx = Transaction.openRoot()) {
-            int remaining = amount;
-            for (ResourceHandler<ItemResource> handler : handlers) {
-                for (int i = 0; i < handler.size() && remaining > 0; i++) {
-                    ItemResource res = handler.getResource(i);
-                    if (!res.isEmpty() && matches.test(res.toStack(1))) {
-                        remaining -= handler.extract(i, res, remaining, tx);
-                    }
-                }
-            }
-            if (remaining == 0) {
-                tx.commit();
-                return true;
-            }
-        }
-        return false;
+        return ResourceBank.extract(serverLevel, this.worldPosition, CHEST_SCAN_RADIUS, stack -> stack.is(ItemTags.LOGS), PROBE_COST)
+                || ResourceBank.extract(serverLevel, this.worldPosition, CHEST_SCAN_RADIUS, stack -> stack.is(Items.COBBLESTONE), PROBE_COST);
     }
 
     @Override

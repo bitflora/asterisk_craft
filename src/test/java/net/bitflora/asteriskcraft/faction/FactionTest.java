@@ -1,4 +1,4 @@
-package com.timja.asteriskcraft.faction;
+package net.bitflora.asteriskcraft.faction;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +30,14 @@ class FactionTest {
         assertFalse(Faction.NEUTRAL.isEnemy(Faction.PROTOSS));
         assertFalse(Faction.PROTOSS.isEnemy(Faction.NEUTRAL));
         assertFalse(Faction.NEUTRAL.isEnemy(Faction.NEUTRAL));
+    }
+
+    @Test
+    void enemyRuleIsEntityTypeAgnostic() {
+        // Faction.isEnemy takes only factions, never an entity/role: combat targeting
+        // (FactionTargetGoal) relies on this to treat an enemy-faction Probe as a valid
+        // target just like an enemy soldier, with no entity-type whitelist anywhere.
+        assertTrue(Faction.PROTOSS.isEnemy(Faction.ZERG));
     }
 
     @Test

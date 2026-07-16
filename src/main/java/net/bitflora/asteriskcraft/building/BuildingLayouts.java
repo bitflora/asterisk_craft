@@ -1,6 +1,6 @@
-package com.timja.asteriskcraft.building;
+package net.bitflora.asteriskcraft.building;
 
-import com.timja.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -40,6 +40,28 @@ public final class BuildingLayouts {
         layout.put(new BlockPos(0, 2, 0), AsteriskCraft.NEXUS_CORE.get().defaultBlockState());
         return layout;
     }
+
+    /** 3x3 cobblestone platform with two purpur pillars framing the Gateway core arch. */
+    public static Map<BlockPos, BlockState> gateway() {
+        Map<BlockPos, BlockState> layout = new LinkedHashMap<>();
+        BlockState platform = Blocks.COBBLESTONE.defaultBlockState();
+        BlockState pillar = Blocks.PURPUR_PILLAR.defaultBlockState();
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                layout.put(new BlockPos(dx, 0, dz), platform);
+            }
+        }
+        layout.put(new BlockPos(-1, 1, 0), pillar);
+        layout.put(new BlockPos(-1, 2, 0), pillar);
+        layout.put(new BlockPos(1, 1, 0), pillar);
+        layout.put(new BlockPos(1, 2, 0), pillar);
+        layout.put(new BlockPos(0, 1, 0), AsteriskCraft.GATEWAY_CORE.get().defaultBlockState());
+        return layout;
+    }
+
+    /** Relative offset of the Gateway's interactive core block within {@link #gateway()}. */
+    public static final BlockPos GATEWAY_CORE_OFFSET = new BlockPos(0, 1, 0);
 
     /** Places a layout into the world, clearing head-room above the footprint first. */
     public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout) {

@@ -1,6 +1,6 @@
-package com.timja.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity;
 
-import com.timja.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

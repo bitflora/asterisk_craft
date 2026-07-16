@@ -1,7 +1,10 @@
-package com.timja.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity;
 
-import com.timja.asteriskcraft.AsteriskCraft;
-import com.timja.asteriskcraft.building.DepletedNodeBlockEntity;
+import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
+import net.bitflora.asteriskcraft.command.CommandAttachments;
+import net.bitflora.asteriskcraft.command.CommandOrder;
+import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -63,8 +66,11 @@ public class ProbeEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new DeliverGoal(this));
-        this.goalSelector.addGoal(2, new HarvestGoal(this));
+        // A move order interrupts the economy (RTS move); a carried load is still delivered
+        // before a fresh mine because DeliverGoal outranks HarvestGoal.
+        this.goalSelector.addGoal(1, new CommandedMoveGoal(this, 1.1));
+        this.goalSelector.addGoal(2, new DeliverGoal(this));
+        this.goalSelector.addGoal(3, new HarvestGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
@@ -127,7 +133,20 @@ public class ProbeEntity extends PathfinderMob {
 
         @Override
         public boolean canUse() {
-            if (this.probe.isCarrying() || this.probe.homePos.equals(BlockPos.ZERO)) {
+            if (this.probe.isCarrying()) {
+                return false;
+            }
+            // A commanded MINE order targets a specific block, bypassing the home-radius search.
+            CommandOrder order = CommandAttachments.getOrder(this.probe);
+            if (order.kind() == CommandOrder.Kind.MINE && order.pos().isPresent()) {
+                BlockPos commanded = order.pos().get();
+                if (this.probe.level().getBlockState(commanded).is(HARVESTABLE)) {
+                    this.target = commanded;
+                    return true;
+                }
+                CommandAttachments.clearOrder(this.probe); // commanded block no longer harvestable
+            }
+            if (this.probe.homePos.equals(BlockPos.ZERO)) {
                 return false;
             }
             if (--this.searchCooldown > 0) {
@@ -191,6 +210,9 @@ public class ProbeEntity extends PathfinderMob {
                 node.setOriginalState(state);
             }
             this.target = null;
+            // If this was a commanded mine, the node is now depleted — drop the order so the
+            // probe reverts to autonomous harvesting (a no-op when there was no order).
+            CommandAttachments.clearOrder(this.probe);
         }
 
         @Nullable

@@ -1,7 +1,9 @@
-package com.timja.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client;
 
-import com.timja.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.renderer.entity.SkeletonRenderer;
+import net.minecraft.client.renderer.entity.ZombieRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,5 +23,7 @@ public class AsteriskCraftClient {
     @SubscribeEvent
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZombieRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), SkeletonRenderer::new);
     }
 }

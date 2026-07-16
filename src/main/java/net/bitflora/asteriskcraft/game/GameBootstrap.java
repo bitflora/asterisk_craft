@@ -1,7 +1,7 @@
-package com.timja.asteriskcraft.game;
+package net.bitflora.asteriskcraft.game;
 
-import com.timja.asteriskcraft.AsteriskCraft;
-import com.timja.asteriskcraft.building.BuildingLayouts;
+import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -60,6 +60,10 @@ public final class GameBootstrap {
         BlockPos core = origin.offset(0, 2, 0);
         level.setData(GameAttachments.NEXUS_POS, core);
         level.setData(GameAttachments.BOOTSTRAPPED, true);
+
+        // The Command Crystal enables unit select/order mode while held (R5).
+        player.getInventory().add(new ItemStack(AsteriskCraft.COMMAND_CRYSTAL.get()));
+
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed Nexus core at {}", core);
     }
 
@@ -71,6 +75,7 @@ public final class GameBootstrap {
             chest.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
             chest.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
             chest.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
+            chest.setItem(4, new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
         }
     }
 }

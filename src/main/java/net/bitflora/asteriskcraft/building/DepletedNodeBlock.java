@@ -1,7 +1,7 @@
-package com.timja.asteriskcraft.building;
+package net.bitflora.asteriskcraft.building;
 
 import com.mojang.serialization.MapCodec;
-import com.timja.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;

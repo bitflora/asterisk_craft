@@ -1,6 +1,6 @@
-package com.timja.asteriskcraft.faction;
+package net.bitflora.asteriskcraft.faction;
 
-import com.timja.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
