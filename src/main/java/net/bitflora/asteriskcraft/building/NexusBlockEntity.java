@@ -4,6 +4,7 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.game.GameOutcome;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -34,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
  * input slots (surfaced through {@link ProductionMenu}). Cost: 50 wood (any logs) OR
  * 50 cobblestone per Probe.
  */
-public class NexusBlockEntity extends BlockEntity implements Container, ProductionBuilding {
+public class NexusBlockEntity extends BlockEntity implements Container, ProductionBuilding, FactionCore {
     public static final int PROBE_COST = 50;
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
@@ -43,6 +44,7 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     private final NonNullList<ItemStack> items = NonNullList.withSize(INPUT_SLOTS, ItemStack.EMPTY);
     private int queued = 0;
     private int buildTicksRemaining = BUILD_TICKS;
+    private int coreHealth = FactionCore.CORE_MAX_HEALTH;
 
     private final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -148,6 +150,25 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
         level.playSound(null, spawnPos, SoundEvents.PLAYER_TELEPORT, SoundSource.BLOCKS, 0.8f, 1.6f);
     }
 
+    // --- FactionCore ---
+
+    @Override
+    public Faction coreFaction() {
+        return Faction.PROTOSS;
+    }
+
+    @Override
+    public void damageCore(int amount, ServerLevel level, BlockPos pos) {
+        this.coreHealth = FactionCore.applyDamage(this.coreHealth, amount, level, pos);
+        this.setChanged();
+    }
+
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state); // keeps vanilla drop-contents for the input slots
+        GameOutcome.onCoreDestroyed(this.level, pos);
+    }
+
     // --- MenuProvider ---
 
     @Override
@@ -215,6 +236,7 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
         super.saveAdditional(output);
         output.putInt("Queued", this.queued);
         output.putInt("BuildTicks", this.buildTicksRemaining);
+        output.putInt("CoreHealth", this.coreHealth);
         ContainerHelper.saveAllItems(output, this.items);
     }
 
@@ -223,6 +245,7 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
         super.loadAdditional(input);
         this.queued = input.getIntOr("Queued", 0);
         this.buildTicksRemaining = input.getIntOr("BuildTicks", BUILD_TICKS);
+        this.coreHealth = input.getIntOr("CoreHealth", FactionCore.CORE_MAX_HEALTH);
         this.items.clear();
         ContainerHelper.loadAllItems(input, this.items);
     }

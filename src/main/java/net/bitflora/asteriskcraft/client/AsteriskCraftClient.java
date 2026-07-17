@@ -26,6 +26,9 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZombieRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), SkeletonRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.DRONE.get(), ProbeRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZombieRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), SkeletonRenderer::new);
     }
 
     @SubscribeEvent

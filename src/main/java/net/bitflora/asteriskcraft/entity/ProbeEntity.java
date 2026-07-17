@@ -88,6 +88,31 @@ public class ProbeEntity extends PathfinderMob {
         return !this.carried.isEmpty();
     }
 
+    /**
+     * Where this worker unloads its carried yield: an adjacent container exposing the item
+     * capability. The Probe delivers to the nearest chest/barrel near home; the Drone overrides
+     * this to deposit straight into its home Hive. Returns {@code null} if none is in range.
+     */
+    @Nullable
+    protected BlockPos findDeliveryTarget() {
+        Level level = this.level();
+        BlockPos home = this.homePos.equals(BlockPos.ZERO) ? this.blockPosition() : this.homePos;
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -4, -12), home.offset(12, 4, 12))) {
+            BlockState state = level.getBlockState(pos);
+            if (!state.is(Blocks.CHEST) && !state.is(Blocks.TRAPPED_CHEST) && !state.is(Blocks.BARREL)) {
+                continue;
+            }
+            double dist = pos.distSqr(this.blockPosition());
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = pos.immutable();
+            }
+        }
+        return best;
+    }
+
     @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
@@ -267,7 +292,7 @@ public class ProbeEntity extends PathfinderMob {
             if (!this.probe.isCarrying()) {
                 return false;
             }
-            this.chestPos = findNearestChest();
+            this.chestPos = this.probe.findDeliveryTarget();
             return this.chestPos != null;
         }
 
@@ -315,28 +340,8 @@ public class ProbeEntity extends PathfinderMob {
                 this.probe.carried = ItemStack.EMPTY;
                 this.probe.level().playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 0.7f, 1.0f);
             }
-            // If the chest is full the probe keeps what's left and retries after canUse fires again.
+            // If the target is full the probe keeps what's left and retries after canUse fires again.
             this.chestPos = null;
-        }
-
-        @Nullable
-        private BlockPos findNearestChest() {
-            Level level = this.probe.level();
-            BlockPos home = this.probe.homePos.equals(BlockPos.ZERO) ? this.probe.blockPosition() : this.probe.homePos;
-            BlockPos best = null;
-            double bestDist = Double.MAX_VALUE;
-            for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -4, -12), home.offset(12, 4, 12))) {
-                BlockState state = level.getBlockState(pos);
-                if (!state.is(Blocks.CHEST) && !state.is(Blocks.TRAPPED_CHEST) && !state.is(Blocks.BARREL)) {
-                    continue;
-                }
-                double dist = pos.distSqr(this.probe.blockPosition());
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = pos.immutable();
-                }
-            }
-            return best;
         }
     }
 }

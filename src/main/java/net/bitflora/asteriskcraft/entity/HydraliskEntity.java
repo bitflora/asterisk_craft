@@ -15,22 +15,21 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * The Protoss ranged unit: a repurposed Skeleton with vanilla player-aggression goals
- * replaced by pure faction targeting. The bow/melee weapon-attack goal itself is left
- * to {@link net.minecraft.world.entity.monster.skeleton.AbstractSkeleton}'s own
- * {@code reassessWeaponGoal()} machinery (invoked on spawn/equip), which keeps the
- * ranged attack in sync with the bow this unit spawns holding.
+ * The Zerg ranged unit — the mirror of {@link DragoonEntity}: a repurposed Skeleton with faction
+ * targeting and a {@link SiegeBlockGoal}. Like the Dragoon it leaves the ranged-attack goal to
+ * {@code AbstractSkeleton.reassessWeaponGoal()}, which installs it from the bow this unit spawns
+ * holding (equipped during {@code finalizeMobSpawn}).
  */
-public class DragoonEntity extends Skeleton {
+public class HydraliskEntity extends Skeleton {
 
-    public DragoonEntity(EntityType<? extends DragoonEntity> type, Level level) {
+    public HydraliskEntity(EntityType<? extends HydraliskEntity> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 24.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
                 .add(Attributes.ATTACK_DAMAGE, 2.0)
                 .add(Attributes.FOLLOW_RANGE, 32.0);

@@ -3,11 +3,12 @@ package net.bitflora.asteriskcraft;
 import com.mojang.logging.LogUtils;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
-import net.bitflora.asteriskcraft.building.DebugZergSpawnerItem;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
+import net.bitflora.asteriskcraft.building.HiveBlock;
+import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlock;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
@@ -16,8 +17,11 @@ import net.bitflora.asteriskcraft.command.CommandCrystalItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
 import net.bitflora.asteriskcraft.entity.DragoonEntity;
+import net.bitflora.asteriskcraft.entity.DroneEntity;
+import net.bitflora.asteriskcraft.entity.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.ZealotEntity;
+import net.bitflora.asteriskcraft.entity.ZerglingEntity;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.registries.Registries;
@@ -37,9 +41,12 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.transfer.item.VanillaContainerWrapper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -77,14 +84,16 @@ public class AsteriskCraft {
             GatewayBlock::new,
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
+    public static final DeferredBlock<HiveBlock> HIVE_CORE = BLOCKS.registerBlock("hive_core",
+            HiveBlock::new,
+            p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
+
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
+    public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingLayouts::gateway, BuildingLayouts.GATEWAY_CORE_OFFSET));
-
-    public static final DeferredItem<DebugZergSpawnerItem> DEBUG_ZERG_SPAWNER = ITEMS.registerItem("debug_zerg_spawner",
-            DebugZergSpawnerItem::new);
 
     public static final DeferredItem<CommandCrystalItem> COMMAND_CRYSTAL = ITEMS.registerItem("command_crystal",
             CommandCrystalItem::new);
@@ -99,6 +108,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GatewayBlockEntity>> GATEWAY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("gateway", () -> new BlockEntityType<>(GatewayBlockEntity::new, GATEWAY_CORE.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HiveBlockEntity>> HIVE_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("hive", () -> new BlockEntityType<>(HiveBlockEntity::new, HIVE_CORE.get()));
 
     // --- Menus ---
 
@@ -125,6 +137,24 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dragoon"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
+            ENTITY_TYPES.register("drone", () -> EntityType.Builder.of(DroneEntity::new, MobCategory.CREATURE)
+                    .sized(0.7f, 0.9f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("drone"))));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<ZerglingEntity>> ZERGLING =
+            ENTITY_TYPES.register("zergling", () -> EntityType.Builder.of(ZerglingEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("zergling"))));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<HydraliskEntity>> HYDRALISK =
+            ENTITY_TYPES.register("hydralisk", () -> EntityType.Builder.of(HydraliskEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.99f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));
+
     // --- Creative tab ---
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()
@@ -135,8 +165,8 @@ public class AsteriskCraft {
                 output.accept(NEXUS_CORE_ITEM.get());
                 output.accept(GATEWAY_CORE_ITEM.get());
                 output.accept(GATEWAY_KIT.get());
+                output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CRYSTAL.get());
-                output.accept(DEBUG_ZERG_SPAWNER.get());
             }).build());
 
     public AsteriskCraft(IEventBus modEventBus, ModContainer modContainer) {
@@ -152,6 +182,14 @@ public class AsteriskCraft {
 
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(this::registerPayloads);
+        modEventBus.addListener(this::registerCapabilities);
+    }
+
+    private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        // Expose the Hive's inventory as an item handler so Drones can deposit into it via the
+        // same capability-based delivery Probes use for chests.
+        event.registerBlockEntity(Capabilities.Item.BLOCK, HIVE_BLOCK_ENTITY.get(),
+                (hive, side) -> VanillaContainerWrapper.of(hive));
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
@@ -164,5 +202,8 @@ public class AsteriskCraft {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
+        event.put(DRONE.get(), DroneEntity.createAttributes().build());
+        event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
+        event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
     }
 }

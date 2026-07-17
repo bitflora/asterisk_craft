@@ -63,6 +63,32 @@ public final class BuildingLayouts {
     /** Relative offset of the Gateway's interactive core block within {@link #gateway()}. */
     public static final BlockPos GATEWAY_CORE_OFFSET = new BlockPos(0, 1, 0);
 
+    /**
+     * 3x3 organic Zerg mound: sculk platform, dripstone spikes on the corners, and the Hive core
+     * raised on a slime pedestal. Deliberately unlike the crisp Protoss quartz/purpur look.
+     */
+    public static Map<BlockPos, BlockState> hive() {
+        Map<BlockPos, BlockState> layout = new LinkedHashMap<>();
+        BlockState floor = Blocks.SCULK.defaultBlockState();
+        BlockState spike = Blocks.DRIPSTONE_BLOCK.defaultBlockState();
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                boolean isCorner = Math.abs(dx) == 1 && Math.abs(dz) == 1;
+                layout.put(new BlockPos(dx, 0, dz), floor);
+                if (isCorner) {
+                    layout.put(new BlockPos(dx, 1, dz), spike);
+                }
+            }
+        }
+        layout.put(new BlockPos(0, 0, 0), Blocks.SLIME_BLOCK.defaultBlockState());
+        layout.put(new BlockPos(0, 1, 0), AsteriskCraft.HIVE_CORE.get().defaultBlockState());
+        return layout;
+    }
+
+    /** Relative offset of the Hive's core block within {@link #hive()}. */
+    public static final BlockPos HIVE_CORE_OFFSET = new BlockPos(0, 1, 0);
+
     /** Places a layout into the world, clearing head-room above the footprint first. */
     public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout) {
         for (int dx = -3; dx <= 3; dx++) {
