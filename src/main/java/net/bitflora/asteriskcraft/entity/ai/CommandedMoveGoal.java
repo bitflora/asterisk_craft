@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.entity.ai;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -12,8 +13,11 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Drives a unit toward the {@link CommandOrder.Kind#MOVE} destination on its command attachment
  * and clears the order on arrival (or after it stops making progress). High priority in the
- * goal selector so a move order overrides autonomous behaviour, like an RTS move command.
- * Faction-generic — installed on any commandable {@link Mob}.
+ * goal selector so a move order overrides autonomous behaviour, like an RTS move command — except
+ * it yields for as long as the unit has a live attack target, so a unit marching under a move
+ * order still stops to fight hostiles it acquires (via {@code FactionTargetGoal} or
+ * {@code RetaliateGoal}) along the way instead of walking past them; it resumes the march once
+ * that target is gone. Faction-generic — installed on any commandable {@link Mob}.
  */
 public class CommandedMoveGoal extends Goal {
     private static final double ARRIVE_DIST_SQR = 2.25; // ~1.5 blocks
@@ -39,13 +43,19 @@ public class CommandedMoveGoal extends Goal {
     @Override
     public boolean canUse() {
         BlockPos target = target();
-        return target != null && !arrived(target);
+        return target != null && !arrived(target) && !hasLiveTarget();
     }
 
     @Override
     public boolean canContinueToUse() {
         BlockPos target = target();
-        return target != null && !arrived(target);
+        return target != null && !arrived(target) && !hasLiveTarget();
+    }
+
+    /** Whether the unit is currently engaged with a live attack target it should fight instead of marching past. */
+    private boolean hasLiveTarget() {
+        LivingEntity target = this.mob.getTarget();
+        return target != null && target.isAlive();
     }
 
     @Override

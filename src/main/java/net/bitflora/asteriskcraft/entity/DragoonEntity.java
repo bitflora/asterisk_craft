@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.entity;
 
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
+import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -42,6 +43,7 @@ public class DragoonEntity extends Skeleton {
         this.goalSelector.addGoal(3, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
     }
