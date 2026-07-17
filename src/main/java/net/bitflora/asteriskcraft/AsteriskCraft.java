@@ -10,6 +10,7 @@ import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlock;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandCrystalItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
@@ -28,6 +29,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -35,6 +37,7 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -53,6 +56,7 @@ public class AsteriskCraft {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MODID);
 
     public static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath(MODID, path);
@@ -96,6 +100,11 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GatewayBlockEntity>> GATEWAY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("gateway", () -> new BlockEntityType<>(GatewayBlockEntity::new, GATEWAY_CORE.get()));
 
+    // --- Menus ---
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ProductionMenu>> PRODUCTION_MENU =
+            MENUS.register("production", () -> IMenuTypeExtension.create(ProductionMenu::new));
+
     // --- Entities ---
 
     public static final DeferredHolder<EntityType<?>, EntityType<ProbeEntity>> PROBE =
@@ -136,6 +145,7 @@ public class AsteriskCraft {
         CREATIVE_MODE_TABS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        MENUS.register(modEventBus);
         FactionAttachments.ATTACHMENT_TYPES.register(modEventBus);
         GameAttachments.ATTACHMENT_TYPES.register(modEventBus);
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);

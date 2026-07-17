@@ -9,6 +9,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 @Mod(value = AsteriskCraft.MODID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
@@ -25,5 +26,10 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZombieRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), SkeletonRenderer::new);
+    }
+
+    @SubscribeEvent
+    static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(AsteriskCraft.PRODUCTION_MENU.get(), ProductionScreen::new);
     }
 }

@@ -15,11 +15,15 @@
   "message.asteriskcraft.nexus_location": "Your Nexus stands at %s, %s, %s. Protect it!",
   "message.asteriskcraft.nexus.queued": "Probe warping in... (%s in queue)",
   "message.asteriskcraft.nexus.queue_full": "Production queue is full",
-  "message.asteriskcraft.nexus.cannot_afford": "Not enough resources: a Probe costs %1$s wood or %1$s cobblestone (from a chest near the Nexus)",
+  "message.asteriskcraft.nexus.cannot_afford": "Not enough resources: a Probe costs %1$s wood or %1$s cobblestone (load them into the Nexus)",
   "message.asteriskcraft.gateway.queued": "Unit warping in... (%s in queue)",
   "message.asteriskcraft.gateway.queue_full": "Production queue is full",
-  "message.asteriskcraft.gateway.cannot_afford": "Not enough resources: Zealots cost 50 wood + 50 cobblestone, Dragoons cost 10 iron ingots (from a chest near the Gateway)",
+  "message.asteriskcraft.gateway.cannot_afford": "Not enough resources: Zealots cost 50 wood + 50 cobblestone, Dragoons cost 10 iron ingots (load them into the Gateway)",
   "message.asteriskcraft.gateway.warping": "The Gateway is still warping in",
   "message.asteriskcraft.kit.blocked": "Not enough clear space to warp in this building",
-  "message.asteriskcraft.kit.warping": "Warping in..."
+  "message.asteriskcraft.kit.warping": "Warping in...",
+  "gui.asteriskcraft.warping": "Warping in %ss...",
+  "gui.asteriskcraft.cost.probe": "Cost: 50 wood or 50 cobblestone",
+  "gui.asteriskcraft.cost.zealot": "Cost: 50 wood + 50 cobblestone",
+  "gui.asteriskcraft.cost.dragoon": "Cost: 10 iron ingots"
 }

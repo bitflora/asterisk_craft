@@ -16,8 +16,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The Nexus core block. Right-click to queue a Probe; destroying it loses the game
- * (defeat wiring lands in V3, for now it just reports).
+ * The Nexus core block. Right-click to open the production GUI (load resources, train
+ * Probes); destroying it loses the game (defeat wiring lands in V3, for now it just reports).
  */
 public class NexusBlock extends BaseEntityBlock {
     public static final MapCodec<NexusBlock> CODEC = simpleCodec(NexusBlock::new);
@@ -44,7 +44,7 @@ public class NexusBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof NexusBlockEntity nexus) {
-            nexus.tryQueueProbe(player);
+            player.openMenu(nexus, buf -> buf.writeVarInt(nexus.kind().ordinal()));
         }
         return InteractionResult.SUCCESS;
     }

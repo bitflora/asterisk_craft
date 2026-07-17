@@ -16,8 +16,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The Gateway core block. Right-click to queue a Zealot, shift-right-click to queue
- * a Dragoon. Production is disabled while the building is still warping in.
+ * The Gateway core block. Right-click to open the production GUI (load resources, train
+ * Zealots/Dragoons). Production is disabled while the building is still warping in.
  */
 public class GatewayBlock extends BaseEntityBlock {
     public static final MapCodec<GatewayBlock> CODEC = simpleCodec(GatewayBlock::new);
@@ -44,8 +44,7 @@ public class GatewayBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof GatewayBlockEntity gateway) {
-            GatewayBlockEntity.UnitType type = player.isShiftKeyDown() ? GatewayBlockEntity.UnitType.DRAGOON : GatewayBlockEntity.UnitType.ZEALOT;
-            gateway.tryQueueUnit(player, type);
+            player.openMenu(gateway, buf -> buf.writeVarInt(gateway.kind().ordinal()));
         }
         return InteractionResult.SUCCESS;
     }
