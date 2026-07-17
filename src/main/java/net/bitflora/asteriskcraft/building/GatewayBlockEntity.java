@@ -43,7 +43,7 @@ import java.util.List;
  * warp-in countdown after the kit places the structure. Costs are paid atomically
  * out of the Gateway's own input slots (surfaced through {@link ProductionMenu}).
  */
-public class GatewayBlockEntity extends BlockEntity implements Container, ProductionBuilding {
+public class GatewayBlockEntity extends BlockEntity implements Container, ProductionBuilding, WarpInBuilding {
     public enum UnitType implements StringRepresentable {
         ZEALOT("zealot"), DRAGOON("dragoon");
 

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "C": "minecraft:cobblestone",
+    "L": "#minecraft:logs"
+  },
+  "pattern": [
+    "ICI",
+    "CLC",
+    "ICI"
+  ],
+  "result": {
+    "id": "asteriskcraft:photon_cannon_kit"
+  }
+}

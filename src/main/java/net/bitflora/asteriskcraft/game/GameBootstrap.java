@@ -159,6 +159,7 @@ public final class GameBootstrap {
             chest.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
             chest.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
             chest.setItem(4, new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
+            chest.setItem(5, new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
         }
     }
 }

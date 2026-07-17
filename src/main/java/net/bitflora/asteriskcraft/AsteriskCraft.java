@@ -11,6 +11,8 @@ import net.bitflora.asteriskcraft.building.HiveBlock;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlock;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.PhotonCannonBlock;
+import net.bitflora.asteriskcraft.building.PhotonCannonBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandCrystalItem;
@@ -90,12 +92,20 @@ public class AsteriskCraft {
             HiveBlock::new,
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
 
+    public static final DeferredBlock<PhotonCannonBlock> PHOTON_CANNON_CORE = BLOCKS.registerBlock("photon_cannon_core",
+            PhotonCannonBlock::new,
+            p -> p.mapColor(MapColor.DIAMOND).strength(15.0f, 1200.0f).lightLevel(s -> 10));
+
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
+    public static final DeferredItem<BlockItem> PHOTON_CANNON_CORE_ITEM = ITEMS.registerSimpleBlockItem("photon_cannon_core", PHOTON_CANNON_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingLayouts::gateway, BuildingLayouts.GATEWAY_CORE_OFFSET));
+
+    public static final DeferredItem<BuildingKitItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
+            props -> new BuildingKitItem(props, BuildingLayouts::photonCannon, BuildingLayouts.PHOTON_CANNON_CORE_OFFSET));
 
     public static final DeferredItem<CommandCrystalItem> COMMAND_CRYSTAL = ITEMS.registerItem("command_crystal",
             CommandCrystalItem::new);
@@ -113,6 +123,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HiveBlockEntity>> HIVE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("hive", () -> new BlockEntityType<>(HiveBlockEntity::new, HIVE_CORE.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PhotonCannonBlockEntity>> PHOTON_CANNON_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("photon_cannon", () -> new BlockEntityType<>(PhotonCannonBlockEntity::new, PHOTON_CANNON_CORE.get()));
 
     // --- Menus ---
 
@@ -199,6 +212,8 @@ public class AsteriskCraft {
                 output.accept(NEXUS_CORE_ITEM.get());
                 output.accept(GATEWAY_CORE_ITEM.get());
                 output.accept(GATEWAY_KIT.get());
+                output.accept(PHOTON_CANNON_CORE_ITEM.get());
+                output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CRYSTAL.get());
             }).build());

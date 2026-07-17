@@ -52,8 +52,8 @@ public class BuildingKitItem extends Item {
         BlockPos corePos = origin.offset(this.coreOffset.getX(), this.coreOffset.getY(), this.coreOffset.getZ());
         // Every kit is placed by the player for now, so it's always PROTOSS; a real
         // player->faction registry arrives with race selection/PvP (see docs/shaping.md V5).
-        if (serverLevel.getBlockEntity(corePos) instanceof GatewayBlockEntity gateway) {
-            gateway.setFaction(Faction.PROTOSS);
+        if (serverLevel.getBlockEntity(corePos) instanceof WarpInBuilding building) {
+            building.setFaction(Faction.PROTOSS);
         }
         context.getItemInHand().shrink(1);
         overlay(player, Component.translatable("message.asteriskcraft.kit.warping"));
