@@ -49,6 +49,8 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     private int queued = 0;
     private int buildTicksRemaining = BUILD_TICKS;
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
+    /** Game time of the next allowed "under attack" alert. Deliberately not saved: the cooldown resets on reload. */
+    private long nextAlertTime = 0L;
     /** Whether the Nexus currently has a clear path to the sky. Transient; null until the first tick evaluates it. */
     private Boolean skyLit = null;
 
@@ -203,6 +205,22 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     public void damageCore(int amount, ServerLevel level, BlockPos pos) {
         this.coreHealth = FactionCore.applyDamage(this.coreHealth, amount, level, pos);
         this.setChanged();
+        notifyUnderAttack(level);
+    }
+
+    /** "Nexus under attack" alert, throttled to once per {@link #ALERT_COOLDOWN_TICKS} so repeated hits don't spam it. */
+    private static final int ALERT_COOLDOWN_TICKS = 20 * 30;
+
+    private void notifyUnderAttack(ServerLevel level) {
+        long now = level.getGameTime();
+        if (now < this.nextAlertTime) {
+            return;
+        }
+        this.nextAlertTime = now + ALERT_COOLDOWN_TICKS;
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            player.sendSystemMessage(Component.translatable("message.asteriskcraft.under_attack"));
+            level.playSound(null, player.blockPosition(), SoundEvents.WARDEN_NEARBY_CLOSEST, SoundSource.HOSTILE, 0.7f, 1.2f);
+        }
     }
 
     @Override

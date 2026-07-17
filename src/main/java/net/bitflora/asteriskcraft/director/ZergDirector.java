@@ -8,9 +8,7 @@ import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
@@ -101,7 +99,6 @@ public final class ZergDirector {
         }
 
         int size = waveSize(waveNumber);
-        int spawned = 0;
         for (int i = 0; i < size; i++) {
             boolean hydralisk = i % 3 == 2; // roughly one ranged unit per three
             if (!payFromHives(hives, hydralisk ? HYDRALISK_COST : ZERGLING_COST)) {
@@ -113,16 +110,6 @@ public final class ZergDirector {
                     : ZergSpawns.spawn(overworld, spawnHive, AsteriskCraft.ZERGLING.get(), Faction.ZERG, true);
             if (unit != null) {
                 CommandAttachments.setOrder(unit, CommandOrder.move(nexus));
-                spawned++;
-            }
-        }
-
-        if (spawned > 0) {
-            for (ServerPlayer player : overworld.getServer().getPlayerList().getPlayers()) {
-                player.sendSystemMessage(Component.translatable("message.asteriskcraft.under_attack"));
-                overworld.playSound(null, player.blockPosition(),
-                        net.minecraft.sounds.SoundEvents.WARDEN_NEARBY_CLOSEST,
-                        net.minecraft.sounds.SoundSource.HOSTILE, 0.7f, 1.2f);
             }
         }
     }
