@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameOutcome;
@@ -24,18 +25,21 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * Production logic for the Nexus: a small Probe queue paid for out of the Nexus's own
  * input slots (surfaced through {@link ProductionMenu}). Cost: 50 wood (any logs) OR
  * 50 cobblestone per Probe.
  */
-public class NexusBlockEntity extends BlockEntity implements Container, ProductionBuilding, FactionCore {
+public class NexusBlockEntity extends BlockEntity implements Container, ProductionBuilding, FactionCore, BeaconBeamOwner {
     public static final int PROBE_COST = 50;
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
@@ -45,6 +49,8 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     private int queued = 0;
     private int buildTicksRemaining = BUILD_TICKS;
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
+    /** Whether the Nexus currently has a clear path to the sky. Transient; null until the first tick evaluates it. */
+    private Boolean skyLit = null;
 
     private final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -75,6 +81,9 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, NexusBlockEntity nexus) {
+        if (!nexus.updateSky(level, pos)) {
+            return; // dormant: no clear path to the sky, production is frozen
+        }
         if (nexus.queued <= 0) {
             return;
         }
@@ -86,6 +95,35 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
         nexus.buildTicksRemaining = BUILD_TICKS;
         nexus.setChanged();
         nexus.spawnProbe((ServerLevel) level, pos);
+    }
+
+    /**
+     * Recomputes whether the Nexus can see the sky, plays an activate/deactivate cue on any
+     * change, and cancels the production queue when it goes dormant. Returns the current lit state.
+     */
+    private boolean updateSky(Level level, BlockPos pos) {
+        boolean lit = level.canSeeSky(pos.above());
+        if (this.skyLit != null && this.skyLit != lit) {
+            level.playSound(null, pos, lit ? SoundEvents.BEACON_ACTIVATE : SoundEvents.BEACON_DEACTIVATE,
+                    SoundSource.BLOCKS, 1.0f, 1.0f);
+            if (!lit && this.queued > 0) {
+                this.queued = 0;
+                this.buildTicksRemaining = BUILD_TICKS;
+                this.setChanged();
+            }
+        }
+        this.skyLit = lit;
+        return lit;
+    }
+
+    // --- BeaconBeamOwner (client-side beam locator) ---
+
+    @Override
+    public List<BeaconBeamOwner.Section> getBeamSections() {
+        if (this.level == null || !this.level.canSeeSky(this.worldPosition.above())) {
+            return List.of();
+        }
+        return List.of(new BeaconBeamOwner.Section(TeamColors.factionColor(Faction.PROTOSS)));
     }
 
     // --- ProductionBuilding ---
@@ -108,6 +146,10 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     @Override
     public void trainOption(int optionIndex, Player player) {
         if (optionIndex != 0) {
+            return;
+        }
+        if (this.skyLit == Boolean.FALSE) {
+            overlay(player, Component.translatable("message.asteriskcraft.nexus.dormant"));
             return;
         }
         if (this.queued >= MAX_QUEUE) {

@@ -19,14 +19,17 @@ public final class TeamColors {
     private TeamColors() {
     }
 
-    public static void dyeArmor(Mob entity, Faction faction) {
-        int color = switch (faction) {
+    /** Faction team color as a packed RGB int, or {@code -1} for factions with no color (NEUTRAL). */
+    public static int factionColor(Faction faction) {
+        return switch (faction) {
             case PROTOSS -> PROTOSS_COLOR;
             case ZERG -> ZERG_COLOR;
-            case NEUTRAL -> {
-                yield -1;
-            }
+            case NEUTRAL -> -1;
         };
+    }
+
+    public static void dyeArmor(Mob entity, Faction faction) {
+        int color = factionColor(faction);
         if (color < 0) {
             return;
         }

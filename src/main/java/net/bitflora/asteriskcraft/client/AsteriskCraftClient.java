@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.client;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.renderer.entity.SkeletonRenderer;
 import net.minecraft.client.renderer.entity.ZombieRenderer;
 import net.neoforged.api.distmarker.Dist;
@@ -29,6 +30,10 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), ProbeRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZombieRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), SkeletonRenderer::new);
+        // Nexus/Hive shoot a vanilla beacon beam upward as a locator; reuses BeaconRenderer since
+        // both block entities implement BeaconBeamOwner. See docs/neoforge-api-notes.md.
+        event.registerBlockEntityRenderer(AsteriskCraft.NEXUS_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());
+        event.registerBlockEntityRenderer(AsteriskCraft.HIVE_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());
     }
 
     @SubscribeEvent
