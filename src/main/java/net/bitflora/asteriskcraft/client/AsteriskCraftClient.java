@@ -18,6 +18,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation ZEALOT_LAYER = new ModelLayerLocation(AsteriskCraft.id("zealot"), "main");
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
+    public static final ModelLayerLocation DRONE_LAYER = new ModelLayerLocation(AsteriskCraft.id("drone"), "main");
 
     @SubscribeEvent
     static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
@@ -25,6 +26,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(ZEALOT_LAYER, ZealotModel::createBodyLayer);
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
+        event.registerLayerDefinition(DRONE_LAYER, DroneModel::createBodyLayer);
     }
 
     @SubscribeEvent
@@ -32,7 +34,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), SkeletonRenderer::new);
-        event.registerEntityRenderer(AsteriskCraft.DRONE.get(), ProbeRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
         // Nexus/Hive shoot a vanilla beacon beam upward as a locator; reuses BeaconRenderer since

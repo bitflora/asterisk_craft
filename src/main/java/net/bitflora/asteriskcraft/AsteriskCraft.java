@@ -28,6 +28,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
@@ -64,6 +65,7 @@ public class AsteriskCraft {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MODID);
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, MODID);
 
     public static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath(MODID, path);
@@ -155,6 +157,38 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));
 
+    // --- Sounds ---
+    // Ambient events each name several ogg files in sounds.json; vanilla's sound system already
+    // picks one at random per play, so a single registered SoundEvent covers all "live" variants.
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZEALOT_AMBIENT =
+            SOUND_EVENTS.register("entity.zealot.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZEALOT_HURT =
+            SOUND_EVENTS.register("entity.zealot.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.hurt")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZEALOT_DEATH =
+            SOUND_EVENTS.register("entity.zealot.death", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.death")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZERGLING_AMBIENT =
+            SOUND_EVENTS.register("entity.zergling.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZERGLING_HURT =
+            SOUND_EVENTS.register("entity.zergling.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.hurt")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZERGLING_DEATH =
+            SOUND_EVENTS.register("entity.zergling.death", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.death")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_AMBIENT =
+            SOUND_EVENTS.register("entity.hydralisk.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_HURT =
+            SOUND_EVENTS.register("entity.hydralisk.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.hurt")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_DEATH =
+            SOUND_EVENTS.register("entity.hydralisk.death", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.death")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_AMBIENT =
+            SOUND_EVENTS.register("entity.probe.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_HURT =
+            SOUND_EVENTS.register("entity.probe.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.hurt")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_DEATH =
+            SOUND_EVENTS.register("entity.probe.death", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.death")));
+
     // --- Creative tab ---
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()
@@ -176,6 +210,7 @@ public class AsteriskCraft {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         MENUS.register(modEventBus);
+        SOUND_EVENTS.register(modEventBus);
         FactionAttachments.ATTACHMENT_TYPES.register(modEventBus);
         GameAttachments.ATTACHMENT_TYPES.register(modEventBus);
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);

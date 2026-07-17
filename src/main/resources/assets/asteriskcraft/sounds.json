@@ -1,0 +1,77 @@
+{
+  "entity.zealot.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zealot.ambient",
+    "sounds": [
+      "asteriskcraft:mob/zealot/zealot-live1",
+      "asteriskcraft:mob/zealot/zealot-live2",
+      "asteriskcraft:mob/zealot/zealot-live3",
+      "asteriskcraft:mob/zealot/zealot-live4"
+    ]
+  },
+  "entity.zealot.hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zealot.hurt",
+    "sounds": ["asteriskcraft:mob/zealot/zealot-hurt"]
+  },
+  "entity.zealot.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zealot.death",
+    "sounds": ["asteriskcraft:mob/zealot/zealot-death"]
+  },
+  "entity.zergling.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zergling.ambient",
+    "sounds": [
+      "asteriskcraft:mob/zergling/zergling-live1",
+      "asteriskcraft:mob/zergling/zergling-live2",
+      "asteriskcraft:mob/zergling/zergling-live3",
+      "asteriskcraft:mob/zergling/zergling-live4"
+    ]
+  },
+  "entity.zergling.hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zergling.hurt",
+    "sounds": ["asteriskcraft:mob/zergling/zergling-hurt"]
+  },
+  "entity.zergling.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zergling.death",
+    "sounds": ["asteriskcraft:mob/zergling/zergling-death"]
+  },
+  "entity.hydralisk.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.hydralisk.ambient",
+    "sounds": [
+      "asteriskcraft:mob/hydralisk/hydralisk-live1",
+      "asteriskcraft:mob/hydralisk/hydralisk-live2",
+      "asteriskcraft:mob/hydralisk/hydralisk-live3",
+      "asteriskcraft:mob/hydralisk/hydralisk-live4"
+    ]
+  },
+  "entity.hydralisk.hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.hydralisk.hurt",
+    "sounds": ["asteriskcraft:mob/hydralisk/hydralisk-hurt"]
+  },
+  "entity.hydralisk.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.hydralisk.death",
+    "sounds": ["asteriskcraft:mob/hydralisk/hydralisk-death"]
+  },
+  "entity.probe.ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",
+    "sounds": ["asteriskcraft:mob/probe/probe-live1"]
+  },
+  "entity.probe.hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.probe.hurt",
+    "sounds": ["asteriskcraft:mob/probe/probe-hurt"]
+  },
+  "entity.probe.death": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.probe.death",
+    "sounds": ["asteriskcraft:mob/probe/probe-death"]
+  }
+}

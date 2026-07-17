@@ -1,8 +1,11 @@
 package net.bitflora.asteriskcraft.entity;
 
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -45,5 +48,20 @@ public class ZerglingEntity extends Zombie {
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return AsteriskCraft.ZERGLING_AMBIENT.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return AsteriskCraft.ZERGLING_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return AsteriskCraft.ZERGLING_DEATH.get();
     }
 }

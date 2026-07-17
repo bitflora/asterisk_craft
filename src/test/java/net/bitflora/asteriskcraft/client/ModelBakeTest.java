@@ -35,4 +35,9 @@ class ModelBakeTest {
     void probeModelBakes() {
         assertNotNull(new ProbeModel(ProbeModel.createBodyLayer().bakeRoot()));
     }
+
+    @Test
+    void droneModelBakes() {
+        assertNotNull(new DroneModel(DroneModel.createBodyLayer().bakeRoot()));
+    }
 }

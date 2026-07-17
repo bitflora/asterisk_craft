@@ -34,5 +34,17 @@
   "gui.asteriskcraft.warping": "Warping in %ss...",
   "gui.asteriskcraft.cost.probe": "Cost: 50 wood or 50 cobblestone",
   "gui.asteriskcraft.cost.zealot": "Cost: 50 wood + 50 cobblestone",
-  "gui.asteriskcraft.cost.dragoon": "Cost: 10 iron ingots"
+  "gui.asteriskcraft.cost.dragoon": "Cost: 10 iron ingots",
+  "subtitles.entity.asteriskcraft.zealot.ambient": "Zealot mutters",
+  "subtitles.entity.asteriskcraft.zealot.hurt": "Zealot hurts",
+  "subtitles.entity.asteriskcraft.zealot.death": "Zealot dies",
+  "subtitles.entity.asteriskcraft.zergling.ambient": "Zergling snarls",
+  "subtitles.entity.asteriskcraft.zergling.hurt": "Zergling hurts",
+  "subtitles.entity.asteriskcraft.zergling.death": "Zergling dies",
+  "subtitles.entity.asteriskcraft.hydralisk.ambient": "Hydralisk hisses",
+  "subtitles.entity.asteriskcraft.hydralisk.hurt": "Hydralisk hurts",
+  "subtitles.entity.asteriskcraft.hydralisk.death": "Hydralisk dies",
+  "subtitles.entity.asteriskcraft.probe.ambient": "Probe hums",
+  "subtitles.entity.asteriskcraft.probe.hurt": "Probe hurts",
+  "subtitles.entity.asteriskcraft.probe.death": "Probe destroyed"
 }

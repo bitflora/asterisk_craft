@@ -6,10 +6,12 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -74,6 +76,21 @@ public class ProbeEntity extends PathfinderMob {
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return AsteriskCraft.PROBE_AMBIENT.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return AsteriskCraft.PROBE_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return AsteriskCraft.PROBE_DEATH.get();
     }
 
     public void setHomePos(BlockPos pos) {
