@@ -79,6 +79,11 @@ public class ProbeEntity extends PathfinderMob {
     }
 
     @Override
+    public int getAmbientSoundInterval() {
+        return 1200; // ~10x the vanilla default (80): ambient barks average ~1/minute, not ~1/6s.
+    }
+
+    @Override
     protected SoundEvent getAmbientSound() {
         return AsteriskCraft.PROBE_AMBIENT.get();
     }
