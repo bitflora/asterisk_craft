@@ -7,6 +7,7 @@ import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -127,8 +128,10 @@ public class GatewayBlockEntity extends BlockEntity implements Container, Produc
     public static void serverTick(Level level, BlockPos pos, BlockState state, GatewayBlockEntity gateway) {
         if (gateway.warpTicksRemaining > 0) {
             gateway.warpTicksRemaining--;
-            if (gateway.warpTicksRemaining % 20 == 0) {
-                level.levelEvent(2004, pos, 0); // portal particles
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
+                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                        6, 0.4, 0.6, 0.4, 0.02);
             }
             if (gateway.warpTicksRemaining == 0) {
                 level.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
