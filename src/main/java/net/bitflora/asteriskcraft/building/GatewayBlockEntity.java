@@ -15,7 +15,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
-import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Inventory;
@@ -40,10 +39,14 @@ import java.util.List;
 
 /**
  * Production logic for the Gateway: a Zealot/Dragoon queue, gated by a one-time
- * warp-in countdown after the kit places the structure. Costs are paid atomically
- * out of the Gateway's own input slots (surfaced through {@link ProductionMenu}).
+ * warp-in countdown after the kit places the structure. Costs are paid atomically out of the
+ * shared Protoss army bank (surfaced through {@link ProductionMenu}).
+ *
+ * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link NexusBlockEntity}
+ * reads and writes the same underlying data, so every Protoss production building draws from
+ * one shared pool. See {@link ArmyLinkedContainer}.
  */
-public class GatewayBlockEntity extends BlockEntity implements Container, ProductionBuilding, WarpInBuilding {
+public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding {
     public enum UnitType implements StringRepresentable {
         ZEALOT("zealot"), DRAGOON("dragoon");
 
@@ -68,9 +71,7 @@ public class GatewayBlockEntity extends BlockEntity implements Container, Produc
     public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
     public static final int WARP_TICKS = 200; // 10 seconds to warp in
-    public static final int INPUT_SLOTS = 9;
 
-    private final NonNullList<ItemStack> items = NonNullList.withSize(INPUT_SLOTS, ItemStack.EMPTY);
     private final Deque<UnitType> queue = new ArrayDeque<>();
     private int buildTicksRemaining = BUILD_TICKS;
     private int warpTicksRemaining = WARP_TICKS;
@@ -249,41 +250,22 @@ public class GatewayBlockEntity extends BlockEntity implements Container, Produc
                 ContainerLevelAccess.create(this.level, this.worldPosition));
     }
 
-    // --- Container ---
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        // Deliberately skip super: vanilla would drop+clear this Container's contents, but that
+        // Container is the shared Protoss army bank (ArmyLinkedContainer) — one Gateway breaking
+        // must not dump/clear resources the Nexus and other Gateways still depend on.
+    }
+
+    // --- ArmyLinkedContainer ---
 
     @Override
-    public int getContainerSize() {
-        return this.items.size();
+    public NonNullList<ItemStack> armyItems() {
+        return ArmyBank.of(this.level, this.faction);
     }
 
     @Override
-    public boolean isEmpty() {
-        return this.items.stream().allMatch(ItemStack::isEmpty);
-    }
-
-    @Override
-    public ItemStack getItem(int slot) {
-        return this.items.get(slot);
-    }
-
-    @Override
-    public ItemStack removeItem(int slot, int amount) {
-        ItemStack removed = ContainerHelper.removeItem(this.items, slot, amount);
-        if (!removed.isEmpty()) {
-            this.setChanged();
-        }
-        return removed;
-    }
-
-    @Override
-    public ItemStack removeItemNoUpdate(int slot) {
-        return ContainerHelper.takeItem(this.items, slot);
-    }
-
-    @Override
-    public void setItem(int slot, ItemStack stack) {
-        this.items.set(slot, stack);
-        stack.limitSize(this.getMaxStackSize(stack));
+    public void markArmyBankChanged() {
         this.setChanged();
     }
 
@@ -293,18 +275,12 @@ public class GatewayBlockEntity extends BlockEntity implements Container, Produc
     }
 
     @Override
-    public void clearContent() {
-        this.items.clear();
-    }
-
-    @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putInt("BuildTicks", this.buildTicksRemaining);
         output.putInt("WarpTicks", this.warpTicksRemaining);
         output.store("Faction", Faction.CODEC, this.faction);
         output.store("Queue", UnitType.LIST_CODEC, List.copyOf(this.queue));
-        ContainerHelper.saveAllItems(output, this.items);
     }
 
     @Override
@@ -315,7 +291,5 @@ public class GatewayBlockEntity extends BlockEntity implements Container, Produc
         this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.PROTOSS);
         this.queue.clear();
         this.queue.addAll(input.read("Queue", UnitType.LIST_CODEC).orElse(List.of()));
-        this.items.clear();
-        ContainerHelper.loadAllItems(input, this.items);
     }
 }

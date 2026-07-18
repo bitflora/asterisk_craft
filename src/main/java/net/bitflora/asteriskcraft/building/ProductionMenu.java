@@ -32,13 +32,14 @@ public class ProductionMenu extends AbstractContainerMenu {
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.
     public static final int IMAGE_WIDTH = 176;
-    public static final int IMAGE_HEIGHT = 182;
+    public static final int INPUT_COLUMNS = 9;
+    public static final int IMAGE_HEIGHT = 218; // grown to fit the input bank's extra rows
     public static final int SLOT_START_X = 8;
     public static final int INPUT_ROW_Y = 20;
-    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 100
-    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 158
+    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 136
+    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 194
     public static final int BUTTON_X = 26;
-    public static final int BUTTON_Y = 44;
+    public static final int BUTTON_Y = 80;
     public static final int BUTTON_W = 124;
     public static final int BUTTON_H = 20;
     public static final int BUTTON_SPACING = 22;
@@ -81,7 +82,9 @@ public class ProductionMenu extends AbstractContainerMenu {
         this.inputSlots = kind.inputSlotCount();
 
         for (int i = 0; i < inputSlots; i++) {
-            addSlot(new Slot(input, i, SLOT_START_X + i * 18, INPUT_ROW_Y));
+            int col = i % INPUT_COLUMNS;
+            int row = i / INPUT_COLUMNS;
+            addSlot(new Slot(input, i, SLOT_START_X + col * 18, INPUT_ROW_Y + row * 18));
         }
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {

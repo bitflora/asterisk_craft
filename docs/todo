@@ -7,6 +7,23 @@
 - generally fix unit sizes and hitboxes
 - get proper graphics
 - add air units
+- AI improvements
+  - Create build lists telling the enemy what to make. Each line will have a command and then parameters.
+  - Parameters may take the form of a comma-delimited list of [Quantity] [Unit] and will be referred to as [UnitList]
+  - When instructed to build certain units, the AI will wait until it has the appropriate resources available.
+    - [Quantity] can be a range of integers, in which case a number should be randomly selected from that range whne it is executed
+  - The following commands should be implemented
+    - Workers: [Number]
+    The AI will from this point forward make sure it has at minimum this many workers, training new ones when it is below the number
+    - Defence: [UnitList]
+    The AI will train these units and leave them patrolling the area near the base.
+    - Wave: [UnitList]
+    The AI will train these units and send them to attack the enemy base once all of them are trained.
+    - Wait [Seconds]
+    Waits [Seconds] seconds before executing the next command
+    - Repeat [Integer]
+    Repeats the previous [Integer] commands endlessly
+
 Additional units in old mod:
 Protoss: Zealot, Dark Templar, Zeratul, Probe (+Dark/Void/Purifier variants), Reaver, Scarab
 Zerg: Zergling family, Hydralisk family, Mutalisk family, Larva/Broodling, Queen, Brutalisk, Tyrannozor, Brakk

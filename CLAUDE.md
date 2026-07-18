@@ -30,11 +30,12 @@ Faction hostility is the single mechanism all targeting/combat logic must go thr
 - `entity/ai/FactionTargetGoal` — a `NearestAttackableTargetGoal<LivingEntity>` parameterized with a `TargetingConditions.Selector` that delegates to `FactionAttachments.areEnemies`. Every faction-aware combat unit uses this instead of vanilla player-targeting goals.
 
 Production buildings (Nexus, Gateway, and future ones) share a common shape, factored into `building/`:
-- `building/ResourceBank` — atomic multi-item cost extraction from containers near a building (e.g. "50 wood AND 50 cobblestone, all or nothing").
+- `building/ArmyBank` — the shared per-faction resource pool (a level attachment, not owned by any one building): Nexus + Gateway (Protoss) and all three Hives (Zerg) act as "linked chests" onto one `Container` per faction via `building/ArmyLinkedContainer`, instead of each holding its own independent inventory. Sized 27 slots (Protoss) / 81 slots (Zerg).
+- `building/ResourceBank` — atomic multi-item cost extraction from a `Container` (e.g. "50 wood AND 50 cobblestone, all or nothing"); operates generically whether that container is a shared `ArmyBank` view or a plain container.
 - `building/SpawnSpots` — finds an open, safely-footed spot near a building to place a freshly produced unit.
 - `building/BuildingLayouts` — code-defined multiblock structures (a `Map<BlockPos, BlockState>` per building) plus `place(...)` to stamp one into the world, used both by world-bootstrap placement and by warp-in kits.
 - `building/BuildingKitItem` — generic "right-click the ground to warp in a building" item; reusable across building types via a layout supplier + core-block offset.
-- Each building is a `BaseEntityBlock` + `BlockEntity` pair (`NexusBlock`/`NexusBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`.
+- Each building is a `BaseEntityBlock` + `BlockEntity` pair (`NexusBlock`/`NexusBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`. A building's `preRemoveSideEffects` deliberately skips `super` (see `ArmyLinkedContainer`) so destroying one building never drops/clears the whole army's shared bank.
 
 Units are repurposed vanilla mobs, not new models: `entity/ZealotEntity` (Zombie) and `entity/DragoonEntity` (Skeleton) override `registerGoals()` to strip vanilla player-aggression and install `FactionTargetGoal` instead, and are rendered client-side with the plain vanilla `ZombieRenderer`/`SkeletonRenderer` (this only works because a custom `EntityType<Subclass>` can reuse a renderer typed to its vanilla superclass — see the API notes doc). `entity/TeamColors` dyes a leather chestplate per faction for cheap visual team identity.
 

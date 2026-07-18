@@ -15,7 +15,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
-import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -35,17 +34,20 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Production logic for the Nexus: a small Probe queue paid for out of the Nexus's own
- * input slots (surfaced through {@link ProductionMenu}). Cost: 50 wood (any logs) OR
+ * Production logic for the Nexus: a small Probe queue paid for out of the shared Protoss
+ * army bank (surfaced through {@link ProductionMenu}). Cost: 50 wood (any logs) OR
  * 50 cobblestone per Probe.
+ *
+ * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link GatewayBlockEntity}
+ * reads and writes the same underlying data, so every Protoss production building draws from
+ * one shared pool. See {@link ArmyLinkedContainer}.
  */
-public class NexusBlockEntity extends BlockEntity implements Container, ProductionBuilding, FactionCore, BeaconBeamOwner {
+public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, FactionCore, BeaconBeamOwner {
     public static final int PROBE_COST = 50;
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
-    public static final int INPUT_SLOTS = 9;
+    public static final int INPUT_SLOTS = ArmyBank.PROTOSS_SLOTS;
 
-    private final NonNullList<ItemStack> items = NonNullList.withSize(INPUT_SLOTS, ItemStack.EMPTY);
     private int queued = 0;
     private int buildTicksRemaining = BUILD_TICKS;
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
@@ -225,7 +227,9 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
 
     @Override
     public void preRemoveSideEffects(BlockPos pos, BlockState state) {
-        super.preRemoveSideEffects(pos, state); // keeps vanilla drop-contents for the input slots
+        // Deliberately skip super: vanilla would drop+clear this Container's contents, but that
+        // Container is the shared Protoss army bank (ArmyLinkedContainer) — the Nexus breaking
+        // must not dump/clear resources Gateways still depend on.
         GameOutcome.onCoreDestroyed(this.level, pos);
     }
 
@@ -243,41 +247,15 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
                 ContainerLevelAccess.create(this.level, this.worldPosition));
     }
 
-    // --- Container ---
+    // --- ArmyLinkedContainer ---
 
     @Override
-    public int getContainerSize() {
-        return this.items.size();
+    public NonNullList<ItemStack> armyItems() {
+        return ArmyBank.of(this.level, this.coreFaction());
     }
 
     @Override
-    public boolean isEmpty() {
-        return this.items.stream().allMatch(ItemStack::isEmpty);
-    }
-
-    @Override
-    public ItemStack getItem(int slot) {
-        return this.items.get(slot);
-    }
-
-    @Override
-    public ItemStack removeItem(int slot, int amount) {
-        ItemStack removed = ContainerHelper.removeItem(this.items, slot, amount);
-        if (!removed.isEmpty()) {
-            this.setChanged();
-        }
-        return removed;
-    }
-
-    @Override
-    public ItemStack removeItemNoUpdate(int slot) {
-        return ContainerHelper.takeItem(this.items, slot);
-    }
-
-    @Override
-    public void setItem(int slot, ItemStack stack) {
-        this.items.set(slot, stack);
-        stack.limitSize(this.getMaxStackSize(stack));
+    public void markArmyBankChanged() {
         this.setChanged();
     }
 
@@ -287,17 +265,11 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
     }
 
     @Override
-    public void clearContent() {
-        this.items.clear();
-    }
-
-    @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putInt("Queued", this.queued);
         output.putInt("BuildTicks", this.buildTicksRemaining);
         output.putInt("CoreHealth", this.coreHealth);
-        ContainerHelper.saveAllItems(output, this.items);
     }
 
     @Override
@@ -306,7 +278,5 @@ public class NexusBlockEntity extends BlockEntity implements Container, Producti
         this.queued = input.getIntOr("Queued", 0);
         this.buildTicksRemaining = input.getIntOr("BuildTicks", BUILD_TICKS);
         this.coreHealth = input.getIntOr("CoreHealth", FactionCore.CORE_MAX_HEALTH);
-        this.items.clear();
-        ContainerHelper.loadAllItems(input, this.items);
     }
 }

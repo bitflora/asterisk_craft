@@ -16,12 +16,12 @@ import java.util.function.Supplier;
  * Serialized to the open-menu buffer by {@link #ordinal()} and rebuilt on the client.
  */
 public enum ProductionKind {
-    NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), 9, List.of(
+    NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Component.translatable("entity.asteriskcraft.probe"),
                     new ItemStack(Items.GOLDEN_PICKAXE),
                     Component.translatable("gui.asteriskcraft.cost.probe")))),
-    GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), 9, List.of(
+    GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Component.translatable("entity.asteriskcraft.zealot"),
                     new ItemStack(Items.IRON_SWORD),

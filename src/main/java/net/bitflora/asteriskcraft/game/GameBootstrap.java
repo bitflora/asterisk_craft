@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.game;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
@@ -8,6 +9,7 @@ import net.bitflora.asteriskcraft.director.ZergSpawns;
 import net.bitflora.asteriskcraft.entity.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,9 +44,11 @@ public final class GameBootstrap {
     // chunk tickets out of scope; see docs/shaping.md).
     private static final int ZERG_BASE_DISTANCE = 110;
     private static final int[][] HIVE_OFFSETS = {{0, 0}, {12, -7}, {12, 7}};
-    private static final int STARTING_HIVE_LOGS = 128;
-    private static final int STARTING_HIVE_COBBLE = 128;
-    private static final int STARTING_HIVE_IRON = 48;
+    // Total seeded into the shared Zerg army bank once, matching the old 128/128/48-per-Hive x3
+    // total (each Hive used to hold its own independent stock before they shared one pool).
+    private static final int STARTING_ZERG_LOGS = 128 * 3;
+    private static final int STARTING_ZERG_COBBLE = 128 * 3;
+    private static final int STARTING_ZERG_IRON = 48 * 3;
     private static final int INITIAL_DRONES_PER_HIVE = 2;
 
     private GameBootstrap() {
@@ -108,6 +112,7 @@ public final class GameBootstrap {
             seedResourceGarden(level, hx, hz);
         }
         level.setData(GameAttachments.HIVE_POSITIONS, List.copyOf(cores));
+        seedZergArmyBank(level);
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} Zerg Hives near {},{}", cores.size(), baseX, baseZ);
     }
 
@@ -119,7 +124,6 @@ public final class GameBootstrap {
                 BuildingLayouts.HIVE_CORE_OFFSET.getY(), BuildingLayouts.HIVE_CORE_OFFSET.getZ());
         if (level.getBlockEntity(core) instanceof HiveBlockEntity hive) {
             hive.setFaction(Faction.ZERG);
-            seedHive(hive);
             for (int i = 0; i < INITIAL_DRONES_PER_HIVE; i++) {
                 DroneEntity drone = ZergSpawns.spawn(level, core, AsteriskCraft.DRONE.get(), Faction.ZERG, false);
                 if (drone != null) {
@@ -130,13 +134,18 @@ public final class GameBootstrap {
         return core;
     }
 
-    /** Seeds a Hive with enough resources to bankroll its first Drones and the director's early waves. */
-    private static void seedHive(HiveBlockEntity hive) {
-        hive.setItem(0, new ItemStack(Items.OAK_LOG, 64));
-        hive.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_HIVE_LOGS - 64));
-        hive.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
-        hive.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_HIVE_COBBLE - 64));
-        hive.setItem(4, new ItemStack(Items.IRON_INGOT, STARTING_HIVE_IRON));
+    /**
+     * Seeds the shared Zerg army bank once (not per-Hive — all three Hives are linked chests
+     * onto the same pool) with enough resources to bankroll the first Drones and the director's
+     * early waves.
+     */
+    private static void seedZergArmyBank(ServerLevel level) {
+        NonNullList<ItemStack> bank = ArmyBank.of(level, Faction.ZERG);
+        bank.set(0, new ItemStack(Items.OAK_LOG, 64));
+        bank.set(1, new ItemStack(Items.OAK_LOG, STARTING_ZERG_LOGS - 64));
+        bank.set(2, new ItemStack(Items.COBBLESTONE, 64));
+        bank.set(3, new ItemStack(Items.COBBLESTONE, STARTING_ZERG_COBBLE - 64));
+        bank.set(4, new ItemStack(Items.IRON_INGOT, STARTING_ZERG_IRON));
     }
 
     /** Exposes a handful of surface harvestable blocks near a Hive so its Drones can keep mining. */
