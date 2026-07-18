@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "asteriskcraft:item/command_crystal"
+    "model": "asteriskcraft:item/cursor"
   }
 }

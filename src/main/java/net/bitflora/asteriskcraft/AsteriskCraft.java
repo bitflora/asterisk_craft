@@ -15,7 +15,7 @@ import net.bitflora.asteriskcraft.building.PhotonCannonBlock;
 import net.bitflora.asteriskcraft.building.PhotonCannonBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
-import net.bitflora.asteriskcraft.command.CommandCrystalItem;
+import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
 import net.bitflora.asteriskcraft.entity.DragoonEntity;
@@ -107,8 +107,8 @@ public class AsteriskCraft {
     public static final DeferredItem<BuildingKitItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
             props -> new BuildingKitItem(props, BuildingLayouts::photonCannon, BuildingLayouts.PHOTON_CANNON_CORE_OFFSET));
 
-    public static final DeferredItem<CommandCrystalItem> COMMAND_CRYSTAL = ITEMS.registerItem("command_crystal",
-            CommandCrystalItem::new);
+    public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
+            CursorItem::new);
 
     // --- Block entities ---
 
@@ -215,7 +215,7 @@ public class AsteriskCraft {
                 output.accept(PHOTON_CANNON_CORE_ITEM.get());
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
-                output.accept(COMMAND_CRYSTAL.get());
+                output.accept(CURSOR.get());
             }).build());
 
     public AsteriskCraft(IEventBus modEventBus, ModContainer modContainer) {

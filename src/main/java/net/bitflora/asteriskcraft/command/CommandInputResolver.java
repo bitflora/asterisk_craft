@@ -31,7 +31,7 @@ public final class CommandInputResolver {
 
     public static void handle(CommandInputPacket packet, ServerPlayer player) {
         // Re-validate the Crystal is actually held — the packet is client-asserted.
-        if (!(player.getMainHandItem().getItem() instanceof CommandCrystalItem)) {
+        if (!(player.getMainHandItem().getItem() instanceof CursorItem)) {
             return;
         }
         ServerLevel level = (ServerLevel) player.level();

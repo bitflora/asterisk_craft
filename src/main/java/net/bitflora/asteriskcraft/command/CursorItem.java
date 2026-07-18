@@ -26,23 +26,23 @@ import java.util.function.Consumer;
  * keepInventory game rule already carried it over, to avoid duplicating).
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
-public class CommandCrystalItem extends Item {
-    public CommandCrystalItem(Properties properties) {
+public class CursorItem extends Item {
+    public CursorItem(Properties properties) {
         super(properties);
     }
 
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display,
                                 Consumer<Component> adder, TooltipFlag flag) {
-        adder.accept(Component.translatable("item.asteriskcraft.command_crystal.tip.select").withStyle(ChatFormatting.GRAY));
-        adder.accept(Component.translatable("item.asteriskcraft.command_crystal.tip.group").withStyle(ChatFormatting.GRAY));
-        adder.accept(Component.translatable("item.asteriskcraft.command_crystal.tip.order").withStyle(ChatFormatting.GRAY));
+        adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.select").withStyle(ChatFormatting.GRAY));
+        adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.group").withStyle(ChatFormatting.GRAY));
+        adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.order").withStyle(ChatFormatting.GRAY));
     }
 
     @SubscribeEvent
     public static void onDrops(LivingDropsEvent event) {
         if (event.getEntity() instanceof ServerPlayer) {
-            event.getDrops().removeIf(itemEntity -> itemEntity.getItem().is(AsteriskCraft.COMMAND_CRYSTAL.get()));
+            event.getDrops().removeIf(itemEntity -> itemEntity.getItem().is(AsteriskCraft.CURSOR.get()));
         }
     }
 
@@ -51,9 +51,9 @@ public class CommandCrystalItem extends Item {
         if (!event.isWasDeath() || !(event.getEntity() instanceof ServerPlayer newPlayer)) {
             return;
         }
-        boolean alreadyCarried = newPlayer.getInventory().contains(stack -> stack.is(AsteriskCraft.COMMAND_CRYSTAL.get()));
+        boolean alreadyCarried = newPlayer.getInventory().contains(stack -> stack.is(AsteriskCraft.CURSOR.get()));
         if (!alreadyCarried) {
-            newPlayer.getInventory().add(new ItemStack(AsteriskCraft.COMMAND_CRYSTAL.get()));
+            newPlayer.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
         }
     }
 }

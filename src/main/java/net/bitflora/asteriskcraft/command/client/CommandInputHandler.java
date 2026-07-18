@@ -1,7 +1,7 @@
 package net.bitflora.asteriskcraft.command.client;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.command.CommandCrystalItem;
+import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -49,7 +49,7 @@ public final class CommandInputHandler {
         if (mc.player == null || mc.level == null || mc.screen != null) {
             return;
         }
-        if (!(mc.player.getMainHandItem().getItem() instanceof CommandCrystalItem)) {
+        if (!(mc.player.getMainHandItem().getItem() instanceof CursorItem)) {
             return;
         }
         event.setCanceled(true); // command mode owns this click; suppress vanilla attack/use

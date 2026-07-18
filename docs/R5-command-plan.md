@@ -79,7 +79,7 @@ flowchart TD
 
 ## Implementation steps
 
-1. **`command/CommandCrystalItem`** — plain `Item` marker with a controls tooltip; register in `AsteriskCraft` (`DeferredRegister.Items`) and add to the creative tab. Granted to the player in `GameBootstrap` when the starting base is placed.
+1. **`command/CursorItem`** — plain `Item` marker with a controls tooltip; register in `AsteriskCraft` (`DeferredRegister.Items`) and add to the creative tab. Granted to the player in `GameBootstrap` when the starting base is placed.
 2. **`command/CommandOrder`** + **`CommandAttachments`** — record `CommandOrder(Kind kind, Optional<BlockPos> pos, Optional<UUID> target)` with a `Codec`; register a serialized `AttachmentType<CommandOrder>` (default = empty/none). Applied to any `Mob`.
 3. **`command/PlayerSelection`** + attachment — `Set<UUID>` per player (serialization optional; fine to reset on relog). Ops: `setSingle`, `toggle`, `addAllOfType`, `toggleAllOfType`, plus a `pruneAndGet(level)` that drops dead/invalid entities and returns live `Mob`s. Toggling membership sets/clears the glowing flag on affected units.
 4. **`command/CommandInputPacket`** — `CustomPacketPayload` `{int button, boolean ctrl, boolean shift, HitKind kind, int entityId, BlockPos pos, Vec3 farPoint}` with a `StreamCodec`. Register via `RegisterPayloadHandlersEvent` → `registrar.playToServer(...)`, handler on the main thread (`IPayloadContext.player()` gives the `ServerPlayer`).

@@ -83,7 +83,7 @@ public final class GameBootstrap {
         level.setData(GameAttachments.BOOTSTRAPPED, true);
 
         // The Command Crystal enables unit select/order mode while held (R5).
-        player.getInventory().add(new ItemStack(AsteriskCraft.COMMAND_CRYSTAL.get()));
+        player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
         player.sendSystemMessage(Component.translatable("message.asteriskcraft.zerg_location", "east"));
 
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed Nexus core at {}", core);

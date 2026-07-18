@@ -65,7 +65,7 @@ Package root `net.bitflora.asteriskcraft`:
 - `faction/` — Faction, FactionSavedData, FactionAttachment, FactionRelations
 - `building/` — WarpInHandler, BuildingKitItem, NexusBlock(Entity), GatewayBlock(Entity), PhotonCannonBlock(Entity), HiveBlock(Entity), structure templates in `data/asteriskcraft/structure/`
 - `entity/` — ProbeEntity, DroneEntity; `ai/` goals: HarvestBlockGoal, DeliverToContainerGoal, FactionTargetGoal, CommandedMoveGoal
-- `command/` — CommandCrystalItem (held marker), CommandInputPacket + client input handler, CommandInputResolver (server), PlayerSelection attachment, CommandOrder attachment + `ai/CommandedMoveGoal`/`ai/CommandedAttackGoal`
+- `command/` — CursorItem (held marker), CommandInputPacket + client input handler, CommandInputResolver (server), PlayerSelection attachment, CommandOrder attachment + `ai/CommandedMoveGoal`/`ai/CommandedAttackGoal`
 - `director/` — ZergDirector (server tick handler, wave scheduler)
 - `game/` — GameState saved data (initialized/won/lost) + world bootstrap. Implemented as first-player-join placement rather than server start (see Status note below) — no slash commands anywhere in the MVP.
 
