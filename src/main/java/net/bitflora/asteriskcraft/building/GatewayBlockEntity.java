@@ -231,7 +231,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
         unit.snapTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
         EventHooks.finalizeMobSpawn(unit, level, level.getCurrentDifficultyAt(spawnPos), EntitySpawnReason.TRIGGERED, null);
         FactionAttachments.set(unit, this.faction);
-        TeamColors.dyeArmor(unit, this.faction);
+        //TeamColors.dyeArmor(unit, this.faction);
         level.addFreshEntity(unit);
         level.playSound(null, spawnPos, SoundEvents.PLAYER_TELEPORT, SoundSource.BLOCKS, 0.8f, 1.6f);
     }

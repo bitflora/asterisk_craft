@@ -44,12 +44,13 @@ import org.jetbrains.annotations.Nullable;
  * resource type it last mined, mines it non-destructively (the block is swapped for a
  * regenerating depleted node), then delivers the yield straight into the Nexus.
  */
-public class ProbeEntity extends PathfinderMob {
+public class ProbeEntity extends PathfinderMob implements Protoss {
     public static final TagKey<Block> HARVESTABLE = BlockTags.create(AsteriskCraft.id("harvestable"));
     public static final int YIELD_PER_TRIP = 3;
     public static final int MINE_TICKS = 60;
     public static final int SEARCH_RADIUS = 24;
     public static final int SEARCH_VERTICAL = 8;
+    public static final int SHIELD = 10;
 
     /** Coarse resource category, used to prefer re-mining the same kind of node on the next trip. */
     enum ResourceType implements StringRepresentable {
@@ -126,6 +127,10 @@ public class ProbeEntity extends PathfinderMob {
     @Override
     protected SoundEvent getDeathSound() {
         return AsteriskCraft.PROBE_DEATH.get();
+    }
+
+    public int getShield() {
+        return SHIELD;
     }
 
     public void setHomePos(BlockPos pos) {

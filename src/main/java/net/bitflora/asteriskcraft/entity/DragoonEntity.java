@@ -22,7 +22,8 @@ import net.minecraft.world.level.Level;
  * {@code reassessWeaponGoal()} machinery (invoked on spawn/equip), which keeps the
  * ranged attack in sync with the bow this unit spawns holding.
  */
-public class DragoonEntity extends Skeleton {
+public class DragoonEntity extends Skeleton implements Protoss {
+    public static final int SHIELD = 40;
 
     public DragoonEntity(EntityType<? extends DragoonEntity> type, Level level) {
         super(type, level);
@@ -46,5 +47,9 @@ public class DragoonEntity extends Skeleton {
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    public int getShield() {
+        return SHIELD;
     }
 }

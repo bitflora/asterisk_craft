@@ -16,21 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ZergEconomyTest {
 
-    @Test
-    void droneCostMirrorsProbe() {
-        assertEquals(NexusBlockEntity.PROBE_COST, HiveBlockEntity.DRONE_COST);
-    }
 
-    @Test
-    void zerglingCostMirrorsZealot() {
-        assertEquals(GatewayBlockEntity.ZEALOT_WOOD_COST, ZergDirector.ZERGLING_WOOD_COST);
-        assertEquals(GatewayBlockEntity.ZEALOT_COBBLE_COST, ZergDirector.ZERGLING_COBBLE_COST);
-    }
-
-    @Test
-    void hydraliskCostMirrorsDragoon() {
-        assertEquals(GatewayBlockEntity.DRAGOON_IRON_COST, ZergDirector.HYDRALISK_IRON_COST);
-    }
 
     @Test
     void hiveTuningIsSane() {

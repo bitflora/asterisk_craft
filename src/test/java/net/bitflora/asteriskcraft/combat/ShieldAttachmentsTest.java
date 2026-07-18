@@ -13,13 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ShieldAttachmentsTest {
 
     @Test
-    void designConstantsAreNonNegative() {
-        assertEquals(20.0f, ShieldAttachments.ZEALOT_MAX_SHIELD);
-        assertEquals(10.0f, ShieldAttachments.DRAGOON_MAX_SHIELD);
-        assertEquals(10.0f, ShieldAttachments.PROBE_MAX_SHIELD);
-    }
-
-    @Test
     void shieldFullyAbsorbsDamageWithinItsPool() {
         ShieldAttachments.DamageResult result = ShieldAttachments.resolveDamage(20.0f, 12.0f);
         assertEquals(8.0f, result.remainingShield());

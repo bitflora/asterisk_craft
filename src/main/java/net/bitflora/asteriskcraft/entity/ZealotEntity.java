@@ -23,7 +23,8 @@ import net.minecraft.world.level.Level;
  * replaced by pure faction targeting (see {@link FactionTargetGoal}). Sun-immune
  * because it's a distinct EntityType never added to {@code #minecraft:burn_in_daylight}.
  */
-public class ZealotEntity extends Zombie {
+public class ZealotEntity extends Zombie implements Protoss {
+    public static final int SHIELD = 30;
 
     public ZealotEntity(EntityType<? extends ZealotEntity> type, Level level) {
         super(type, level);
@@ -32,10 +33,10 @@ public class ZealotEntity extends Zombie {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Zombie.createAttributes()
-                .add(Attributes.MAX_HEALTH, 40.0)
+                .add(Attributes.MAX_HEALTH, 50.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 6.0)
-                .add(Attributes.ARMOR, 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 4.0)
+                .add(Attributes.ARMOR, 0.5)
                 .add(Attributes.FOLLOW_RANGE, 32.0);
     }
 
@@ -69,5 +70,9 @@ public class ZealotEntity extends Zombie {
     @Override
     protected SoundEvent getDeathSound() {
         return AsteriskCraft.ZEALOT_DEATH.get();
+    }
+
+    public int getShield() {
+        return SHIELD;
     }
 }

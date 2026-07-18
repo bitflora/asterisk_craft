@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.entity.Protoss;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -22,10 +23,6 @@ import java.util.function.Supplier;
 public final class ShieldAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
-
-    public static final float ZEALOT_MAX_SHIELD = 20.0f;
-    public static final float DRAGOON_MAX_SHIELD = 10.0f;
-    public static final float PROBE_MAX_SHIELD = 10.0f;
 
     /**
      * Current shield value. Defaults to this entity's max shield (so Protoss units spawn at full
@@ -58,15 +55,8 @@ public final class ShieldAttachments {
         if (!(holder instanceof Entity entity) || FactionAttachments.get(entity) != Faction.PROTOSS) {
             return 0.0f;
         }
-        EntityType<?> type = entity.getType();
-        if (type == AsteriskCraft.ZEALOT.get()) {
-            return ZEALOT_MAX_SHIELD;
-        }
-        if (type == AsteriskCraft.DRAGOON.get()) {
-            return DRAGOON_MAX_SHIELD;
-        }
-        if (type == AsteriskCraft.PROBE.get()) {
-            return PROBE_MAX_SHIELD;
+        if (entity instanceof Protoss protoss) {
+            return protoss.getShield();
         }
         return 0.0f;
     }
