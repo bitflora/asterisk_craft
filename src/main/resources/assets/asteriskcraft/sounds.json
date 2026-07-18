@@ -73,5 +73,20 @@
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.death",
     "sounds": ["asteriskcraft:mob/probe/probe-death"]
+  },
+  "entity.drone.ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.drone.ambient",
+    "sounds": ["asteriskcraft:mob/drone/drone-live1"]
+  },
+  "entity.drone.hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.drone.hurt",
+    "sounds": ["asteriskcraft:mob/drone/drone-hurt"]
+  },
+  "entity.drone.death": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.drone.death",
+    "sounds": ["asteriskcraft:mob/drone/drone-death"]
   }
 }

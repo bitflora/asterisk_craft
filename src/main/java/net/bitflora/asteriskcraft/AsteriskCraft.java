@@ -240,6 +240,12 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.probe.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.hurt")));
     public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_DEATH =
             SOUND_EVENTS.register("entity.probe.death", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
+            SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
+            SOUND_EVENTS.register("entity.drone.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.hurt")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_DEATH =
+            SOUND_EVENTS.register("entity.drone.death", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.death")));
 
     // --- Creative tab ---
 

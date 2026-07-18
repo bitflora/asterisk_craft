@@ -60,5 +60,8 @@
   "subtitles.entity.asteriskcraft.hydralisk.death": "Hydralisk dies",
   "subtitles.entity.asteriskcraft.probe.ambient": "Probe hums",
   "subtitles.entity.asteriskcraft.probe.hurt": "Probe hurts",
-  "subtitles.entity.asteriskcraft.probe.death": "Probe destroyed"
+  "subtitles.entity.asteriskcraft.probe.death": "Probe destroyed",
+  "subtitles.entity.asteriskcraft.drone.ambient": "Drone chitters",
+  "subtitles.entity.asteriskcraft.drone.hurt": "Drone hurts",
+  "subtitles.entity.asteriskcraft.drone.death": "Drone dies"
 }
