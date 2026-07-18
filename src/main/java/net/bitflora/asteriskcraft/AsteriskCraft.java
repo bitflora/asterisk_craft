@@ -18,6 +18,7 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
+import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.entity.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.DroneEntity;
 import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
@@ -278,6 +279,7 @@ public class AsteriskCraft {
         FactionAttachments.ATTACHMENT_TYPES.register(modEventBus);
         GameAttachments.ATTACHMENT_TYPES.register(modEventBus);
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);
+        ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(this::registerPayloads);

@@ -18,7 +18,10 @@ public final class FactionAttachments {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
 
     public static final Supplier<AttachmentType<Faction>> FACTION = ATTACHMENT_TYPES.register(
-            "faction", () -> AttachmentType.builder(() -> Faction.NEUTRAL).serialize(Faction.CODEC.fieldOf("faction")).build());
+            "faction", () -> AttachmentType.builder(() -> Faction.NEUTRAL)
+                    .serialize(Faction.CODEC.fieldOf("faction"))
+                    .sync(Faction.STREAM_CODEC)
+                    .build());
 
     private FactionAttachments() {
     }

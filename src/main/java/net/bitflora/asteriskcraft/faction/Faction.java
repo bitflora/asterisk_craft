@@ -1,6 +1,9 @@
 package net.bitflora.asteriskcraft.faction;
 
 import com.mojang.serialization.Codec;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 
 /**
@@ -14,6 +17,8 @@ public enum Faction implements StringRepresentable {
     ZERG("zerg");
 
     public static final Codec<Faction> CODEC = StringRepresentable.fromEnum(Faction::values);
+    public static final StreamCodec<ByteBuf, Faction> STREAM_CODEC =
+            ByteBufCodecs.VAR_INT.map(id -> Faction.values()[id], Faction::ordinal);
 
     private final String name;
 
