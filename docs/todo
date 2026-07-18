@@ -1,9 +1,4 @@
-- Harvest improvements
-  - Workers (Probes, Drones) should automatically seek out another node of the same type to continue mining from. If no node of the same type is found, seek out any nearby valid node to mine.
-  - Workers should bring resources back to the nearest Nexus, giving 3 of that item.
-  - Make sure that mined items regenerate
-  - There should be visual feedback when a valid block is selected for harvesting. Ideally, highlight it in green briefly, but if something is more easily implemented go with that.
-  - Eliminate the starting chest. Move those starting resources to the Nexus's container instead.
+
 - Protoss shields
   - Protoss should have shields in addition to HP, and only the shield regenerates
   - This should be visible on Jade
@@ -15,4 +10,3 @@
 - generally fix unit sizes and hitboxes
 - get proper graphics
 - add air units
-- Add spawn eggs for each unit. There should be two spawn eggs for each, one to make an allied unit and one to make an enemy unit.

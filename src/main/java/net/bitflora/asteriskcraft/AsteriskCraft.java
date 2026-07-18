@@ -20,10 +20,12 @@ import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
 import net.bitflora.asteriskcraft.entity.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.DroneEntity;
+import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.ZerglingEntity;
+import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.registries.Registries;
@@ -170,6 +172,41 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));
 
+    // --- Spawn eggs ---
+    // Two per unit: one stamps the spawned mob as the player's own (PROTOSS, matching
+    // ControlledFaction), the other as the enemy (ZERG) — independent of the unit's own race,
+    // since Faction only controls targeting, not the mob's model/renderer.
+
+    public static final DeferredItem<FactionSpawnEggItem> PROBE_SPAWN_EGG_ALLY = ITEMS.registerItem("probe_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, PROBE, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> PROBE_SPAWN_EGG_ENEMY = ITEMS.registerItem("probe_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, PROBE, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, ZEALOT, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ENEMY = ITEMS.registerItem("zealot_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, ZEALOT, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> DRAGOON_SPAWN_EGG_ALLY = ITEMS.registerItem("dragoon_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, DRAGOON, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> DRAGOON_SPAWN_EGG_ENEMY = ITEMS.registerItem("dragoon_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, DRAGOON, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ALLY = ITEMS.registerItem("drone_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, DRONE, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ENEMY = ITEMS.registerItem("drone_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, DRONE, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> ZERGLING_SPAWN_EGG_ALLY = ITEMS.registerItem("zergling_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, ZERGLING, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> ZERGLING_SPAWN_EGG_ENEMY = ITEMS.registerItem("zergling_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, ZERGLING, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("hydralisk_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("hydralisk_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.ZERG));
+
     // --- Sounds ---
     // Ambient events each name several ogg files in sounds.json; vanilla's sound system already
     // picks one at random per play, so a single registered SoundEvent covers all "live" variants.
@@ -216,6 +253,18 @@ public class AsteriskCraft {
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(CURSOR.get());
+                output.accept(PROBE_SPAWN_EGG_ALLY.get());
+                output.accept(PROBE_SPAWN_EGG_ENEMY.get());
+                output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
+                output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
+                output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
+                output.accept(DRAGOON_SPAWN_EGG_ENEMY.get());
+                output.accept(DRONE_SPAWN_EGG_ALLY.get());
+                output.accept(DRONE_SPAWN_EGG_ENEMY.get());
+                output.accept(ZERGLING_SPAWN_EGG_ALLY.get());
+                output.accept(ZERGLING_SPAWN_EGG_ENEMY.get());
+                output.accept(HYDRALISK_SPAWN_EGG_ALLY.get());
+                output.accept(HYDRALISK_SPAWN_EGG_ENEMY.get());
             }).build());
 
     public AsteriskCraft(IEventBus modEventBus, ModContainer modContainer) {
