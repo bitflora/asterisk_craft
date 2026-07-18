@@ -4,6 +4,7 @@ import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -25,6 +26,9 @@ public final class CommandInputResolver {
     /** GLFW modifier bits (see {@code net.minecraft.client.gui.screens.Screen}). */
     private static final int MOD_SHIFT = 0x0001;
     private static final int MOD_CONTROL = 0x0002;
+
+    /** Brief green flash confirming a valid MINE order landed on a harvestable block. */
+    private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0x33FF33, 1.2f);
 
     private CommandInputResolver() {
     }
@@ -110,6 +114,8 @@ public final class CommandInputResolver {
         }
         BlockPos pos = packet.pos();
         if (unit instanceof ProbeEntity && level.getBlockState(pos).is(ProbeEntity.HARVESTABLE)) {
+            level.sendParticles(MINE_TARGET_FLASH,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
             return CommandOrder.mine(pos);
         }
         return CommandOrder.move(pos);

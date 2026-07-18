@@ -236,8 +236,10 @@ public class AsteriskCraft {
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
-        // Expose the Hive's inventory as an item handler so Drones can deposit into it via the
-        // same capability-based delivery Probes use for chests.
+        // Expose the Nexus's and Hive's inventories as item handlers so Probes/Drones can
+        // deposit their harvest yield straight into their home core building.
+        event.registerBlockEntity(Capabilities.Item.BLOCK, NEXUS_BLOCK_ENTITY.get(),
+                (nexus, side) -> VanillaContainerWrapper.of(nexus));
         event.registerBlockEntity(Capabilities.Item.BLOCK, HIVE_BLOCK_ENTITY.get(),
                 (hive, side) -> VanillaContainerWrapper.of(hive));
     }

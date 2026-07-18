@@ -5,12 +5,14 @@ import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -26,7 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -39,19 +40,48 @@ import java.util.EnumSet;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The Protoss worker. Finds a harvestable block near its home Nexus, mines it
- * non-destructively (the block is swapped for a regenerating depleted node),
- * then delivers the yield to the nearest chest.
+ * The Protoss worker. Finds a harvestable block near its home Nexus, preferring the same
+ * resource type it last mined, mines it non-destructively (the block is swapped for a
+ * regenerating depleted node), then delivers the yield straight into the Nexus.
  */
 public class ProbeEntity extends PathfinderMob {
     public static final TagKey<Block> HARVESTABLE = BlockTags.create(AsteriskCraft.id("harvestable"));
-    public static final int YIELD_PER_TRIP = 10;
+    public static final int YIELD_PER_TRIP = 3;
     public static final int MINE_TICKS = 60;
     public static final int SEARCH_RADIUS = 24;
     public static final int SEARCH_VERTICAL = 8;
 
+    /** Coarse resource category, used to prefer re-mining the same kind of node on the next trip. */
+    enum ResourceType implements StringRepresentable {
+        WOOD("wood"), IRON("iron"), STONE("stone");
+
+        static final Codec<ResourceType> CODEC = StringRepresentable.fromEnum(ResourceType::values);
+        private final String name;
+
+        ResourceType(String name) {
+            this.name = name;
+        }
+
+        static ResourceType of(BlockState state) {
+            if (state.is(BlockTags.LOGS)) {
+                return WOOD;
+            }
+            if (state.is(BlockTags.IRON_ORES)) {
+                return IRON;
+            }
+            return STONE;
+        }
+
+        @Override
+        public String getSerializedName() {
+            return this.name;
+        }
+    }
+
     private BlockPos homePos = BlockPos.ZERO;
     private ItemStack carried = ItemStack.EMPTY;
+    @Nullable
+    private ResourceType lastResourceType;
 
     public ProbeEntity(EntityType<? extends ProbeEntity> type, Level level) {
         super(type, level);
@@ -111,28 +141,13 @@ public class ProbeEntity extends PathfinderMob {
     }
 
     /**
-     * Where this worker unloads its carried yield: an adjacent container exposing the item
-     * capability. The Probe delivers to the nearest chest/barrel near home; the Drone overrides
-     * this to deposit straight into its home Hive. Returns {@code null} if none is in range.
+     * Where this worker unloads its carried yield: home is always set to the owning Nexus/Hive
+     * core, which is exactly the "nearest core building" a worker should deliver into. Returns
+     * {@code null} if home hasn't been set yet.
      */
     @Nullable
     protected BlockPos findDeliveryTarget() {
-        Level level = this.level();
-        BlockPos home = this.homePos.equals(BlockPos.ZERO) ? this.blockPosition() : this.homePos;
-        BlockPos best = null;
-        double bestDist = Double.MAX_VALUE;
-        for (BlockPos pos : BlockPos.betweenClosed(home.offset(-12, -4, -12), home.offset(12, 4, 12))) {
-            BlockState state = level.getBlockState(pos);
-            if (!state.is(Blocks.CHEST) && !state.is(Blocks.TRAPPED_CHEST) && !state.is(Blocks.BARREL)) {
-                continue;
-            }
-            double dist = pos.distSqr(this.blockPosition());
-            if (dist < bestDist) {
-                bestDist = dist;
-                best = pos.immutable();
-            }
-        }
-        return best;
+        return this.homePos.equals(BlockPos.ZERO) ? null : this.homePos;
     }
 
     @Override
@@ -142,6 +157,9 @@ public class ProbeEntity extends PathfinderMob {
         if (!this.carried.isEmpty()) {
             output.store("Carried", ItemStack.CODEC, this.carried);
         }
+        if (this.lastResourceType != null) {
+            output.store("LastResourceType", ResourceType.CODEC, this.lastResourceType);
+        }
     }
 
     @Override
@@ -149,17 +167,17 @@ public class ProbeEntity extends PathfinderMob {
         super.readAdditionalSaveData(input);
         this.homePos = input.read("HomePos", BlockPos.CODEC).orElse(BlockPos.ZERO);
         this.carried = input.read("Carried", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        this.lastResourceType = input.read("LastResourceType", ResourceType.CODEC).orElse(null);
     }
 
-    /** What a harvested block yields. Iron smelts on the way home; stone chips to cobble. */
+    /** What a harvested block yields: a flat {@link #YIELD_PER_TRIP} of the matching item. */
     static ItemStack yieldFor(BlockState state) {
-        if (state.is(BlockTags.LOGS)) {
-            return new ItemStack(state.getBlock().asItem(), YIELD_PER_TRIP);
-        }
-        if (state.is(BlockTags.IRON_ORES)) {
-            return new ItemStack(Items.IRON_INGOT, YIELD_PER_TRIP / 2);
-        }
-        return new ItemStack(Items.COBBLESTONE, YIELD_PER_TRIP);
+        ResourceType type = ResourceType.of(state);
+        return switch (type) {
+            case WOOD -> new ItemStack(state.getBlock().asItem(), YIELD_PER_TRIP);
+            case IRON -> new ItemStack(Items.IRON_INGOT, YIELD_PER_TRIP);
+            case STONE -> new ItemStack(Items.COBBLESTONE, YIELD_PER_TRIP);
+        };
     }
 
     /**
@@ -251,6 +269,7 @@ public class ProbeEntity extends PathfinderMob {
             Level level = this.probe.level();
             BlockState state = level.getBlockState(pos);
             this.probe.carried = yieldFor(state);
+            this.probe.lastResourceType = ResourceType.of(state);
             level.levelEvent(2001, pos, Block.getId(state));
             level.setBlock(pos, AsteriskCraft.DEPLETED_NODE.get().defaultBlockState(), Block.UPDATE_ALL);
             if (level.getBlockEntity(pos) instanceof DepletedNodeBlockEntity node) {
@@ -262,16 +281,25 @@ public class ProbeEntity extends PathfinderMob {
             CommandAttachments.clearOrder(this.probe);
         }
 
+        /**
+         * Prefers the nearest reachable node matching the last-mined resource type (so a probe
+         * keeps working the same vein); falls back to the nearest reachable node of any type if
+         * none of that type is in range.
+         */
         @Nullable
         private BlockPos findNearestHarvestable() {
             Level level = this.probe.level();
             BlockPos home = this.probe.homePos;
-            BlockPos best = null;
-            double bestDist = Double.MAX_VALUE;
+            ResourceType preferred = this.probe.lastResourceType;
+            BlockPos bestSameType = null;
+            double bestSameTypeDist = Double.MAX_VALUE;
+            BlockPos bestAny = null;
+            double bestAnyDist = Double.MAX_VALUE;
             for (BlockPos pos : BlockPos.betweenClosed(
                     home.offset(-SEARCH_RADIUS, -SEARCH_VERTICAL, -SEARCH_RADIUS),
                     home.offset(SEARCH_RADIUS, SEARCH_VERTICAL, SEARCH_RADIUS))) {
-                if (!level.getBlockState(pos).is(HARVESTABLE)) {
+                BlockState state = level.getBlockState(pos);
+                if (!state.is(HARVESTABLE)) {
                     continue;
                 }
                 // Only blocks a probe can stand next to: some horizontal neighbor is passable.
@@ -279,12 +307,16 @@ public class ProbeEntity extends PathfinderMob {
                     continue;
                 }
                 double dist = pos.distSqr(this.probe.blockPosition());
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = pos.immutable();
+                if (dist < bestAnyDist) {
+                    bestAnyDist = dist;
+                    bestAny = pos.immutable();
+                }
+                if (preferred != null && ResourceType.of(state) == preferred && dist < bestSameTypeDist) {
+                    bestSameTypeDist = dist;
+                    bestSameType = pos.immutable();
                 }
             }
-            return best;
+            return bestSameType != null ? bestSameType : bestAny;
         }
 
         private static boolean isReachable(Level level, BlockPos pos) {

@@ -20,10 +20,9 @@ class ProbeEconomyTest {
     }
 
     @Test
-    void harvestYieldIsPositiveAndEven() {
-        // Iron ore yields YIELD_PER_TRIP / 2 refined ingots, so it must stay even and > 0.
-        assertTrue(ProbeEntity.YIELD_PER_TRIP > 0, "yield must be positive");
-        assertEquals(0, ProbeEntity.YIELD_PER_TRIP % 2, "yield must be even so iron halves cleanly");
+    void harvestYieldIsFlatPerTrip() {
+        // Every resource type (wood/cobblestone/iron) yields the same flat amount per trip.
+        assertEquals(3, ProbeEntity.YIELD_PER_TRIP);
     }
 
     @Test

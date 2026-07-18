@@ -16,7 +16,7 @@ Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring 
 |----|-------------|--------|
 | R0 | RTS core loop: gather resources → construct buildings → produce units → destroy enemy base | Core goal |
 | R1 | Buildings are multiblock structures; Nexus pre-placed at game start; its destruction = defeat | Must-have |
-| R2 | Nexus produces Probes that gather vanilla items non-destructively and deliver them to the nearest chest | Must-have |
+| R2 | Nexus produces Probes that gather vanilla items non-destructively and deliver them straight into the Nexus | Must-have |
 | R3 | Gateway produces ground attack units (MVP: repurposed skeletons/zombies) that fight the enemy faction | Must-have |
 | R4 | Photon Cannon auto-attacks all enemy-faction targets in range | Must-have |
 | R5 | Group select + orders: attack target, attack-move to point, rally | Must-have |
@@ -51,8 +51,8 @@ Expanded from the top-level R5 to pin down the exact control scheme (see shape A
 | **A1** | **Faction system** — `SavedData` faction registry (`PLAYER_PROTOSS`, `AI_ZERG`); NeoForge data attachments tag entities + block entities with a faction id; single `FactionRelations.isEnemy(a,b)` used by all targeting |
 | **A2** | **Warp-in kits** (chosen: A2-B) — each building is a craftable kit item; right-click ground → validates footprint → structure template materializes over ~10s with particles/sound. One generic `WarpInHandler` + per-building structure template `.nbt` |
 | **A3** | **Nexus** — controller block entity + GUI with Probe production queue; defeat trigger when core block is destroyed; gates crafting of other kits (recipes unlock via advancement granted at game start) |
-| **A4** | **Probe** — small custom entity; goal chain: find nearest block in `#asteriskcraft:harvestable` tag → mine-beam N seconds → block enters depleted/cooldown state (never removed) → carry drops to nearest chest near the Nexus |
-| **A5** | **Vanilla-item economy** (chosen: user variant of A5-B) — resources are real items in chests/building inventories; kits are crafted normally; production buildings consume items from their internal inventory or an adjacent chest |
+| **A4** | **Probe** — small custom entity; goal chain: find nearest block in `#asteriskcraft:harvestable` tag (preferring the same resource type it last mined) → mine-beam N seconds → block enters depleted/cooldown state (never removed) → carry drops straight into the home Nexus's inventory |
+| **A5** | **Vanilla-item economy** (chosen: user variant of A5-B) — resources are real items in building inventories; kits are crafted normally; production buildings consume items from their own internal inventory, which workers deliver into directly |
 | **A6** | **Gateway** — production block entity; spawns **Zealots** (repurposed Zombie, melee) and **Dragoons** (repurposed Skeleton, ranged) with goal selectors replaced (faction targeting, no sunburn, no player aggression) + colored leather armor for team identity; rally point support |
 | **A7** | **Photon Cannon** — block entity ticker scans radius for nearest enemy-faction entity → fires a projectile; simple, no power system in MVP |
 | **A8** | **Command Crystal + StarCraft click semantics** (chosen; revised from the earlier "command wand" sketch — see R5 detail + [R5-command-plan.md](R5-command-plan.md)) — a held marker item enables command mode; **left-click = select** (plain / Shift-toggle / Ctrl-all-of-type-in-radius / Ctrl+Shift-toggle-all-of-type), **right-click = order** (enemy = attack, block = move, air = move toward look). All input captured client-side (Ctrl is not server-known) and sent as one `CommandInputPacket`; selection is a per-player attachment; orders are a `CommandOrder` attachment read by commanded goals on each unit. Probes are commandable too: they honor MOVE and a **MINE** order (right-click a harvestable block) that reuses their existing harvest logic |
@@ -89,7 +89,7 @@ The whole economy runs on three vanilla resources Probes/Drones can harvest non-
 
 ## Slices (each ends demo-able)
 
-**V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus + starting chest on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore and delivers to the nearest chest; Probe costs 50 wood or 50 cobble from the Nexus's adjacent chest. Unit tests cover faction rules, the Nexus multiblock layout, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and fill a chest.*
+**V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus, seeded with starting resources, on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore (preferring to keep mining the same resource type) and delivers a flat 3 per trip straight into the Nexus; Probe costs 50 wood or 50 cobble from the Nexus's own inventory. Unit tests cover faction rules, the Nexus multiblock layout, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and deposit into the Nexus.*
 
 **V2a — Gateway + Zealots/Dragoons. `[DONE]`** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, iron); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad.*
 

@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.game;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
+import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.director.ZergSpawns;
 import net.bitflora.asteriskcraft.entity.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
@@ -14,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Places the player's Nexus and starting chest the first time someone joins a new
- * world. We do this on first join (rather than at server start) because the player's
+ * Places the player's Nexus (seeded with starting resources) the first time someone joins a
+ * new world. We do this on first join (rather than at server start) because the player's
  * chunk is guaranteed loaded with a settled surface height — placing at server start
  * can land the structure at the world floor before terrain is ready. From the player's
  * point of view the world still "starts" with a Nexus already standing (R1).
@@ -73,10 +73,12 @@ public final class GameBootstrap {
         BlockPos origin = new BlockPos(x, y, z);
 
         BuildingLayouts.place(level, origin, BuildingLayouts.nexus());
-        placeStartingChest(level, origin.offset(3, 1, 0));
 
         BlockPos core = origin.offset(0, 2, 0);
         level.setData(GameAttachments.NEXUS_POS, core);
+        if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
+            seedNexus(nexus);
+        }
 
         placeZergBase(level, x, z);
 
@@ -84,6 +86,8 @@ public final class GameBootstrap {
 
         // The Command Crystal enables unit select/order mode while held (R5).
         player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
+        player.getInventory().add(new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
+        player.getInventory().add(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
         player.sendSystemMessage(Component.translatable("message.asteriskcraft.zerg_location", "east"));
 
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed Nexus core at {}", core);
@@ -150,16 +154,11 @@ public final class GameBootstrap {
         }
     }
 
-    private static void placeStartingChest(ServerLevel level, BlockPos pos) {
-        level.setBlock(pos.below(), Blocks.SMOOTH_QUARTZ.defaultBlockState(), Block.UPDATE_ALL);
-        level.setBlock(pos, Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
-        if (level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
-            chest.setItem(0, new ItemStack(Items.OAK_LOG, 64));
-            chest.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
-            chest.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
-            chest.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
-            chest.setItem(4, new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
-            chest.setItem(5, new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
-        }
+    /** Seeds the Nexus's own input slots with enough resources to bankroll the first Probes. */
+    private static void seedNexus(NexusBlockEntity nexus) {
+        nexus.setItem(0, new ItemStack(Items.OAK_LOG, 64));
+        nexus.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
+        nexus.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
+        nexus.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
     }
 }
