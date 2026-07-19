@@ -22,6 +22,11 @@ class ModelBakeTest {
     }
 
     @Test
+    void dragoonModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new DragoonModel(DragoonModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
     void zerglingModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new ZerglingModel(ZerglingModel.createBodyLayer().bakeRoot()));
     }

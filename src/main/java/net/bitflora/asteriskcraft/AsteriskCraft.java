@@ -146,7 +146,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<DragoonEntity>> DRAGOON =
             ENTITY_TYPES.register("dragoon", () -> EntityType.Builder.of(DragoonEntity::new, MobCategory.MONSTER)
-                    .sized(0.6f, 1.99f)
+                    // Squat, wide footprint matching the four-legged spider walker (was the tall
+                    // 0.6x1.99 Skeleton box). See client/DragoonModel.
+                    .sized(1.1f, 1.2f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dragoon"))));
 
