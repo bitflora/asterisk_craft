@@ -141,11 +141,27 @@ public final class GameBootstrap {
      */
     private static void seedZergArmyBank(ServerLevel level) {
         NonNullList<ItemStack> bank = ArmyBank.of(level, Faction.ZERG);
-        bank.set(0, new ItemStack(Items.OAK_LOG, 64));
-        bank.set(1, new ItemStack(Items.OAK_LOG, STARTING_ZERG_LOGS - 64));
-        bank.set(2, new ItemStack(Items.COBBLESTONE, 64));
-        bank.set(3, new ItemStack(Items.COBBLESTONE, STARTING_ZERG_COBBLE - 64));
-        bank.set(4, new ItemStack(Items.IRON_INGOT, STARTING_ZERG_IRON));
+        int slot = 0;
+        slot = seedStacks(bank, slot, Items.OAK_LOG, STARTING_ZERG_LOGS);
+        slot = seedStacks(bank, slot, Items.COBBLESTONE, STARTING_ZERG_COBBLE);
+        seedStacks(bank, slot, Items.IRON_INGOT, STARTING_ZERG_IRON);
+    }
+
+    /**
+     * Fills consecutive bank slots starting at {@code slot} with {@code amount} of {@code item},
+     * each slot capped at the item's max stack size (64 for these resources) — a naive single
+     * split assuming the leftover fits in one slot silently produces oversized stacks once a
+     * total exceeds twice the max stack size, which then fails to (de)serialize.
+     */
+    private static int seedStacks(NonNullList<ItemStack> bank, int slot, net.minecraft.world.item.Item item, int amount) {
+        int maxStackSize = new ItemStack(item).getMaxStackSize();
+        int remaining = amount;
+        while (remaining > 0) {
+            int count = Math.min(remaining, maxStackSize);
+            bank.set(slot++, new ItemStack(item, count));
+            remaining -= count;
+        }
+        return slot;
     }
 
     /** Exposes a handful of surface harvestable blocks near a Hive so its Drones can keep mining. */
