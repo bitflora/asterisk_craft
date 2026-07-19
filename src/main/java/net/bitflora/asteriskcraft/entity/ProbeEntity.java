@@ -7,6 +7,8 @@ import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -31,6 +33,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
@@ -91,7 +94,7 @@ public class ProbeEntity extends PathfinderMob implements Protoss {
 
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 10.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.35)
                 .add(Attributes.FOLLOW_RANGE, 48.0);
     }
@@ -268,6 +271,7 @@ public class ProbeEntity extends PathfinderMob implements Protoss {
                 if (this.mineTicks % 10 == 0) {
                     this.probe.level().playSound(null, pos, SoundEvents.STONE_HIT, SoundSource.BLOCKS, 0.5f, 1.2f);
                 }
+                spawnMiningParticles();
                 return;
             }
 
@@ -284,6 +288,18 @@ public class ProbeEntity extends PathfinderMob implements Protoss {
             // If this was a commanded mine, the node is now depleted — drop the order so the
             // probe reverts to autonomous harvesting (a no-op when there was no order).
             CommandAttachments.clearOrder(this.probe);
+        }
+
+        /** Emits a burst of crit particles from the probe's front, where its mining beam would be. */
+        private void spawnMiningParticles() {
+            if (!(this.probe.level() instanceof ServerLevel serverLevel)) {
+                return;
+            }
+            Vec3 look = this.probe.getLookAngle();
+            Vec3 origin = this.probe.getEyePosition().add(look.scale(0.6));
+            serverLevel.sendParticles(ParticleTypes.CRIT,
+                    origin.x, origin.y, origin.z,
+                    2, 0.05, 0.05, 0.05, 0.02);
         }
 
         /**

@@ -32,9 +32,10 @@ public class DragoonEntity extends Skeleton implements Protoss {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 50.0)
+                .add(Attributes.ARMOR, 0.5)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 10.0)
                 .add(Attributes.FOLLOW_RANGE, 32.0);
     }
 

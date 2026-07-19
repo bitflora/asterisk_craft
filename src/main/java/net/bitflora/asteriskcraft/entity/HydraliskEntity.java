@@ -33,9 +33,10 @@ public class HydraliskEntity extends Skeleton {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 24.0)
+                .add(Attributes.MAX_HEALTH, 40.0)
+                .add(Attributes.ARMOR, 0.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 5.0)
                 .add(Attributes.FOLLOW_RANGE, 32.0);
     }
 

@@ -12,6 +12,7 @@ import net.bitflora.asteriskcraft.building.HiveBlock;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlock;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.BuildingAggroAttachments;
 import net.bitflora.asteriskcraft.building.PhotonCannonBlock;
 import net.bitflora.asteriskcraft.building.PhotonCannonBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
@@ -289,6 +290,7 @@ public class AsteriskCraft {
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ZergRegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
+        BuildingAggroAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);

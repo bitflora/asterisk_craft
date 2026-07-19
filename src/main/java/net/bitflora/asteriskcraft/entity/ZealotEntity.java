@@ -34,9 +34,9 @@ public class ZealotEntity extends Zombie implements Protoss {
     public static AttributeSupplier.Builder createAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MAX_HEALTH, 50.0)
+                .add(Attributes.ARMOR, 0.5)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
                 .add(Attributes.ATTACK_DAMAGE, 4.0)
-                .add(Attributes.ARMOR, 0.5)
                 .add(Attributes.FOLLOW_RANGE, 32.0);
     }
 
