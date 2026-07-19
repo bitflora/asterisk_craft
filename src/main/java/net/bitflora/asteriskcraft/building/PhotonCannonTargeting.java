@@ -16,9 +16,13 @@ public final class PhotonCannonTargeting {
     private PhotonCannonTargeting() {
     }
 
-    /** A candidate is fair game only if it's alive and belongs to an enemy faction of the cannon. */
-    public static boolean isTargetable(Faction cannon, Faction target, boolean alive) {
-        return alive && cannon.isEnemy(target);
+    /**
+     * A candidate is fair game if it's alive and either belongs to an enemy faction of the
+     * cannon, or is a vanilla hostile monster (zombies, creepers, etc.) — those default to
+     * {@link Faction#NEUTRAL} but the cannon should still defend the base against them.
+     */
+    public static boolean isTargetable(Faction cannon, Faction target, boolean alive, boolean isMonster) {
+        return alive && (cannon.isEnemy(target) || isMonster);
     }
 
     /** Returns the candidate with the smallest distance (empty if the list is empty). */

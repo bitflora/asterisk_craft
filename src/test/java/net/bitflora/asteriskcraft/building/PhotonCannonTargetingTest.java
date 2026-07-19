@@ -18,14 +18,22 @@ class PhotonCannonTargetingTest {
 
     @Test
     void targetsOnlyLivingEnemyFactions() {
-        assertTrue(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.ZERG, true),
+        assertTrue(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.ZERG, true, false),
                 "a Protoss cannon must fire on a living Zerg unit");
-        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.PROTOSS, true),
+        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.PROTOSS, true, false),
                 "the cannon must never fire on its own faction");
-        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, true),
+        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, true, false),
                 "NEUTRAL entities (players, wild mobs) are never targeted");
-        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.ZERG, false),
+        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.ZERG, false, false),
                 "a dead enemy is not a valid target");
+    }
+
+    @Test
+    void alwaysTargetsLivingMonstersRegardlessOfFaction() {
+        assertTrue(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, true, true),
+                "vanilla hostile monsters must be fired on even though they default to NEUTRAL");
+        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, false, true),
+                "a dead monster is not a valid target");
     }
 
     @Test

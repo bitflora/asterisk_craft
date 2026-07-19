@@ -13,6 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Monster;
 
 import java.util.List;
 
@@ -132,12 +133,17 @@ public final class CommandInputResolver {
         return null;
     }
 
+    /**
+     * A valid attack-order target: a living enemy-faction unit, or a vanilla hostile monster
+     * (zombies, creepers, etc.) — those default to {@link Faction#NEUTRAL} but units should
+     * still be orderable to fight them off, same as the Photon Cannon auto-targets them.
+     */
     private static LivingEntity enemyTargetAt(CommandInputPacket packet, ServerLevel level, Faction owner) {
         if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
             return null;
         }
-        if (level.getEntity(packet.entityId()) instanceof LivingEntity target
-                && target.isAlive() && owner.isEnemy(FactionAttachments.get(target))) {
+        if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()
+                && (owner.isEnemy(FactionAttachments.get(target)) || target instanceof Monster)) {
             return target;
         }
         return null;

@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -137,7 +138,7 @@ public class PhotonCannonBlockEntity extends BlockEntity implements WarpInBuildi
         double cz = pos.getZ() + 0.5;
         AABB range = new AABB(pos).inflate(RANGE);
         List<LivingEntity> candidates = serverLevel.getEntitiesOfClass(LivingEntity.class, range,
-                e -> PhotonCannonTargeting.isTargetable(cannon.faction, FactionAttachments.get(e), e.isAlive()));
+                e -> PhotonCannonTargeting.isTargetable(cannon.faction, FactionAttachments.get(e), e.isAlive(), e instanceof Monster));
 
         PhotonCannonTargeting.nearest(candidates, e -> e.distanceToSqr(cx, cy, cz))
                 .ifPresent(target -> {
