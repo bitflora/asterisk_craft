@@ -14,8 +14,8 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
 public final class ShieldEventHandler {
-    private static final int REGEN_DELAY_TICKS = 60; // 3s of no damage before shields start recharging
-    private static final float REGEN_PER_TICK = 0.5f; // 10 shield/s once recharging
+    private static final int REGEN_DELAY_TICKS = 140; // 7s of no damage before shields start recharging
+    private static final float REGEN_PER_TICK = 0.05f; // 1 shield/s once recharging
 
     private ShieldEventHandler() {
     }
