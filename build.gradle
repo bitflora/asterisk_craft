@@ -125,6 +125,14 @@ dependencies {
     // We add the full version to localRuntime, not runtimeOnly, so that we do not publish a dependency on it
     // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
 
+    // Optional Jade addon integration (compat/jade): Jade ships API + impl in a single jar
+    // (already compiled against this MC version's official mappings, so no remapping needed).
+    // Dropped into ./libs since no Maven mirror publishes a 26.1.2-compatible build yet.
+    // Referenced for both compiling against snownee.jade.api and running it in-game via
+    // runClient, without publishing a hard dependency on it (see the JEI example above).
+    compileOnly files("libs/Jade-mc26.1-NeoForge-26.1.8.jar")
+    localRuntime files("libs/Jade-mc26.1-NeoForge-26.1.8.jar")
+
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"

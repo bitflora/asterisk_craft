@@ -16,9 +16,8 @@ AsteriskCraft is a NeoForge mod that brings a StarCraft-style RTS loop (gather �
   - Single test class: `./gradlew test --tests "net.bitflora.asteriskcraft.building.GatewayEconomyTest"`
   - Single test method: `./gradlew test --tests "net.bitflora.asteriskcraft.building.GatewayEconomyTest.zealotCostMatchesDesign"`
 - `./gradlew compileJava` — fast compile-only check.
-- `./gradlew runClient` — launch the game client with the mod loaded, for manual/visual verification.
-- `./gradlew runServer` — launch a headless dedicated server (`--nogui`); requires `run/eula.txt` containing `eula=true` (gitignored, create it locally). Useful as a crash smoke test for server-side safety without needing a GUI.
 - `./gradlew runData` — run data generators (see `data` run config in build.gradle; outputs to `src/generated/resources/`).
+- Don't try to launch the game as a test, I will do that myself
 
 **Important test-bootstrap limitation:** block/item **tags** are not bound in the JUnit bootstrap environment, so tag-dependent behavior (e.g. which block a Probe's tag-based harvest yields) can't be unit-tested — it's verified via `runClient` instead. See `ProbeEconomyTest`'s javadoc for the pattern: keep unit tests to pure logic/constants, and note in the test class why tag-dependent behavior is excluded.
 

@@ -82,6 +82,15 @@ Example mod description.
     ordering="NONE"
     side="BOTH"
 
+# Optional: when Jade is installed, compat/jade's @WailaPlugin adds a Protoss shield tooltip line.
+# The mod loads fine without Jade present; this just lets us load after it if both are present.
+[[dependencies.${mod_id}]]
+    modId="jade"
+    type="optional"
+    versionRange="[26.1,)"
+    ordering="AFTER"
+    side="CLIENT"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

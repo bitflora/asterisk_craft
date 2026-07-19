@@ -63,5 +63,6 @@
   "subtitles.entity.asteriskcraft.probe.death": "Probe destroyed",
   "subtitles.entity.asteriskcraft.drone.ambient": "Drone chitters",
   "subtitles.entity.asteriskcraft.drone.hurt": "Drone hurts",
-  "subtitles.entity.asteriskcraft.drone.death": "Drone dies"
+  "subtitles.entity.asteriskcraft.drone.death": "Drone dies",
+  "config.jade.plugin_asteriskcraft.protoss_shield": "Protoss Shield"
 }
