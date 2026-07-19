@@ -26,7 +26,7 @@ public class HydraliskRenderer extends MobRenderer<HydraliskEntity, LivingEntity
 
     @Override
     protected void scale(LivingEntityRenderState state, PoseStack poseStack) {
-        poseStack.scale(1.3f, 1.3f, 1.3f);
+        poseStack.scale(0.975f, 0.975f, 0.975f);
     }
 
     @Override

@@ -26,7 +26,7 @@ public class ZealotRenderer extends MobRenderer<ZealotEntity, LivingEntityRender
 
     @Override
     protected void scale(LivingEntityRenderState state, PoseStack poseStack) {
-        poseStack.scale(0.7f, 0.7f, 0.7f);
+        poseStack.scale(0.525f, 0.525f, 0.525f);
     }
 
     @Override

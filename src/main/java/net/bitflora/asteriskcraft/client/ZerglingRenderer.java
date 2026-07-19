@@ -26,7 +26,7 @@ public class ZerglingRenderer extends MobRenderer<ZerglingEntity, LivingEntityRe
 
     @Override
     protected void scale(LivingEntityRenderState state, PoseStack poseStack) {
-        poseStack.scale(1.25f, 1.25f, 1.25f);
+        poseStack.scale(0.9375f, 0.9375f, 0.9375f);
     }
 
     @Override
