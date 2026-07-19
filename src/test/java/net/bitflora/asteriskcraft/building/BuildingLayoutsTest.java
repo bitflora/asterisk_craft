@@ -67,13 +67,4 @@ class BuildingLayoutsTest {
             }
         }
     }
-
-    @Test
-    void photonCannonCoreSitsAtItsDeclaredOffset() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.photonCannon();
-        BlockState core = layout.get(BuildingLayouts.PHOTON_CANNON_CORE_OFFSET);
-        assertNotNull(core, "expected a block at the declared Photon Cannon core offset");
-        assertEquals(AsteriskCraft.PHOTON_CANNON_CORE.get(), core.getBlock(),
-                "the declared offset must hold the interactive Photon Cannon core");
-    }
 }

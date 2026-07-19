@@ -69,7 +69,7 @@ public final class BuildingLayouts {
      */
     public static Map<BlockPos, BlockState> hive() {
         Map<BlockPos, BlockState> layout = new LinkedHashMap<>();
-        BlockState floor = Blocks.SCULK.defaultBlockState();
+        BlockState floor = Blocks.MYCELIUM.defaultBlockState();
         BlockState spike = Blocks.DRIPSTONE_BLOCK.defaultBlockState();
 
         for (int dx = -1; dx <= 1; dx++) {
@@ -88,28 +88,6 @@ public final class BuildingLayouts {
 
     /** Relative offset of the Hive's core block within {@link #hive()}. */
     public static final BlockPos HIVE_CORE_OFFSET = new BlockPos(0, 1, 0);
-
-    /**
-     * Compact 3x3 defensive turret: a smooth-quartz platform with a chiseled-quartz pedestal
-     * lifting the Photon Cannon core one block up so its energy bolts clear the platform edge.
-     * Smaller and pillar-less to read distinctly from the Gateway.
-     */
-    public static Map<BlockPos, BlockState> photonCannon() {
-        Map<BlockPos, BlockState> layout = new LinkedHashMap<>();
-        BlockState platform = Blocks.SMOOTH_QUARTZ.defaultBlockState();
-
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                layout.put(new BlockPos(dx, 0, dz), platform);
-            }
-        }
-        layout.put(new BlockPos(0, 1, 0), Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
-        layout.put(new BlockPos(0, 2, 0), AsteriskCraft.PHOTON_CANNON_CORE.get().defaultBlockState());
-        return layout;
-    }
-
-    /** Relative offset of the Photon Cannon's core block within {@link #photonCannon()}. */
-    public static final BlockPos PHOTON_CANNON_CORE_OFFSET = new BlockPos(0, 2, 0);
 
     /** Places a layout into the world, clearing head-room above the footprint first. */
     public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout) {

@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.building;
 
+import net.bitflora.asteriskcraft.entity.PhotonCannonEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,16 +14,22 @@ class PhotonCannonEconomyTest {
 
     @Test
     void kitCostMatchesDesign() {
-        assertEquals(100, PhotonCannonBlockEntity.WOOD_COST);
-        assertEquals(100, PhotonCannonBlockEntity.COBBLE_COST);
-        assertEquals(20, PhotonCannonBlockEntity.IRON_COST);
+        assertEquals(100, PhotonCannonEntity.WOOD_COST);
+        assertEquals(100, PhotonCannonEntity.COBBLE_COST);
+        assertEquals(20, PhotonCannonEntity.IRON_COST);
     }
 
     @Test
     void combatTimingIsSane() {
-        assertTrue(PhotonCannonBlockEntity.WARP_TICKS > 0, "the cannon must take time to warp in");
-        assertTrue(PhotonCannonBlockEntity.RANGE > 0, "the cannon must have a positive attack range");
-        assertTrue(PhotonCannonBlockEntity.ATTACK_DAMAGE > 0, "each shot must deal damage");
-        assertTrue(PhotonCannonBlockEntity.ATTACK_COOLDOWN > 0, "shots must be spaced out in time");
+        assertTrue(PhotonCannonEntity.WARP_TICKS > 0, "the cannon must take time to warp in");
+        assertTrue(PhotonCannonEntity.RANGE > 0, "the cannon must have a positive attack range");
+        assertTrue(PhotonCannonEntity.ATTACK_DAMAGE > 0, "each shot must deal damage");
+        assertTrue(PhotonCannonEntity.ATTACK_COOLDOWN > 0, "shots must be spaced out in time");
+    }
+
+    @Test
+    void combatStatsMatchDesign() {
+        assertEquals(50, PhotonCannonEntity.MAX_HEALTH, "the cannon has a 50 HP pool");
+        assertEquals(50, PhotonCannonEntity.SHIELD, "behind a 50-point Protoss shield");
     }
 }

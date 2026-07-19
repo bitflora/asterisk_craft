@@ -19,6 +19,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
     public static final ModelLayerLocation DRONE_LAYER = new ModelLayerLocation(AsteriskCraft.id("drone"), "main");
+    public static final ModelLayerLocation PHOTON_CANNON_LAYER = new ModelLayerLocation(AsteriskCraft.id("photon_cannon"), "main");
 
     @SubscribeEvent
     static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
@@ -27,6 +28,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
         event.registerLayerDefinition(DRONE_LAYER, DroneModel::createBodyLayer);
+        event.registerLayerDefinition(PHOTON_CANNON_LAYER, PhotonCannonModel::createBodyLayer);
     }
 
     @SubscribeEvent
@@ -37,6 +39,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.PHOTON_CANNON.get(), PhotonCannonRenderer::new);
         // Nexus/Hive shoot a vanilla beacon beam upward as a locator; reuses BeaconRenderer since
         // both block entities implement BeaconBeamOwner. See docs/neoforge-api-notes.md.
         event.registerBlockEntityRenderer(AsteriskCraft.NEXUS_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());

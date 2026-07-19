@@ -12,9 +12,6 @@ import net.bitflora.asteriskcraft.building.HiveBlock;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlock;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
-import net.bitflora.asteriskcraft.building.BuildingAggroAttachments;
-import net.bitflora.asteriskcraft.building.PhotonCannonBlock;
-import net.bitflora.asteriskcraft.building.PhotonCannonBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
@@ -26,6 +23,7 @@ import net.bitflora.asteriskcraft.entity.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.DroneEntity;
 import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.HydraliskEntity;
+import net.bitflora.asteriskcraft.entity.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.ZerglingEntity;
@@ -98,20 +96,17 @@ public class AsteriskCraft {
             HiveBlock::new,
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
 
-    public static final DeferredBlock<PhotonCannonBlock> PHOTON_CANNON_CORE = BLOCKS.registerBlock("photon_cannon_core",
-            PhotonCannonBlock::new,
-            p -> p.mapColor(MapColor.DIAMOND).strength(15.0f, 1200.0f).lightLevel(s -> 10));
-
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
-    public static final DeferredItem<BlockItem> PHOTON_CANNON_CORE_ITEM = ITEMS.registerSimpleBlockItem("photon_cannon_core", PHOTON_CANNON_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingLayouts::gateway, BuildingLayouts.GATEWAY_CORE_OFFSET));
 
-    public static final DeferredItem<BuildingKitItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
-            props -> new BuildingKitItem(props, BuildingLayouts::photonCannon, BuildingLayouts.PHOTON_CANNON_CORE_OFFSET));
+    // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
+    // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
+    public static final DeferredItem<FactionSpawnEggItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, Faction.PROTOSS));
 
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
@@ -129,9 +124,6 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HiveBlockEntity>> HIVE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("hive", () -> new BlockEntityType<>(HiveBlockEntity::new, HIVE_CORE.get()));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PhotonCannonBlockEntity>> PHOTON_CANNON_BLOCK_ENTITY =
-            BLOCK_ENTITY_TYPES.register("photon_cannon", () -> new BlockEntityType<>(PhotonCannonBlockEntity::new, PHOTON_CANNON_CORE.get()));
 
     // --- Menus ---
 
@@ -175,6 +167,12 @@ public class AsteriskCraft {
                     .sized(0.6f, 1.99f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<PhotonCannonEntity>> PHOTON_CANNON =
+            ENTITY_TYPES.register("photon_cannon", () -> EntityType.Builder.of(PhotonCannonEntity::new, MobCategory.MISC)
+                    .sized(2.6f, 1.9f) // 3x3-block disc base + hovering globe
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("photon_cannon"))));
 
     // --- Spawn eggs ---
     // Two per unit: one stamps the spawned mob as the player's own (PROTOSS, matching
@@ -259,7 +257,6 @@ public class AsteriskCraft {
                 output.accept(NEXUS_CORE_ITEM.get());
                 output.accept(GATEWAY_CORE_ITEM.get());
                 output.accept(GATEWAY_KIT.get());
-                output.accept(PHOTON_CANNON_CORE_ITEM.get());
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(CURSOR.get());
@@ -290,7 +287,6 @@ public class AsteriskCraft {
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ZergRegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
-        BuildingAggroAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);
@@ -320,5 +316,6 @@ public class AsteriskCraft {
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
+        event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
     }
 }
