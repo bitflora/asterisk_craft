@@ -170,7 +170,7 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<PhotonCannonEntity>> PHOTON_CANNON =
             ENTITY_TYPES.register("photon_cannon", () -> EntityType.Builder.of(PhotonCannonEntity::new, MobCategory.MISC)
-                    .sized(2.6f, 1.9f) // 3x3-block disc base + hovering globe
+                    .sized(2.6f, 2.5f) // 3x3-block star base + lens drum + domed head
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("photon_cannon"))));
 

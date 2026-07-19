@@ -9,9 +9,12 @@ import net.minecraft.resources.Identifier;
 
 public class PhotonCannonRenderer extends MobRenderer<PhotonCannonEntity, LivingEntityRenderState, PhotonCannonModel> {
     private static final Identifier TEXTURE = AsteriskCraft.id("textures/entity/photon_cannon.png");
+    private static final Identifier GLOW = AsteriskCraft.id("textures/entity/photon_cannon_glow.png");
 
     public PhotonCannonRenderer(EntityRendererProvider.Context context) {
         super(context, new PhotonCannonModel(context.bakeLayer(AsteriskCraftClient.PHOTON_CANNON_LAYER)), 1.2f);
+        // Emissive pass: the lens, eyes, and accent panels glow at full brightness (see UnitGlowLayer).
+        this.addLayer(new UnitGlowLayer<>(this, GLOW));
     }
 
     @Override
