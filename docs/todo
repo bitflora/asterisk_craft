@@ -1,9 +1,8 @@
 
 - Build revamp. Make them bigger and better
-- Zerg hives should have some mycelium around them, to imitate creep
+- Nexus should be created only on world creation, not every login.
 - recipes for buildings
 - require pylons
-- generally fix unit sizes and hitboxes
 - get proper graphics
 - add air units
 - AI improvements
