@@ -13,6 +13,8 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -39,11 +41,12 @@ public final class GameBootstrap {
     private static final int STARTING_LOGS = 100;
     private static final int STARTING_COBBLESTONE = 100;
 
-    // The Zerg base sits ~110 blocks east of the Nexus — a real march, but inside typical
-    // simulation distance so wave units and Drones never freeze in unloaded chunks (V3 keeps
-    // chunk tickets out of scope; see docs/shaping.md).
-    private static final int ZERG_BASE_DISTANCE = 110;
-    private static final int[][] HIVE_OFFSETS = {{0, 0}, {12, -7}, {12, 7}};
+    // Each AI Hive is planted in its own random direction around the Nexus, at a random distance
+    // in this range. The max stays inside typical simulation distance so wave units and Drones
+    // never freeze in unloaded chunks (V3 keeps chunk tickets out of scope; see docs/shaping.md).
+    private static final int HIVE_COUNT = 3;
+    private static final int HIVE_MIN_DISTANCE = 95;
+    private static final int HIVE_MAX_DISTANCE = 120;
     // Total seeded into the shared Zerg army bank once, matching the old 128/128/48-per-Hive x3
     // total (each Hive used to hold its own independent stock before they shared one pool).
     private static final int STARTING_ZERG_LOGS = 128 * 3;
@@ -92,19 +95,24 @@ public final class GameBootstrap {
         player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
-        player.sendSystemMessage(Component.translatable("message.asteriskcraft.zerg_location", "east"));
+        player.sendSystemMessage(Component.translatable("message.asteriskcraft.zerg_location"));
 
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed Nexus core at {}", core);
     }
 
-    /** Stamps the AI Zerg's three Hives (plus a small resource garden and starter Drones) east of the Nexus. */
+    /**
+     * Stamps the AI Zerg's Hives (plus a small resource garden and starter Drones), each in its
+     * own random direction and distance from the Nexus, so the enemy presence surrounds the
+     * player instead of sitting in one predictable cluster.
+     */
     private static void placeZergBase(ServerLevel level, int nexusX, int nexusZ) {
-        int baseX = nexusX + ZERG_BASE_DISTANCE;
-        int baseZ = nexusZ;
+        RandomSource random = level.getRandom();
         List<BlockPos> cores = new ArrayList<>();
-        for (int[] offset : HIVE_OFFSETS) {
-            int hx = baseX + offset[0];
-            int hz = baseZ + offset[1];
+        for (int i = 0; i < HIVE_COUNT; i++) {
+            float angle = random.nextFloat() * Mth.TWO_PI;
+            int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
+            int hx = nexusX + Math.round(Mth.cos(angle) * distance);
+            int hz = nexusZ + Math.round(Mth.sin(angle) * distance);
             BlockPos core = placeHive(level, hx, hz);
             if (core != null) {
                 cores.add(core);
@@ -113,7 +121,8 @@ public final class GameBootstrap {
         }
         level.setData(GameAttachments.HIVE_POSITIONS, List.copyOf(cores));
         seedZergArmyBank(level);
-        AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} Zerg Hives near {},{}", cores.size(), baseX, baseZ);
+        AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} Zerg Hives scattered around {},{}",
+                cores.size(), nexusX, nexusZ);
     }
 
     private static BlockPos placeHive(ServerLevel level, int x, int z) {

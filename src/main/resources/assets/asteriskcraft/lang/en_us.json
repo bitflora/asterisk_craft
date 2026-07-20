@@ -30,7 +30,7 @@
   "entity.asteriskcraft.hydralisk": "Hydralisk",
   "entity.asteriskcraft.photon_cannon": "Photon Cannon",
   "message.asteriskcraft.nexus_location": "Your Nexus stands at %s, %s, %s. Protect it!",
-  "message.asteriskcraft.zerg_location": "A Zerg swarm nests to the %s. Destroy all 3 Hives to win.",
+  "message.asteriskcraft.zerg_location": "The Zerg swarm has scattered across the land. Destroy all 3 Hives to win.",
   "message.asteriskcraft.under_attack": "Your Nexus is under attack!",
   "message.asteriskcraft.hive_razed": "Hive destroyed! %s Zerg Hive(s) remaining.",
   "message.asteriskcraft.victory": "Victory! Every Zerg Hive has been razed.",
