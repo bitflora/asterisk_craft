@@ -1,7 +1,8 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.building.PhotonCannonTargeting;
-import net.bitflora.asteriskcraft.entity.ai.CannonFireGoal;
+import net.bitflora.asteriskcraft.entity.Shielded;
+import net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +24,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * The Photon Cannon: a stationary Protoss defensive structure, now a proper entity rather than a
  * block entity. As a {@link LivingEntity} it reuses the whole unit-combat stack instead of
  * re-implementing it: HP is {@link Attributes#MAX_HEALTH}, shields come for free from being a
- * {@link Protoss} (see {@code ShieldEventHandler}), and — crucially — retaliation is automatic,
+ * {@link Shielded} (see {@code ShieldEventHandler}), and — crucially — retaliation is automatic,
  * since attacking units acquire and hit it back through the same {@code RetaliateGoal}/
  * {@code FactionTargetGoal} path they use against any living enemy (no special-case building-aggro
  * bookkeeping needed).
@@ -33,7 +34,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * instant energy bolt at the nearest enemy-faction unit — or any vanilla monster — in range via
  * {@link CannonFireGoal}. Hostility is resolved purely through the faction attachment.
  */
-public class PhotonCannonEntity extends Mob implements Protoss {
+public class PhotonCannonEntity extends Mob implements Shielded {
     public static final double RANGE = 7.0;          // StarCraft Photon Cannon range
     public static final float ATTACK_DAMAGE = 10.0f;
     public static final int ATTACK_COOLDOWN = 20;    // one shot per second

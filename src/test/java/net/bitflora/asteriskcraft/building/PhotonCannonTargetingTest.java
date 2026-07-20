@@ -29,11 +29,21 @@ class PhotonCannonTargetingTest {
     }
 
     @Test
-    void alwaysTargetsLivingMonstersRegardlessOfFaction() {
+    void targetsLivingNeutralMonsters() {
         assertTrue(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, true, true),
                 "vanilla hostile monsters must be fired on even though they default to NEUTRAL");
         assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.NEUTRAL, false, true),
                 "a dead monster is not a valid target");
+    }
+
+    @Test
+    void neverTargetsFactionTaggedMonstersOfAnAlliedOrOwnFaction() {
+        // Zealot/Zergling/Dragoon/Hydralisk are all Java Monster subclasses, but they carry a real
+        // Faction attachment and must never be caught by the "vanilla wild monster" fallback.
+        assertFalse(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.PROTOSS, true, true),
+                "an allied combat unit must never be fired on just because it's a Monster subclass");
+        assertTrue(PhotonCannonTargeting.isTargetable(Faction.PROTOSS, Faction.ZERG, true, true),
+                "an enemy-faction combat unit is still targetable through the enemy-faction path");
     }
 
     @Test

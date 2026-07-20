@@ -1,6 +1,20 @@
 package net.bitflora.asteriskcraft.client;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.client.protoss.DragoonModel;
+import net.bitflora.asteriskcraft.client.protoss.DragoonRenderer;
+import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
+import net.bitflora.asteriskcraft.client.protoss.PhotonCannonRenderer;
+import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
+import net.bitflora.asteriskcraft.client.protoss.ProbeRenderer;
+import net.bitflora.asteriskcraft.client.protoss.ZealotModel;
+import net.bitflora.asteriskcraft.client.protoss.ZealotRenderer;
+import net.bitflora.asteriskcraft.client.zerg.DroneModel;
+import net.bitflora.asteriskcraft.client.zerg.DroneRenderer;
+import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
+import net.bitflora.asteriskcraft.client.zerg.HydraliskRenderer;
+import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
+import net.bitflora.asteriskcraft.client.zerg.ZerglingRenderer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.neoforged.api.distmarker.Dist;

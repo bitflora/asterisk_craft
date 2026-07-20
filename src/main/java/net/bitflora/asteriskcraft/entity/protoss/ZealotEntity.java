@@ -1,6 +1,7 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
@@ -12,18 +13,19 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.ZombieAttackGoal;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * The Protoss melee unit: a repurposed Zombie with vanilla player-aggression goals
+ * The Protoss melee unit: a plain hostile mob (not a repurposed Zombie — see
+ * docs/neoforge-api-notes.md for why) with vanilla player-aggression goals
  * replaced by pure faction targeting (see {@link FactionTargetGoal}). Sun-immune
  * because it's a distinct EntityType never added to {@code #minecraft:burn_in_daylight}.
  */
-public class ZealotEntity extends Zombie implements Protoss {
+public class ZealotEntity extends Monster implements Shielded {
     public static final int SHIELD = 30;
 
     public ZealotEntity(EntityType<? extends ZealotEntity> type, Level level) {
@@ -32,7 +34,7 @@ public class ZealotEntity extends Zombie implements Protoss {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Zombie.createAttributes()
+        return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 50.0)
                 .add(Attributes.ARMOR, 0.5)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
@@ -43,7 +45,7 @@ public class ZealotEntity extends Zombie implements Protoss {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new ZombieAttackGoal(this, 1.0, false));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
         this.goalSelector.addGoal(3, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));

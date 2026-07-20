@@ -1,4 +1,4 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import org.junit.jupiter.api.Test;

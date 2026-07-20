@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.building;
 
-import net.bitflora.asteriskcraft.entity.PhotonCannonEntity;
+import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

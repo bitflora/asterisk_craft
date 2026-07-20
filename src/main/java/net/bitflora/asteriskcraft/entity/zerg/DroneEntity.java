@@ -1,6 +1,7 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;

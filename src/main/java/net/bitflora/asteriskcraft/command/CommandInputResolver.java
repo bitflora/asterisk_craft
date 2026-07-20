@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.command;
 
-import net.bitflora.asteriskcraft.entity.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;

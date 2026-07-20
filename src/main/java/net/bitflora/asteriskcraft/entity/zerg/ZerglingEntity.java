@@ -1,6 +1,7 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
@@ -12,19 +13,20 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.ZombieAttackGoal;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * The Zerg melee unit — the mirror of {@link ZealotEntity}: a repurposed Zombie with vanilla
- * player-aggression stripped, faction targeting installed, plus a {@link SiegeBlockGoal} so it can
- * batter down the Nexus. Faster and squishier than a Zealot to read as a swarm unit. Sun-immune
- * because its EntityType is never added to {@code #minecraft:burn_in_daylight}.
+ * The Zerg melee unit — the mirror of {@link ZealotEntity}: a plain hostile mob (not a repurposed
+ * Zombie — see docs/neoforge-api-notes.md) with vanilla player-aggression stripped, faction targeting
+ * installed, plus a {@link SiegeBlockGoal} so it can batter down the Nexus. Faster and squishier than
+ * a Zealot to read as a swarm unit. Sun-immune because its EntityType is never added to
+ * {@code #minecraft:burn_in_daylight}.
  */
-public class ZerglingEntity extends Zombie {
+public class ZerglingEntity extends Monster {
 
     public ZerglingEntity(EntityType<? extends ZerglingEntity> type, Level level) {
         super(type, level);
@@ -32,7 +34,7 @@ public class ZerglingEntity extends Zombie {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Zombie.createAttributes()
+        return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 17.5)
                 .add(Attributes.ARMOR, 0.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.30)
@@ -43,7 +45,7 @@ public class ZerglingEntity extends Zombie {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new ZombieAttackGoal(this, 1.0, false));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
         this.goalSelector.addGoal(3, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));

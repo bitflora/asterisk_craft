@@ -2,7 +2,7 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.director.ZergSpawns;
-import net.bitflora.asteriskcraft.entity.DroneEntity;
+import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.game.GameOutcome;

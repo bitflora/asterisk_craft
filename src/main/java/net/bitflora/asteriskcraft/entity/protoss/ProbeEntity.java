@@ -1,9 +1,10 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
+import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
@@ -47,7 +48,7 @@ import org.jetbrains.annotations.Nullable;
  * resource type it last mined, mines it non-destructively (the block is swapped for a
  * regenerating depleted node), then delivers the yield straight into the Nexus.
  */
-public class ProbeEntity extends PathfinderMob implements Protoss {
+public class ProbeEntity extends PathfinderMob implements Shielded {
     public static final TagKey<Block> HARVESTABLE = BlockTags.create(AsteriskCraft.id("harvestable"));
     public static final int YIELD_PER_TRIP = 3;
     public static final int MINE_TICKS = 60;

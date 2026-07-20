@@ -1,5 +1,5 @@
 package net.bitflora.asteriskcraft.entity;
 
-public interface Protoss {
+public interface Shielded {
     int getShield();
 }

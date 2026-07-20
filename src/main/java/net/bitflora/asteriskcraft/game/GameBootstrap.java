@@ -6,7 +6,7 @@ import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.director.ZergSpawns;
-import net.bitflora.asteriskcraft.entity.DroneEntity;
+import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;

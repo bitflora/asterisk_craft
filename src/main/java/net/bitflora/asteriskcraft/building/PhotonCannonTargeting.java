@@ -19,10 +19,13 @@ public final class PhotonCannonTargeting {
     /**
      * A candidate is fair game if it's alive and either belongs to an enemy faction of the
      * cannon, or is a vanilla hostile monster (zombies, creepers, etc.) — those default to
-     * {@link Faction#NEUTRAL} but the cannon should still defend the base against them.
+     * {@link Faction#NEUTRAL} but the cannon should still defend the base against them. The
+     * monster fallback is gated on the target actually being {@code NEUTRAL} (not just a Java
+     * {@code Monster} subclass), since faction-tagged combat units (Zealot, Zergling, Dragoon,
+     * Hydralisk) are themselves {@code Monster} subclasses and must never be caught by it.
      */
     public static boolean isTargetable(Faction cannon, Faction target, boolean alive, boolean isMonster) {
-        return alive && (cannon.isEnemy(target) || isMonster);
+        return alive && (cannon.isEnemy(target) || (target == Faction.NEUTRAL && isMonster));
     }
 
     /** Returns the candidate with the smallest distance (empty if the list is empty). */

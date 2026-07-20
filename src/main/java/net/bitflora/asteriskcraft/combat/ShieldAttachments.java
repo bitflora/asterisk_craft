@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
-import net.bitflora.asteriskcraft.entity.Protoss;
+import net.bitflora.asteriskcraft.entity.Shielded;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -55,8 +55,8 @@ public final class ShieldAttachments {
         if (!(holder instanceof Entity entity) || FactionAttachments.get(entity) != Faction.PROTOSS) {
             return 0.0f;
         }
-        if (entity instanceof Protoss protoss) {
-            return protoss.getShield();
+        if (entity instanceof Shielded shielded) {
+            return shielded.getShield();
         }
         return 0.0f;
     }

@@ -1,7 +1,10 @@
-package net.bitflora.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client.protoss;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import net.bitflora.asteriskcraft.client.zerg.DroneModel;
+import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
+import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import org.junit.jupiter.api.Test;

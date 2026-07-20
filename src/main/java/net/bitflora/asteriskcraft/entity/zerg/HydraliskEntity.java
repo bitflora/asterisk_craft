@@ -1,6 +1,7 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
@@ -19,19 +20,17 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * The Zerg ranged unit — the mirror of {@link DragoonEntity}: a repurposed Skeleton with faction
- * targeting and a {@link SiegeBlockGoal}. Its ranged attack is a custom hitscan (see
- * {@link HitscanAttacks}) fired on a fixed {@link #ATTACK_COOLDOWN} cadence via the plain
- * {@link RangedAttackGoal}, instead of vanilla {@code AbstractSkeleton} bow/arrow behavior —
- * {@link #reassessWeaponGoal()} is overridden to a no-op so that vanilla machinery never
- * installs a competing bow/melee goal.
+ * The Zerg ranged unit — the mirror of {@link DragoonEntity}: a plain hostile mob (not a
+ * repurposed Skeleton — see docs/neoforge-api-notes.md) with faction targeting and a
+ * {@link SiegeBlockGoal}. Its ranged attack is a custom hitscan (see {@link HitscanAttacks}) fired
+ * on a fixed {@link #ATTACK_COOLDOWN} cadence via the plain {@link RangedAttackGoal}.
  */
-public class HydraliskEntity extends Skeleton {
+public class HydraliskEntity extends Monster implements RangedAttackMob {
     public static final int ATTACK_COOLDOWN = 20;
     public static final float ATTACK_RADIUS = 15.0f;
 
@@ -59,11 +58,6 @@ public class HydraliskEntity extends Skeleton {
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
-    }
-
-    @Override
-    public void reassessWeaponGoal() {
-        // No-op: skip AbstractSkeleton's bow/melee goal swap, this unit's ranged attack goal is fixed.
     }
 
     @Override

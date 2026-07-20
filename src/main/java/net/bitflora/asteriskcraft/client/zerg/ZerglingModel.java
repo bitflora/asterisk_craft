@@ -1,4 +1,4 @@
-package net.bitflora.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client.zerg;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;

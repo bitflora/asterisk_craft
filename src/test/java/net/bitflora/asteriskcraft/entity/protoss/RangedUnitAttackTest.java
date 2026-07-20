@@ -1,5 +1,6 @@
-package net.bitflora.asteriskcraft.entity;
+package net.bitflora.asteriskcraft.entity.protoss;
 
+import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

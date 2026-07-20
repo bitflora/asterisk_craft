@@ -1,8 +1,11 @@
-package net.bitflora.asteriskcraft.client;
+package net.bitflora.asteriskcraft.client.zerg;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.entity.HydraliskEntity;
+import net.bitflora.asteriskcraft.client.AsteriskCraftClient;
+import net.bitflora.asteriskcraft.client.UnitGlowLayer;
+import net.bitflora.asteriskcraft.client.UnitOverlayLayer;
+import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
