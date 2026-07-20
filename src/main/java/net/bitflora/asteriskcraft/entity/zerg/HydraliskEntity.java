@@ -32,7 +32,7 @@ import net.minecraft.world.level.Level;
  */
 public class HydraliskEntity extends Monster implements RangedAttackMob {
     public static final int ATTACK_COOLDOWN = 20;
-    public static final float ATTACK_RADIUS = 15.0f;
+    public static final float ATTACK_RADIUS = 4.0f;
 
     public HydraliskEntity(EntityType<? extends HydraliskEntity> type, Level level) {
         super(type, level);
@@ -62,7 +62,7 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE), ParticleTypes.END_ROD, SoundEvents.SKELETON_SHOOT);
+        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE), ParticleTypes.ITEM_SLIME, SoundEvents.SKELETON_SHOOT);
     }
 
     @Override
