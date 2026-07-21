@@ -5,9 +5,12 @@ import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.SpawnSpots;
 import net.bitflora.asteriskcraft.director.ZergSpawns;
+import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -15,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -40,6 +44,7 @@ public final class GameBootstrap {
     private static final int NEXUS_OFFSET = 6;
     private static final int STARTING_LOGS = 100;
     private static final int STARTING_COBBLESTONE = 100;
+    private static final int INITIAL_PROBES = 4;
 
     // Each AI Hive is planted in its own random direction around the Nexus, at a random distance
     // in this range. The max stays inside typical simulation distance so wave units and Drones
@@ -91,6 +96,7 @@ public final class GameBootstrap {
         if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
             seedNexus(nexus);
         }
+        spawnStartingProbes(level, core);
 
         placeZergBase(level, x, z);
 
@@ -216,6 +222,25 @@ public final class GameBootstrap {
             int z = cz + offsets[i][1];
             int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
             level.setBlock(new BlockPos(x, y, z), nodes[i], Block.UPDATE_ALL);
+        }
+    }
+
+    /**
+     * Warps in the player's starting Probes next to the freshly placed Nexus, so a new world
+     * begins with a small worker line already gathering instead of an idle base. Mirrors
+     * {@code NexusBlockEntity.spawnProbe}: each Probe is tagged Protoss and homed on the core.
+     */
+    private static void spawnStartingProbes(ServerLevel level, BlockPos core) {
+        for (int i = 0; i < INITIAL_PROBES; i++) {
+            ProbeEntity probe = AsteriskCraft.PROBE.get().create(level, EntitySpawnReason.TRIGGERED);
+            if (probe == null) {
+                continue;
+            }
+            BlockPos spot = SpawnSpots.findGroundSpot(level, core);
+            probe.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
+            probe.setHomePos(core);
+            FactionAttachments.set(probe, Faction.PROTOSS);
+            level.addFreshEntity(probe);
         }
     }
 
