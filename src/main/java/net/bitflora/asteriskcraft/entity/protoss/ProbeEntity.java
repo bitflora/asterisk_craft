@@ -32,6 +32,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
@@ -40,7 +41,12 @@ import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -194,11 +200,22 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
      * for a depleted node, and loads the yield onto the probe.
      */
     static class HarvestGoal extends Goal {
+        private static final double MINE_RANGE_SQR = 6.25;   // must be within 2.5 blocks to mine
+        private static final int REACH_ACCURACY = 2;         // a valid path must end within 2 blocks of the node
+        private static final int NO_PROGRESS_LIMIT = 60;     // ~3s of not getting closer → abandon this node
+        private static final int UNREACHABLE_COOLDOWN = 200; // ~10s a rejected node is skipped by the search
+        private static final int MAX_PATH_CHECKS = 8;        // cap A* validations per search so it stays cheap
+
         private final ProbeEntity probe;
+        /** Nodes we recently failed to reach, mapped to the game time their cooldown expires. */
+        private final Map<BlockPos, Long> unreachable = new HashMap<>();
         @Nullable
         private BlockPos target;
+        private boolean commandedTarget;
         private int mineTicks;
         private int searchCooldown;
+        private double lastDistSqr;
+        private int noProgressTicks;
 
         HarvestGoal(ProbeEntity probe) {
             this.probe = probe;
@@ -215,7 +232,8 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             if (order.kind() == CommandOrder.Kind.MINE && order.pos().isPresent()) {
                 BlockPos commanded = order.pos().get();
                 if (this.probe.level().getBlockState(commanded).is(HARVESTABLE)) {
-                    this.target = commanded;
+                    this.target = commanded.immutable();
+                    this.commandedTarget = true;
                     return true;
                 }
                 CommandAttachments.clearOrder(this.probe); // commanded block no longer harvestable
@@ -228,6 +246,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             }
             this.searchCooldown = 40;
             this.target = findNearestHarvestable();
+            this.commandedTarget = false;
             return this.target != null;
         }
 
@@ -241,6 +260,8 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         @Override
         public void start() {
             this.mineTicks = 0;
+            this.lastDistSqr = Double.MAX_VALUE;
+            this.noProgressTicks = 0;
         }
 
         @Override
@@ -261,8 +282,21 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             }
             BlockPos pos = this.target;
             this.probe.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            if (pos.distToCenterSqr(this.probe.position()) > 6.25) {
-                this.probe.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.0);
+            double dist = pos.distToCenterSqr(this.probe.position());
+            if (dist > MINE_RANGE_SQR) {
+                // Still travelling. Abandon this node if we stop making headway toward it, so a probe
+                // that can't actually reach its pick (blocked path, unstable footing) frees itself to
+                // choose another instead of grinding against the same block forever.
+                if (dist < this.lastDistSqr - 0.25) {
+                    this.lastDistSqr = dist;
+                    this.noProgressTicks = 0;
+                } else if (++this.noProgressTicks > NO_PROGRESS_LIMIT) {
+                    abandonTarget(pos);
+                    return;
+                }
+                if (this.probe.getNavigation().isDone()) {
+                    this.probe.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.0);
+                }
                 this.mineTicks = 0;
                 return;
             }
@@ -304,19 +338,36 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         }
 
         /**
-         * Prefers the nearest reachable node matching the last-mined resource type (so a probe
-         * keeps working the same vein); falls back to the nearest reachable node of any type if
-         * none of that type is in range.
+         * Gives up on the current node: stops navigating and, for an autonomous pick, blacklists
+         * the block for a short cooldown so the next search skips it and chooses a different one.
+         * A commanded mine is dropped back to autonomous behaviour instead.
+         */
+        private void abandonTarget(BlockPos pos) {
+            this.probe.getNavigation().stop();
+            if (this.commandedTarget) {
+                CommandAttachments.clearOrder(this.probe);
+            } else {
+                this.unreachable.put(pos.immutable(), this.probe.level().getGameTime() + UNREACHABLE_COOLDOWN);
+            }
+            this.target = null;
+            this.searchCooldown = 0; // re-search immediately so a fresh node is picked next tick
+        }
+
+        /**
+         * Picks a node the probe can actually walk to. Candidates are ranked (same-type-as-last
+         * first so a probe keeps working one vein, then nearest), and the top few are verified with
+         * a real pathfind — the first that yields a reachable path wins. Recently-abandoned nodes
+         * are skipped until their cooldown lapses. Returns {@code null} if nothing reachable is in range.
          */
         @Nullable
         private BlockPos findNearestHarvestable() {
             Level level = this.probe.level();
             BlockPos home = this.probe.homePos;
             ResourceType preferred = this.probe.lastResourceType;
-            BlockPos bestSameType = null;
-            double bestSameTypeDist = Double.MAX_VALUE;
-            BlockPos bestAny = null;
-            double bestAnyDist = Double.MAX_VALUE;
+            long now = level.getGameTime();
+            this.unreachable.entrySet().removeIf(e -> e.getValue() <= now);
+
+            List<Candidate> candidates = new ArrayList<>();
             for (BlockPos pos : BlockPos.betweenClosed(
                     home.offset(-SEARCH_RADIUS, -SEARCH_VERTICAL, -SEARCH_RADIUS),
                     home.offset(SEARCH_RADIUS, SEARCH_VERTICAL, SEARCH_RADIUS))) {
@@ -324,21 +375,40 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
                 if (!state.is(HARVESTABLE)) {
                     continue;
                 }
-                // Only blocks a probe can stand next to: some horizontal neighbor is passable.
+                // Cheap pre-filter: some passable neighbor to stand at. A real pathfind (below)
+                // then confirms the probe can actually get there.
                 if (!isReachable(level, pos)) {
                     continue;
                 }
+                BlockPos immutable = pos.immutable();
+                if (this.unreachable.containsKey(immutable)) {
+                    continue;
+                }
                 double dist = pos.distSqr(this.probe.blockPosition());
-                if (dist < bestAnyDist) {
-                    bestAnyDist = dist;
-                    bestAny = pos.immutable();
-                }
-                if (preferred != null && ResourceType.of(state) == preferred && dist < bestSameTypeDist) {
-                    bestSameTypeDist = dist;
-                    bestSameType = pos.immutable();
-                }
+                boolean sameType = preferred != null && ResourceType.of(state) == preferred;
+                candidates.add(new Candidate(immutable, dist, sameType));
             }
-            return bestSameType != null ? bestSameType : bestAny;
+            candidates.sort(Comparator.comparing((Candidate c) -> c.sameType).reversed()
+                    .thenComparingDouble(c -> c.distSqr));
+
+            int checks = 0;
+            for (Candidate candidate : candidates) {
+                if (checks++ >= MAX_PATH_CHECKS) {
+                    break;
+                }
+                if (canPathTo(candidate.pos)) {
+                    return candidate.pos;
+                }
+                // No path this search: blacklist so subsequent searches don't keep re-checking it.
+                this.unreachable.put(candidate.pos, now + UNREACHABLE_COOLDOWN);
+            }
+            return null;
+        }
+
+        /** Whether a real pathfind reaches within mining range of {@code pos}. */
+        private boolean canPathTo(BlockPos pos) {
+            Path path = this.probe.getNavigation().createPath(pos, REACH_ACCURACY);
+            return path != null && path.canReach();
         }
 
         private static boolean isReachable(Level level, BlockPos pos) {
@@ -348,6 +418,10 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
                 }
             }
             return false;
+        }
+
+        /** A ranked harvest candidate: same-type nodes sort ahead of others, then nearest first. */
+        private record Candidate(BlockPos pos, double distSqr, boolean sameType) {
         }
     }
 
