@@ -82,7 +82,7 @@ The whole economy runs on three vanilla resources Probes/Drones can harvest non-
 |---------|------|-----------------|
 | Probe | 50 wood **or** 50 cobblestone | Drone (same) |
 | Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling (same) |
-| Dragoon (Skeleton, ranged) | 10 iron ingots | Hydralisk (same) |
+| Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk (same) |
 | Gateway kit | 200 wood + 200 cobblestone | Spawning Pool (baked into Hive for MVP) |
 | Photon Cannon kit | 100 wood + 100 cobblestone + 20 iron | Sunken Colony (post-MVP) |
 | Nexus / Hive | Not craftable in MVP (pre-placed) | — |
@@ -91,7 +91,7 @@ The whole economy runs on three vanilla resources Probes/Drones can harvest non-
 
 **V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus, seeded with starting resources, on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore (preferring to keep mining the same resource type) and delivers a flat 3 per trip straight into the Nexus; Probe costs 50 wood or 50 cobble from the Nexus's own inventory. Unit tests cover faction rules, the Nexus multiblock layout, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and deposit into the Nexus.*
 
-**V2a — Gateway + Zealots/Dragoons. `[DONE]`** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, iron); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad.*
+**V2a — Gateway + Zealots/Dragoons. `[DONE]`** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, 100 wood + 50 cobble); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad.*
 
 **V2b — Command Crystal: select + orders (R5).** The A8 command scheme — held Command Crystal enables command mode; left-click select (plain / Shift-toggle / Ctrl-type-in-radius / Ctrl+Shift-toggle-type), right-click order (enemy=attack, block=move, air=move-toward-look). Client input capture → `CommandInputPacket` → per-player selection attachment + `CommandOrder` attachment read by commanded goals on units; selection glow; chunk-load ordered units. Detailed plan: [R5-command-plan.md](R5-command-plan.md). *Demo: hold the Crystal, click-select a mixed squad, right-click a Hive to send them attacking; Ctrl-click one Zealot to grab the whole group.*
 

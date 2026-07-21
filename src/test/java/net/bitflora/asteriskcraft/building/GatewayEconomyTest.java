@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Guards the Gateway's design constants: a Zealot costs 50 wood AND 50 cobblestone
- * (paid atomically), a Dragoon costs 10 iron ingots, and production/warp-in take time.
+ * (paid atomically), a Dragoon costs 100 wood AND 50 cobblestone, and production/warp-in take time.
  */
 class GatewayEconomyTest {
 

@@ -67,7 +67,8 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
 
     public static final int ZEALOT_WOOD_COST = 50;
     public static final int ZEALOT_COBBLE_COST = 50;
-    public static final int DRAGOON_IRON_COST = 10;
+    public static final int DRAGOON_WOOD_COST = 100;
+    public static final int DRAGOON_COBBLE_COST = 50;
     public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
     public static final int WARP_TICKS = 200; // 10 seconds to warp in
@@ -215,7 +216,9 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
             case ZEALOT -> ResourceBank.extractAll(this, List.of(
                     new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), ZEALOT_WOOD_COST),
                     new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), ZEALOT_COBBLE_COST)));
-            case DRAGOON -> ResourceBank.extract(this, stack -> stack.is(Items.IRON_INGOT), DRAGOON_IRON_COST);
+            case DRAGOON -> ResourceBank.extractAll(this, List.of(
+                    new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), DRAGOON_WOOD_COST),
+                    new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), DRAGOON_COBBLE_COST)));
         };
     }
 
