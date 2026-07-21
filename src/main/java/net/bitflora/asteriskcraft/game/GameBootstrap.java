@@ -47,6 +47,11 @@ public final class GameBootstrap {
     private static final int HIVE_COUNT = 3;
     private static final int HIVE_MIN_DISTANCE = 95;
     private static final int HIVE_MAX_DISTANCE = 120;
+    // WORLD_SURFACE reports the topmost solid block in a column, which can be far underground
+    // if that column happens to be a cave/ravine breach — retry with a fresh angle/distance
+    // rather than bury a Hive at the bottom of a sinkhole.
+    private static final int HIVE_PLACEMENT_ATTEMPTS = 8;
+    private static final int SURFACE_CLEARANCE = 12;
     // Total seeded into the shared Zerg army bank once, matching the old 128/128/48-per-Hive x3
     // total (each Hive used to hold its own independent stock before they shared one pool).
     private static final int STARTING_ZERG_LOGS = 128 * 3;
@@ -109,11 +114,23 @@ public final class GameBootstrap {
         RandomSource random = level.getRandom();
         List<BlockPos> cores = new ArrayList<>();
         for (int i = 0; i < HIVE_COUNT; i++) {
-            float angle = random.nextFloat() * Mth.TWO_PI;
-            int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
-            int hx = nexusX + Math.round(Mth.cos(angle) * distance);
-            int hz = nexusZ + Math.round(Mth.sin(angle) * distance);
-            BlockPos core = placeHive(level, hx, hz);
+            int hx = nexusX;
+            int hz = nexusZ;
+            int hy = level.getHeight(Heightmap.Types.WORLD_SURFACE, nexusX, nexusZ) - 1;
+            for (int attempt = 0; attempt < HIVE_PLACEMENT_ATTEMPTS; attempt++) {
+                float angle = random.nextFloat() * Mth.TWO_PI;
+                int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
+                int x = nexusX + Math.round(Mth.cos(angle) * distance);
+                int z = nexusZ + Math.round(Mth.sin(angle) * distance);
+                int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+                hx = x;
+                hz = z;
+                hy = y;
+                if (hasOpenSky(level, x, y, z)) {
+                    break;
+                }
+            }
+            BlockPos core = placeHive(level, hx, hy, hz);
             if (core != null) {
                 cores.add(core);
             }
@@ -125,8 +142,22 @@ public final class GameBootstrap {
                 cores.size(), nexusX, nexusZ);
     }
 
-    private static BlockPos placeHive(ServerLevel level, int x, int z) {
-        int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+    /**
+     * True if the column above (x, y, z) is open to the sky, distinguishing real outdoor ground
+     * from the floor of a cave or ravine that happens to breach the surface (which WORLD_SURFACE
+     * would otherwise report as valid, burying the structure underground).
+     */
+    private static boolean hasOpenSky(ServerLevel level, int x, int y, int z) {
+        for (int dy = 2; dy <= SURFACE_CLEARANCE; dy++) {
+            BlockPos check = new BlockPos(x, y + dy, z);
+            if (level.getBlockState(check).isSolidRender()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static BlockPos placeHive(ServerLevel level, int x, int y, int z) {
         BlockPos origin = new BlockPos(x, y, z);
         BuildingLayouts.place(level, origin, BuildingLayouts.hive());
         BlockPos core = origin.offset(BuildingLayouts.HIVE_CORE_OFFSET.getX(),
