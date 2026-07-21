@@ -32,7 +32,11 @@ import net.minecraft.world.level.Level;
  */
 public class HydraliskEntity extends Monster implements RangedAttackMob {
     public static final int ATTACK_COOLDOWN = 20;
-    public static final float ATTACK_RADIUS = 4.0f;
+    /**
+     * Range the {@link RangedAttackGoal} holds at: once within it the unit stops advancing and fires
+     * in place instead of closing to melee. Shorter-ranged than the {@link DragoonEntity}.
+     */
+    public static final float ATTACK_RADIUS = 6.0f;
 
     public HydraliskEntity(EntityType<? extends HydraliskEntity> type, Level level) {
         super(type, level);

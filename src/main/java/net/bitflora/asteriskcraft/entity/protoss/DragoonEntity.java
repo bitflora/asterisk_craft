@@ -30,7 +30,11 @@ import net.minecraft.world.level.Level;
 public class DragoonEntity extends Monster implements Shielded, RangedAttackMob {
     public static final int SHIELD = 40;
     public static final int ATTACK_COOLDOWN = 40;
-    public static final float ATTACK_RADIUS = 4.0f;
+    /**
+     * Range the {@link RangedAttackGoal} holds at: once within it the unit stops advancing and fires
+     * in place instead of closing to melee. The Dragoon is the longer-ranged unit.
+     */
+    public static final float ATTACK_RADIUS = 8.0f;
 
     public DragoonEntity(EntityType<? extends DragoonEntity> type, Level level) {
         super(type, level);

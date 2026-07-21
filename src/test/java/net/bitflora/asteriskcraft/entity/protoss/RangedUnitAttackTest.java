@@ -24,4 +24,14 @@ class RangedUnitAttackTest {
         assertTrue(DragoonEntity.ATTACK_RADIUS > 0, "Dragoon must have a positive attack range");
         assertTrue(HydraliskEntity.ATTACK_RADIUS > 0, "Hydralisk must have a positive attack range");
     }
+
+    @Test
+    void attackRadiusHoldsAtRealRange() {
+        // The RangedAttackGoal stops advancing once within ATTACK_RADIUS, so it must be a genuine
+        // ranged distance — not near-melee — or the units read as charging in instead of holding.
+        assertTrue(DragoonEntity.ATTACK_RADIUS >= 6, "Dragoon must hold at a proper ranged distance");
+        assertTrue(HydraliskEntity.ATTACK_RADIUS >= 5, "Hydralisk must hold at a proper ranged distance");
+        assertTrue(DragoonEntity.ATTACK_RADIUS > HydraliskEntity.ATTACK_RADIUS,
+                "Dragoon must out-range the Hydralisk");
+    }
 }
