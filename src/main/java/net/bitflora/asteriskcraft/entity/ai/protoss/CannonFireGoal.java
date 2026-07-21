@@ -72,7 +72,10 @@ public class CannonFireGoal extends Goal {
             return null;
         }
         double reachSq = PhotonCannonEntity.RANGE * PhotonCannonEntity.RANGE;
-        return this.cannon.distanceToSqr(target) <= reachSq ? target : null;
+        if (this.cannon.distanceToSqr(target) > reachSq) {
+            return null;
+        }
+        return this.cannon.getSensing().hasLineOfSight(target) ? target : null;
     }
 
     private void fireAt(LivingEntity target) {
