@@ -21,6 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -44,6 +45,8 @@ import java.util.List;
  */
 public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, FactionCore, BeaconBeamOwner {
     public static final int PROBE_COST = 50;
+    /** Wood/cobblestone (any mix) to warp out a building kit — Gateway or Photon Cannon. */
+    public static final int BUILDING_COST = 150;
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
     public static final int INPUT_SLOTS = ArmyBank.PROTOSS_SLOTS;
@@ -149,13 +152,22 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
 
     @Override
     public void trainOption(int optionIndex, Player player) {
-        if (optionIndex != 0) {
-            return;
-        }
         if (this.skyLit == Boolean.FALSE) {
             overlay(player, Component.translatable("message.asteriskcraft.nexus.dormant"));
             return;
         }
+        switch (optionIndex) {
+            case 0 -> trainProbe(player);
+            case 1 -> warpInKit(player, AsteriskCraft.GATEWAY_KIT.get(),
+                    "message.asteriskcraft.nexus.gateway_ready");
+            case 2 -> warpInKit(player, AsteriskCraft.PHOTON_CANNON_KIT.get(),
+                    "message.asteriskcraft.nexus.photon_cannon_ready");
+            default -> {
+            }
+        }
+    }
+
+    private void trainProbe(Player player) {
         if (this.queued >= MAX_QUEUE) {
             overlay(player, Component.translatable("message.asteriskcraft.nexus.queue_full"));
             return;
@@ -172,6 +184,25 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         overlay(player, Component.translatable("message.asteriskcraft.nexus.queued", this.queued));
     }
 
+    /** Warp-in kits are instant: pay the shared cost and hand the player the building kit item. */
+    private void warpInKit(Player player, Item kit, String readyKey) {
+        if (!payBuildingCost()) {
+            overlay(player, Component.translatable("message.asteriskcraft.nexus.cannot_afford_building", BUILDING_COST));
+            return;
+        }
+        giveOrDrop(player, new ItemStack(kit));
+        if (this.level != null) {
+            this.level.playSound(null, this.worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.6f, 1.0f);
+        }
+        overlay(player, Component.translatable(readyKey));
+    }
+
+    private static void giveOrDrop(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false);
+        }
+    }
+
     private static void overlay(Player player, Component message) {
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(message, true);
@@ -181,6 +212,12 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     private boolean payProbeCost() {
         return ResourceBank.extract(this, stack -> stack.is(ItemTags.LOGS), PROBE_COST)
                 || ResourceBank.extract(this, stack -> stack.is(Items.COBBLESTONE), PROBE_COST);
+    }
+
+    /** Any mix of wood and cobblestone that together totals {@link #BUILDING_COST}. */
+    private boolean payBuildingCost() {
+        return ResourceBank.extract(this,
+                stack -> stack.is(ItemTags.LOGS) || stack.is(Items.COBBLESTONE), BUILDING_COST);
     }
 
     private void spawnProbe(ServerLevel level, BlockPos pos) {

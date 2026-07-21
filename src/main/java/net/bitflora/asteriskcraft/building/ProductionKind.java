@@ -20,7 +20,15 @@ public enum ProductionKind {
             new OptionView(
                     Component.translatable("entity.asteriskcraft.probe"),
                     new ItemStack(Items.GOLDEN_PICKAXE),
-                    Component.translatable("gui.asteriskcraft.cost.probe")))),
+                    Component.translatable("gui.asteriskcraft.cost.probe")),
+            new OptionView(
+                    Component.translatable("block.asteriskcraft.gateway_core"),
+                    new ItemStack(AsteriskCraft.GATEWAY_KIT.get()),
+                    Component.translatable("gui.asteriskcraft.cost.gateway")),
+            new OptionView(
+                    Component.translatable("entity.asteriskcraft.photon_cannon"),
+                    new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()),
+                    Component.translatable("gui.asteriskcraft.cost.photon_cannon")))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Component.translatable("entity.asteriskcraft.zealot"),
