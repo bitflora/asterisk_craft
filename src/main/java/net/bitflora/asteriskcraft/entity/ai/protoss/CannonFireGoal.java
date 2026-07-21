@@ -1,13 +1,11 @@
 package net.bitflora.asteriskcraft.entity.ai.protoss;
 
+import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 import org.jetbrains.annotations.Nullable;
@@ -21,8 +19,6 @@ import org.jetbrains.annotations.Nullable;
  * building-aggro bookkeeping here.
  */
 public class CannonFireGoal extends Goal {
-    private static final int BEAM_STEPS = 8;
-
     private final PhotonCannonEntity cannon;
     private int cooldown;
 
@@ -79,16 +75,7 @@ public class CannonFireGoal extends Goal {
     }
 
     private void fireAt(LivingEntity target) {
-        if (!(this.cannon.level() instanceof ServerLevel level)) {
-            return;
-        }
-        target.hurtServer(level, level.damageSources().magic(), PhotonCannonEntity.ATTACK_DAMAGE);
-        Vec3 origin = this.cannon.getEyePosition();
-        Vec3 delta = target.getEyePosition().subtract(origin);
-        for (int i = 1; i <= BEAM_STEPS; i++) {
-            Vec3 point = origin.add(delta.scale((double) i / BEAM_STEPS));
-            level.sendParticles(ParticleTypes.END_ROD, point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
-        }
-        level.playSound(null, this.cannon.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 1.0f, 1.6f);
+        HitscanAttacks.fire(this.cannon, target, PhotonCannonEntity.ATTACK_DAMAGE,
+                ParticleTypes.END_ROD, SoundEvents.BEACON_POWER_SELECT, 1.6f);
     }
 }

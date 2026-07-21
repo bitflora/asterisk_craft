@@ -42,14 +42,7 @@ public final class ShieldEventHandler {
         if (max <= 0.0f) {
             return;
         }
-        int delay = living.getData(ShieldAttachments.REGEN_DELAY);
-        if (delay > 0) {
-            living.setData(ShieldAttachments.REGEN_DELAY, delay - 1);
-            return;
-        }
-        float shield = ShieldAttachments.get(living);
-        if (shield < max) {
-            ShieldAttachments.set(living, Math.min(max, shield + REGEN_PER_TICK));
-        }
+        DelayedRegen.tick(living, ShieldAttachments.REGEN_DELAY, REGEN_PER_TICK,
+                ShieldAttachments.get(living), max, value -> ShieldAttachments.set(living, value));
     }
 }

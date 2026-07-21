@@ -5,9 +5,8 @@ import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
-import net.bitflora.asteriskcraft.building.SpawnSpots;
+import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
-import net.bitflora.asteriskcraft.director.ZergSpawns;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
@@ -19,7 +18,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -190,7 +188,7 @@ public final class GameBootstrap {
         if (level.getBlockEntity(core) instanceof HiveBlockEntity hive) {
             hive.setFaction(Faction.ZERG);
             for (int i = 0; i < INITIAL_DRONES_PER_HIVE; i++) {
-                DroneEntity drone = ZergSpawns.spawn(level, core, AsteriskCraft.DRONE.get(), Faction.ZERG, false);
+                DroneEntity drone = UnitSpawns.spawn(level, core, AsteriskCraft.DRONE.get(), Faction.ZERG, false);
                 if (drone != null) {
                     drone.setHomePos(core);
                 }
@@ -251,15 +249,10 @@ public final class GameBootstrap {
      */
     private static void spawnStartingProbes(ServerLevel level, BlockPos core) {
         for (int i = 0; i < INITIAL_PROBES; i++) {
-            ProbeEntity probe = AsteriskCraft.PROBE.get().create(level, EntitySpawnReason.TRIGGERED);
-            if (probe == null) {
-                continue;
+            ProbeEntity probe = UnitSpawns.spawn(level, core, AsteriskCraft.PROBE.get(), Faction.PROTOSS, false);
+            if (probe != null) {
+                probe.setHomePos(core);
             }
-            BlockPos spot = SpawnSpots.findGroundSpot(level, core);
-            probe.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
-            probe.setHomePos(core);
-            FactionAttachments.set(probe, Faction.PROTOSS);
-            level.addFreshEntity(probe);
         }
     }
 

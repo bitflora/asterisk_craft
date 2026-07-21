@@ -6,8 +6,6 @@ import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.game.GameOutcome;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,8 +34,8 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
 
     private Faction faction = Faction.ZERG;
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
-    /** Whether the Hive currently has a clear path to the sky. Transient; null until the first tick evaluates it. */
-    private Boolean skyLit = null;
+    /** Tracks whether the Hive can see the sky (dormant when buried). */
+    private final SkyGate skyGate = new SkyGate();
 
     public HiveBlockEntity(BlockPos pos, BlockState state) {
         super(AsteriskCraft.HIVE_BLOCK_ENTITY.get(), pos, state);
@@ -51,23 +49,12 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     public static void serverTick(Level level, BlockPos pos, BlockState state, HiveBlockEntity hive) {
         // The Hive's only per-tick job now is tracking whether it's under open sky (dormant if buried);
         // the director reads isAwake() to decide where to train. Worker/wave production lives there.
-        hive.updateSky(level, pos);
+        hive.skyGate.update(level, pos, () -> {});
     }
 
     /** True when the Hive has a clear path to the sky and can produce; false while buried (dormant). */
     public boolean isAwake() {
         return this.level != null && this.level.canSeeSky(this.worldPosition.above());
-    }
-
-    /** Recomputes sky visibility, playing an activate/deactivate cue on any change. Returns the current lit state. */
-    private boolean updateSky(Level level, BlockPos pos) {
-        boolean lit = level.canSeeSky(pos.above());
-        if (this.skyLit != null && this.skyLit != lit) {
-            level.playSound(null, pos, lit ? SoundEvents.BEACON_ACTIVATE : SoundEvents.BEACON_DEACTIVATE,
-                    SoundSource.BLOCKS, 1.0f, 1.0f);
-        }
-        this.skyLit = lit;
-        return lit;
     }
 
     // --- BeaconBeamOwner (client-side beam locator) ---

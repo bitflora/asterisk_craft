@@ -4,7 +4,6 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.faction.Faction;
-import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameOutcome;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -15,7 +14,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -56,8 +54,8 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
     /** Game time of the next allowed "under attack" alert. Deliberately not saved: the cooldown resets on reload. */
     private long nextAlertTime = 0L;
-    /** Whether the Nexus currently has a clear path to the sky. Transient; null until the first tick evaluates it. */
-    private Boolean skyLit = null;
+    /** Tracks whether the Nexus can see the sky (dormant when buried); cancels the queue on going dark. */
+    private final SkyGate skyGate = new SkyGate();
 
     private final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -88,7 +86,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, NexusBlockEntity nexus) {
-        if (!nexus.updateSky(level, pos)) {
+        if (!nexus.skyGate.update(level, pos, nexus::cancelQueueOnDormant)) {
             return; // dormant: no clear path to the sky, production is frozen
         }
         if (nexus.queued <= 0) {
@@ -104,23 +102,13 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         nexus.spawnProbe((ServerLevel) level, pos);
     }
 
-    /**
-     * Recomputes whether the Nexus can see the sky, plays an activate/deactivate cue on any
-     * change, and cancels the production queue when it goes dormant. Returns the current lit state.
-     */
-    private boolean updateSky(Level level, BlockPos pos) {
-        boolean lit = level.canSeeSky(pos.above());
-        if (this.skyLit != null && this.skyLit != lit) {
-            level.playSound(null, pos, lit ? SoundEvents.BEACON_ACTIVATE : SoundEvents.BEACON_DEACTIVATE,
-                    SoundSource.BLOCKS, 1.0f, 1.0f);
-            if (!lit && this.queued > 0) {
-                this.queued = 0;
-                this.buildTicksRemaining = BUILD_TICKS;
-                this.setChanged();
-            }
+    /** Clears any in-progress Probe production when the Nexus goes dormant (loses its sky). */
+    private void cancelQueueOnDormant() {
+        if (this.queued > 0) {
+            this.queued = 0;
+            this.buildTicksRemaining = BUILD_TICKS;
+            this.setChanged();
         }
-        this.skyLit = lit;
-        return lit;
     }
 
     // --- BeaconBeamOwner (client-side beam locator) ---
@@ -152,7 +140,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
 
     @Override
     public void trainOption(int optionIndex, Player player) {
-        if (this.skyLit == Boolean.FALSE) {
+        if (this.skyGate.lit() == Boolean.FALSE) {
             overlay(player, Component.translatable("message.asteriskcraft.nexus.dormant"));
             return;
         }
@@ -221,16 +209,10 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     }
 
     private void spawnProbe(ServerLevel level, BlockPos pos) {
-        ProbeEntity probe = AsteriskCraft.PROBE.get().create(level, EntitySpawnReason.TRIGGERED);
-        if (probe == null) {
-            return;
+        ProbeEntity probe = UnitSpawns.spawn(level, pos, AsteriskCraft.PROBE.get(), Faction.PROTOSS, false);
+        if (probe != null) {
+            probe.setHomePos(pos);
         }
-        BlockPos spawnPos = SpawnSpots.findGroundSpot(level, pos);
-        probe.snapTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
-        probe.setHomePos(pos);
-        FactionAttachments.set(probe, Faction.PROTOSS);
-        level.addFreshEntity(probe);
-        level.playSound(null, spawnPos, SoundEvents.PLAYER_TELEPORT, SoundSource.BLOCKS, 0.8f, 1.6f);
     }
 
     // --- FactionCore ---

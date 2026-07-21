@@ -9,8 +9,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
 
 /**
- * Dyes a leather chestplate onto a combat unit so its faction is visible at a glance,
- * since Zealots/Dragoons reuse the vanilla Zombie/Skeleton renderer with no custom model.
+ * Faction team colors: the packed RGB via {@link #factionColor} still drives visible team identity
+ * (e.g. the Nexus/Hive beacon beam sections). {@link #dyeArmor} dyes a leather chestplate onto a
+ * unit, but every unit now has a bespoke {@code MobRenderer}/model (no reused vanilla
+ * Zombie/Skeleton renderer), and those custom models don't render the armor slot — so {@code dyeArmor}
+ * (and the {@code dyeArmor} flags threaded through {@code UnitSpawns}/{@code ZergUnitCatalog}) is
+ * currently a no-op, kept as the seam for the V5 "team-color visuals" feature that will wire real
+ * team color into the renderers.
  */
 public final class TeamColors {
     private static final int PROTOSS_COLOR = 0x2050C8; // blue

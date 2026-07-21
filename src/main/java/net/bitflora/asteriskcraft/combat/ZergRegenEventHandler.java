@@ -38,13 +38,9 @@ public final class ZergRegenEventHandler {
         if (FactionAttachments.get(living) != Faction.ZERG || !living.isAlive()) {
             return;
         }
-        int delay = living.getData(ZergRegenAttachments.REGEN_DELAY);
-        if (delay > 0) {
-            living.setData(ZergRegenAttachments.REGEN_DELAY, delay - 1);
-            return;
-        }
-        if (living.getHealth() < living.getMaxHealth()) {
-            living.heal(REGEN_PER_TICK);
-        }
+        // heal() rather than setHealth() so any heal listeners still fire; the helper hands us the
+        // already-clamped target, so healing the delta up to it reproduces heal(REGEN_PER_TICK).
+        DelayedRegen.tick(living, ZergRegenAttachments.REGEN_DELAY, REGEN_PER_TICK,
+                living.getHealth(), living.getMaxHealth(), target -> living.heal(target - living.getHealth()));
     }
 }

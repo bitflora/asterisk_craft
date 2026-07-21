@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.director;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.ResourceBank;
+import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.director.script.BuildScript;
@@ -105,7 +106,7 @@ public final class ZergDirector {
             if (hive == null || !payAny(hive, ZergUnitCatalog.drone())) {
                 break; // no awake Hive, or can't afford another drone right now
             }
-            DroneEntity drone = ZergSpawns.spawn(level, hive.getBlockPos(), AsteriskCraft.DRONE.get(), Faction.ZERG, false);
+            DroneEntity drone = UnitSpawns.spawn(level, hive.getBlockPos(), AsteriskCraft.DRONE.get(), Faction.ZERG, false);
             if (drone == null) {
                 break;
             }
@@ -168,7 +169,7 @@ public final class ZergDirector {
             }
             HiveBlockEntity spawnHive = awake.get(this.level.getRandom().nextInt(awake.size()));
             BlockPos hivePos = spawnHive.getBlockPos();
-            Mob unit = ZergSpawns.spawn(this.level, hivePos, def.get().type(), Faction.ZERG, def.get().dyeArmor());
+            Mob unit = UnitSpawns.spawn(this.level, hivePos, def.get().type(), Faction.ZERG, def.get().dyeArmor());
             if (unit == null) {
                 AsteriskCraft.LOGGER.warn("Zerg director paid for {} but failed to spawn it", unitName);
                 return SpawnResult.UNAFFORDABLE;

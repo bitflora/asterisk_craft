@@ -2,9 +2,7 @@ package net.bitflora.asteriskcraft.building;
 
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.faction.Faction;
-import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,7 +13,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +28,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.neoforged.neoforge.event.EventHooks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -223,20 +220,11 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     }
 
     private void spawnUnit(ServerLevel level, BlockPos pos, UnitType type) {
-        Mob unit = switch (type) {
-            case ZEALOT -> AsteriskCraft.ZEALOT.get().create(level, EntitySpawnReason.TRIGGERED);
-            case DRAGOON -> AsteriskCraft.DRAGOON.get().create(level, EntitySpawnReason.TRIGGERED);
+        EntityType<? extends Mob> entityType = switch (type) {
+            case ZEALOT -> AsteriskCraft.ZEALOT.get();
+            case DRAGOON -> AsteriskCraft.DRAGOON.get();
         };
-        if (unit == null) {
-            return;
-        }
-        BlockPos spawnPos = SpawnSpots.findGroundSpot(level, pos);
-        unit.snapTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
-        EventHooks.finalizeMobSpawn(unit, level, level.getCurrentDifficultyAt(spawnPos), EntitySpawnReason.TRIGGERED, null);
-        FactionAttachments.set(unit, this.faction);
-        //TeamColors.dyeArmor(unit, this.faction);
-        level.addFreshEntity(unit);
-        level.playSound(null, spawnPos, SoundEvents.PLAYER_TELEPORT, SoundSource.BLOCKS, 0.8f, 1.6f);
+        UnitSpawns.spawn(level, pos, entityType, this.faction, false);
     }
 
     // --- MenuProvider ---

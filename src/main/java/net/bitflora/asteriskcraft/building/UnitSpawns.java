@@ -1,6 +1,5 @@
-package net.bitflora.asteriskcraft.director;
+package net.bitflora.asteriskcraft.building;
 
-import net.bitflora.asteriskcraft.building.SpawnSpots;
 import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
@@ -15,13 +14,15 @@ import net.neoforged.neoforge.event.EventHooks;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Shared "produce a unit at a building" spawn recipe, factored out of the pattern in
- * {@code GatewayBlockEntity.spawnUnit} so the Hive (Drones) and the {@link ZergDirector}
- * (wave units) both use it. Faction-generic: pass the owning faction and whether to apply
- * team-color armour (workers skip it).
+ * Shared, faction-generic "produce a unit at a building" spawn recipe: find a safely-footed spot
+ * near the building, warp the unit in, tag its faction, and play the teleport cue. Every place a
+ * unit is created at a building routes through here — the Nexus (Probes), the Gateway
+ * (Zealots/Dragoons), the Hive/{@code ZergDirector} (Drones and wave units), and the world
+ * bootstrap's starting workers — so the recipe lives in exactly one spot. Callers set any
+ * unit-specific state (e.g. a worker's home core) on the returned mob.
  */
-public final class ZergSpawns {
-    private ZergSpawns() {
+public final class UnitSpawns {
+    private UnitSpawns() {
     }
 
     @Nullable

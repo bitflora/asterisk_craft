@@ -21,6 +21,11 @@ public final class HitscanAttacks {
     }
 
     public static void fire(Mob attacker, LivingEntity target, double damage, ParticleOptions particle, SoundEvent sound) {
+        fire(attacker, target, damage, particle, sound, 1.0f);
+    }
+
+    /** As {@link #fire(Mob, LivingEntity, double, ParticleOptions, SoundEvent)} but with an explicit sound pitch. */
+    public static void fire(Mob attacker, LivingEntity target, double damage, ParticleOptions particle, SoundEvent sound, float pitch) {
         if (!(attacker.level() instanceof ServerLevel level)) {
             return;
         }
@@ -31,6 +36,6 @@ public final class HitscanAttacks {
             Vec3 point = origin.add(delta.scale((double) i / BEAM_STEPS));
             level.sendParticles(particle, point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
         }
-        level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, 1.0f);
+        level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, pitch);
     }
 }
