@@ -1,7 +1,6 @@
 
 - Build revamp. Make them bigger and better
 - Nexus should be created only on world creation, not every login.
-- recipes for buildings
 - require pylons
 - get proper graphics
 - add air units

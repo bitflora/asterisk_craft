@@ -35,7 +35,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * {@link CannonFireGoal}. Hostility is resolved purely through the faction attachment.
  */
 public class PhotonCannonEntity extends Mob implements Shielded {
-    public static final double RANGE = 7.0;          // StarCraft Photon Cannon range
+    public static final double RANGE = 14.0;          // StarCraft Photon Cannon range
     public static final float ATTACK_DAMAGE = 10.0f;
     public static final int ATTACK_COOLDOWN = 20;    // one shot per second
     public static final int WARP_TICKS = 200;        // 10 seconds to warp in (mirrors the Gateway)
@@ -43,11 +43,6 @@ public class PhotonCannonEntity extends Mob implements Shielded {
     public static final int MAX_HEALTH = 50;
     public static final int SHIELD = 50;
 
-    // Economy figures (docs/shaping.md V4). The crafting recipe is the real item sink; these are the
-    // design source of truth, guarded by PhotonCannonEconomyTest.
-    public static final int WOOD_COST = 100;
-    public static final int COBBLE_COST = 100;
-    public static final int IRON_COST = 20;
 
     private int warpTicksRemaining = WARP_TICKS;
 

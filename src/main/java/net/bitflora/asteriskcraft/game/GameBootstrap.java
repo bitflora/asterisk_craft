@@ -74,6 +74,10 @@ public final class GameBootstrap {
         }
         ServerLevel overworld = player.level().getServer().overworld();
 
+        // Set on every login (not just first-join bootstrap) so players who joined before
+        // enemy-vs-player combat existed also pick up their faction.
+        FactionAttachments.set(player, Faction.PROTOSS);
+
         if (!overworld.getData(GameAttachments.BOOTSTRAPPED)) {
             placeStartingBase(overworld, player);
         }
