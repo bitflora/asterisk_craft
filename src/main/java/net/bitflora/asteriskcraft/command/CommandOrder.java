@@ -17,7 +17,7 @@ import java.util.UUID;
  */
 public record CommandOrder(Kind kind, Optional<BlockPos> pos, Optional<UUID> target) {
     public enum Kind implements StringRepresentable {
-        NONE("none"), MOVE("move"), ATTACK("attack"), MINE("mine");
+        NONE("none"), MOVE("move"), ATTACK("attack"), MINE("mine"), GUARD("guard");
 
         public static final Codec<Kind> CODEC = StringRepresentable.fromEnum(Kind::values);
         private final String name;
@@ -46,6 +46,16 @@ public record CommandOrder(Kind kind, Optional<BlockPos> pos, Optional<UUID> tar
 
     public static CommandOrder mine(BlockPos pos) {
         return new CommandOrder(Kind.MINE, Optional.of(pos.immutable()), Optional.empty());
+    }
+
+    /**
+     * A persistent hold order: the unit patrols near {@code home} and defends it, engaging enemies
+     * that wander in (via its faction-targeting goals) and returning afterwards. Unlike
+     * {@link #move(BlockPos)}, a guard order never self-clears — it keeps the unit stationed until
+     * a new order overrides it (e.g. a wave's {@code move}).
+     */
+    public static CommandOrder guard(BlockPos home) {
+        return new CommandOrder(Kind.GUARD, Optional.of(home.immutable()), Optional.empty());
     }
 
     public static CommandOrder attack(UUID target) {

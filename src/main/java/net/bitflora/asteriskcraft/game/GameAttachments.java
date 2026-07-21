@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.game;
 
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.director.script.InterpreterState;
 import net.minecraft.core.BlockPos;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -34,13 +35,10 @@ public final class GameAttachments {
     public static final Supplier<AttachmentType<Boolean>> GAME_OVER = ATTACHMENT_TYPES.register(
             "game_over", () -> AttachmentType.builder(() -> false).serialize(Codec.BOOL.fieldOf("value")).build());
 
-    /** How many attack waves the Zerg director has launched (drives wave escalation). */
-    public static final Supplier<AttachmentType<Integer>> WAVE_NUMBER = ATTACHMENT_TYPES.register(
-            "wave_number", () -> AttachmentType.builder(() -> 0).serialize(Codec.INT.fieldOf("value")).build());
-
-    /** Ticks remaining until the next attack wave; -1 before the director has initialised it. */
-    public static final Supplier<AttachmentType<Integer>> WAVE_COUNTDOWN = ATTACHMENT_TYPES.register(
-            "wave_countdown", () -> AttachmentType.builder(() -> -1).serialize(Codec.INT.fieldOf("value")).build());
+    /** The Zerg build-script interpreter's execution cursor (program counter, worker floor, batch). */
+    public static final Supplier<AttachmentType<InterpreterState>> INTERPRETER_STATE = ATTACHMENT_TYPES.register(
+            "interpreter_state", () -> AttachmentType.builder(() -> InterpreterState.INITIAL)
+                    .serialize(InterpreterState.CODEC.fieldOf("state")).build());
 
     private GameAttachments() {
     }

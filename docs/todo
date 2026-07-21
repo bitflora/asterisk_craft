@@ -4,7 +4,7 @@
 - require pylons
 - get proper graphics
 - add air units
-- AI improvements
+- Make the following changes to the enamy AI
   - Create build lists telling the enemy what to make. Each line will have a command and then parameters.
   - Parameters may take the form of a comma-delimited list of [Quantity] [Unit] and will be referred to as [UnitList]
   - When instructed to build certain units, the AI will wait until it has the appropriate resources available.

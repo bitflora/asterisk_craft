@@ -5,61 +5,53 @@ import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.ResourceBank;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
+import net.bitflora.asteriskcraft.director.script.BuildScript;
+import net.bitflora.asteriskcraft.director.script.BuildScriptManager;
+import net.bitflora.asteriskcraft.director.script.DirectorWorld;
+import net.bitflora.asteriskcraft.director.script.InterpreterState;
+import net.bitflora.asteriskcraft.director.script.ScriptInterpreter;
+import net.bitflora.asteriskcraft.director.script.ZergUnitCatalog;
+import net.bitflora.asteriskcraft.director.script.ZergUnitCatalog.UnitDef;
+import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 /**
- * The Zerg AI brain (shape A9). Per-Hive worker economy lives on {@link HiveBlockEntity}; this
- * global director spends the pooled Hive resources on escalating attack waves and marches them at
- * the player's Nexus. Runs off {@link ServerTickEvent.Post}; all schedule state is kept in
- * {@link GameAttachments} so it survives save/reload. The wave-size and interval curves are pure
- * functions ({@link #waveSize}/{@link #intervalFor}) so they can be unit-tested.
+ * The Zerg AI brain (shape A9). It runs the data-driven build script loaded by
+ * {@link BuildScriptManager}: the pure {@link ScriptInterpreter} decides what to do each tick and
+ * this class is its {@link DirectorWorld} — spawning units at the Hives, paying their cost out of
+ * the shared Zerg bank, and issuing attack orders. It also maintains the standing worker floor set
+ * by the script's {@code Workers} command (independent of the interpreter's program counter).
+ *
+ * <p>Runs off {@link ServerTickEvent.Post}; the interpreter cursor lives in
+ * {@link GameAttachments#INTERPRETER_STATE} so it survives save/reload. A {@code /reload} that
+ * changes the script bumps {@link BuildScriptManager#version()}, which resets the cursor here
+ * (preserving the worker floor so the economy doesn't collapse).
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
 public final class ZergDirector {
-    // Wave scheduling (ticks; 20 ticks = 1s).
-    public static final int FIRST_WAVE_DELAY = 20 * 45;      // grace period before the first wave
-    public static final int WAVE_INTERVAL_MAX = 20 * 75;     // slowest cadence (early game)
-    public static final int WAVE_INTERVAL_MIN = 20 * 30;     // fastest cadence (late game)
-    public static final int INTERVAL_STEP = 20 * 5;          // each wave comes 5s sooner
-
-    // Wave composition.
-    public static final int BASE_WAVE_SIZE = 3;
-    public static final int MAX_WAVE_SIZE = 12;
-
-    // Unit costs — mirror the Protoss equivalents exactly (see GatewayBlockEntity).
-    public static final int ZERGLING_WOOD_COST = 50;
-    public static final int ZERGLING_COBBLE_COST = 50;
-    public static final int HYDRALISK_IRON_COST = 10;
-
-    private static final List<ResourceBank.Cost> ZERGLING_COST = List.of(
-            new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), ZERGLING_WOOD_COST),
-            new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), ZERGLING_COBBLE_COST));
-    private static final List<ResourceBank.Cost> HYDRALISK_COST = List.of(
-            new ResourceBank.Cost(stack -> stack.is(Items.IRON_INGOT), HYDRALISK_IRON_COST));
+    /** How far from a Hive a drone still counts as "ours" for the worker floor. */
+    public static final int DRONE_LEASH = 32;
+    /** How often (ticks) the standing worker floor is re-checked and topped up (5s). */
+    public static final int WORKER_CHECK_INTERVAL = 100;
 
     private ZergDirector() {
-    }
-
-    /** How many units the given (0-based) wave fields, escalating up to {@link #MAX_WAVE_SIZE}. */
-    public static int waveSize(int waveNumber) {
-        return Math.min(MAX_WAVE_SIZE, BASE_WAVE_SIZE + waveNumber);
-    }
-
-    /** Ticks between wave {@code waveNumber} and the next, shrinking toward {@link #WAVE_INTERVAL_MIN}. */
-    public static int intervalFor(int waveNumber) {
-        return Math.max(WAVE_INTERVAL_MIN, WAVE_INTERVAL_MAX - waveNumber * INTERVAL_STEP);
     }
 
     @SubscribeEvent
@@ -73,54 +65,137 @@ public final class ZergDirector {
         if (hivePositions.isEmpty() || nexus.equals(BlockPos.ZERO)) {
             return;
         }
-
-        int countdown = overworld.getData(GameAttachments.WAVE_COUNTDOWN);
-        if (countdown < 0) {
-            countdown = FIRST_WAVE_DELAY;
-        }
-        if (--countdown <= 0) {
-            int waveNumber = overworld.getData(GameAttachments.WAVE_NUMBER);
-            launchWave(overworld, nexus, hivePositions, waveNumber);
-            overworld.setData(GameAttachments.WAVE_NUMBER, waveNumber + 1);
-            countdown = intervalFor(waveNumber + 1);
-        }
-        overworld.setData(GameAttachments.WAVE_COUNTDOWN, countdown);
-    }
-
-    private static void launchWave(ServerLevel overworld, BlockPos nexus, List<BlockPos> hivePositions, int waveNumber) {
-        List<HiveBlockEntity> hives = new ArrayList<>();
-        for (BlockPos pos : hivePositions) {
-            if (overworld.getBlockEntity(pos) instanceof HiveBlockEntity hive) {
-                hives.add(hive);
-            }
-        }
+        List<HiveBlockEntity> hives = resolveHives(overworld, hivePositions);
         if (hives.isEmpty()) {
             return; // Hive chunks not loaded / already gone
         }
 
-        int size = waveSize(waveNumber);
-        for (int i = 0; i < size; i++) {
-            boolean hydralisk = i % 3 == 2; // roughly one ranged unit per three
-            if (!payFromHives(hives, hydralisk ? HYDRALISK_COST : ZERGLING_COST)) {
-                continue; // Zerg economy can't afford this unit right now
+        InterpreterState state = overworld.getData(GameAttachments.INTERPRETER_STATE);
+        int scriptVersion = BuildScriptManager.version();
+        if (state.scriptVersion() != scriptVersion) {
+            // Script (re)loaded: restart the program but keep the worker floor so the economy holds.
+            state = InterpreterState.INITIAL.withScriptVersion(scriptVersion).withWorkerTarget(state.workerTarget());
+        }
+
+        // The worker floor is a standing concern, maintained regardless of which command is running.
+        if (overworld.getGameTime() % WORKER_CHECK_INTERVAL == 0) {
+            maintainWorkers(overworld, hives, state.workerTarget());
+        }
+
+        BuildScript script = BuildScriptManager.active();
+        state = ScriptInterpreter.tick(script, state, new DirectorWorldImpl(overworld, hives, nexus));
+        overworld.setData(GameAttachments.INTERPRETER_STATE, state);
+    }
+
+    private static List<HiveBlockEntity> resolveHives(ServerLevel level, List<BlockPos> positions) {
+        List<HiveBlockEntity> hives = new ArrayList<>();
+        for (BlockPos pos : positions) {
+            if (level.getBlockEntity(pos) instanceof HiveBlockEntity hive) {
+                hives.add(hive);
             }
-            BlockPos spawnHive = hives.get(overworld.getRandom().nextInt(hives.size())).getBlockPos();
-            Mob unit = hydralisk
-                    ? ZergSpawns.spawn(overworld, spawnHive, AsteriskCraft.HYDRALISK.get(), Faction.ZERG, true)
-                    : ZergSpawns.spawn(overworld, spawnHive, AsteriskCraft.ZERGLING.get(), Faction.ZERG, true);
-            if (unit != null) {
-                CommandAttachments.setOrder(unit, CommandOrder.move(nexus));
+        }
+        return hives;
+    }
+
+    /** Tops the Zerg worker count up to {@code target}, training drones at awake Hives it can afford. */
+    private static void maintainWorkers(ServerLevel level, List<HiveBlockEntity> hives, int target) {
+        int current = countDrones(level, hives);
+        while (current < target) {
+            HiveBlockEntity hive = randomAwakeHive(level, hives);
+            if (hive == null || !payAny(hive, ZergUnitCatalog.drone())) {
+                break; // no awake Hive, or can't afford another drone right now
             }
+            DroneEntity drone = ZergSpawns.spawn(level, hive.getBlockPos(), AsteriskCraft.DRONE.get(), Faction.ZERG, false);
+            if (drone == null) {
+                break;
+            }
+            drone.setHomePos(hive.getBlockPos());
+            current++;
         }
     }
 
-    /** Pays a unit's cost from the first Hive that can afford it (atomic per Hive). */
-    private static boolean payFromHives(List<HiveBlockEntity> hives, List<ResourceBank.Cost> cost) {
+    /** Counts living Zerg drones near any Hive, deduped by entity id so overlapping ranges don't double-count. */
+    private static int countDrones(ServerLevel level, List<HiveBlockEntity> hives) {
+        Set<Integer> ids = new HashSet<>();
         for (HiveBlockEntity hive : hives) {
-            if (ResourceBank.extractAll(hive, cost)) {
+            AABB range = new AABB(hive.getBlockPos()).inflate(DRONE_LEASH);
+            for (DroneEntity drone : level.getEntitiesOfClass(DroneEntity.class, range,
+                    d -> d.isAlive() && FactionAttachments.get(d) == Faction.ZERG)) {
+                ids.add(drone.getId());
+            }
+        }
+        return ids.size();
+    }
+
+    private static HiveBlockEntity randomAwakeHive(ServerLevel level, List<HiveBlockEntity> hives) {
+        List<HiveBlockEntity> awake = awakeHives(hives);
+        return awake.isEmpty() ? null : awake.get(level.getRandom().nextInt(awake.size()));
+    }
+
+    private static List<HiveBlockEntity> awakeHives(List<HiveBlockEntity> hives) {
+        List<HiveBlockEntity> awake = new ArrayList<>();
+        for (HiveBlockEntity hive : hives) {
+            if (hive.isAwake()) {
+                awake.add(hive);
+            }
+        }
+        return awake;
+    }
+
+    /** Pays any one of a unit's interchangeable cost bundles from the shared bank; false if none affordable. */
+    private static boolean payAny(HiveBlockEntity bank, UnitDef def) {
+        for (List<ResourceBank.Cost> alternative : def.costAlternatives()) {
+            if (ResourceBank.extractAll(bank, alternative)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** The interpreter's live-world adapter: spawns/pays at the Hives and issues orders for one tick. */
+    private record DirectorWorldImpl(ServerLevel level, List<HiveBlockEntity> hives, BlockPos nexus)
+            implements DirectorWorld {
+
+        @Override
+        public SpawnResult canAffordAndSpawn(String unitName, List<UUID> out) {
+            Optional<UnitDef> def = ZergUnitCatalog.resolve(unitName);
+            if (def.isEmpty()) {
+                return SpawnResult.UNKNOWN;
+            }
+            List<HiveBlockEntity> awake = awakeHives(this.hives);
+            if (awake.isEmpty() || !payAny(awake.get(0), def.get())) {
+                return SpawnResult.UNAFFORDABLE;
+            }
+            HiveBlockEntity spawnHive = awake.get(this.level.getRandom().nextInt(awake.size()));
+            BlockPos hivePos = spawnHive.getBlockPos();
+            Mob unit = ZergSpawns.spawn(this.level, hivePos, def.get().type(), Faction.ZERG, def.get().dyeArmor());
+            if (unit == null) {
+                AsteriskCraft.LOGGER.warn("Zerg director paid for {} but failed to spawn it", unitName);
+                return SpawnResult.UNAFFORDABLE;
+            }
+            // Hold near the Hive until the batch completes; a wave later overrides this with a move order.
+            CommandAttachments.setOrder(unit, CommandOrder.guard(hivePos));
+            out.add(unit.getUUID());
+            return SpawnResult.SPAWNED;
+        }
+
+        @Override
+        public void orderMove(List<UUID> unitIds, BlockPos dest) {
+            for (UUID id : unitIds) {
+                if (this.level.getEntity(id) instanceof Mob mob && mob.isAlive()) {
+                    CommandAttachments.setOrder(mob, CommandOrder.move(dest));
+                }
+            }
+        }
+
+        @Override
+        public BlockPos nexus() {
+            return this.nexus;
+        }
+
+        @Override
+        public RandomSource random() {
+            return this.level.getRandom();
+        }
     }
 }

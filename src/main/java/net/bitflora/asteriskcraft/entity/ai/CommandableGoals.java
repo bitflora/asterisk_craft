@@ -14,6 +14,7 @@ public final class CommandableGoals {
 
     public static void install(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector) {
         goalSelector.addGoal(1, new CommandedMoveGoal(mob, 1.1));
+        goalSelector.addGoal(5, new GuardGoal(mob, 1.0));
         targetSelector.addGoal(0, new CommandedAttackGoal(mob));
     }
 }

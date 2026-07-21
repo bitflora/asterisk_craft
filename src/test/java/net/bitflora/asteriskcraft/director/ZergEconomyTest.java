@@ -1,28 +1,26 @@
 package net.bitflora.asteriskcraft.director;
 
 import net.bitflora.asteriskcraft.building.FactionCore;
-import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.director.script.ZergUnitCatalog;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The shaping doc requires Zerg unit costs to mirror the Protoss equivalents exactly. These
- * assert that relationship so the two economies can't drift apart, plus a few sanity bounds on
- * the Hive/core tuning constants.
+ * Sanity bounds on the Zerg economy tuning constants after they were centralised: worker cost lives
+ * in {@link ZergUnitCatalog}, the worker-floor cadence and leash on {@link ZergDirector}, and Hive
+ * storage on {@link HiveBlockEntity}. (Unit costs are predicate-based and tag-dependent, so the
+ * exact "mirrors Protoss" relationship is verified in-game, not here — see the JUnit-bootstrap note
+ * in {@code ProbeEconomyTest}.)
  */
 class ZergEconomyTest {
 
-
-
     @Test
-    void hiveTuningIsSane() {
-        assertTrue(HiveBlockEntity.DRONE_TARGET > 0, "a Hive must keep at least one drone");
-        assertTrue(HiveBlockEntity.DRONE_CHECK_INTERVAL > 0, "drone upkeep must be periodic, not every tick");
-        assertTrue(HiveBlockEntity.DRONE_LEASH > 0, "drones need a leash radius to be counted as the Hive's");
+    void economyTuningIsSane() {
+        assertTrue(ZergUnitCatalog.DRONE_COST > 0, "a drone must cost something");
+        assertTrue(ZergDirector.WORKER_CHECK_INTERVAL > 0, "worker upkeep must be periodic, not every tick");
+        assertTrue(ZergDirector.DRONE_LEASH > 0, "drones need a leash radius to be counted as the army's");
         assertTrue(HiveBlockEntity.INPUT_SLOTS > 0, "the Hive needs storage for mined resources");
     }
 

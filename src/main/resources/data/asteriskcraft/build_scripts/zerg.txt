@@ -1,0 +1,37 @@
+# AsteriskCraft — enemy Zerg build order.
+#
+# Lines run top-to-bottom. Edit this file (or override it from your own datapack at
+# data/<namespace>/build_scripts/zerg.txt) and run /reload to change how the enemy plays.
+#
+# Commands:
+#   Workers: N            keep at least N drones alive from here on (trains more when short)
+#   Defence: <units>      train these units; they patrol and defend the base
+#   Wave: <units>         train these units, then send the whole group to attack once complete
+#   Wait S                pause S seconds before the next command
+#   Repeat N              loop the previous N commands endlessly (put it last)
+#
+#   <units> = comma list of "Qty Unit", e.g. "3 Zergling, 1 Hydralisk". Qty may be a range "3-5".
+#   Units: Zergling (melee), Hydralisk (ranged), Drone (worker).
+#
+# The AI waits until it can afford each unit, so a wave only leaves once fully trained.
+
+Workers: 9
+
+# Opening: post a few defenders while the economy ramps up.
+Defence: 3 Zergling
+Wait 45
+
+# Escalating pushes.
+Wave: 3 Zergling
+Wait 60
+Wave: 4 Zergling, 1 Hydralisk
+Wait 55
+Wave: 6 Zergling, 2 Hydralisk
+Wait 50
+Wave: 8-10 Zergling, 3 Hydralisk
+Wait 40
+
+# Endless heavy waves from here on.
+Wave: 10-12 Zergling, 3-4 Hydralisk
+Wait 35
+Repeat 2
