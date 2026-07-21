@@ -55,7 +55,9 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(3, new SiegeBlockGoal(this));
+        // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
+        // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.
+        this.goalSelector.addGoal(0, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, ATTACK_COOLDOWN, ATTACK_RADIUS));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));

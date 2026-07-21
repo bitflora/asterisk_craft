@@ -45,8 +45,10 @@ public class ZerglingEntity extends Monster {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
+        // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.
+        this.goalSelector.addGoal(0, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
-        this.goalSelector.addGoal(3, new SiegeBlockGoal(this));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));

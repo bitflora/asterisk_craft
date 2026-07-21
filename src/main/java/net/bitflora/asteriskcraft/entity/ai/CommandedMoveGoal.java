@@ -19,24 +19,23 @@ import org.jetbrains.annotations.Nullable;
  * acquires (via {@code FactionTargetGoal} or {@code RetaliateGoal}) along the way instead of
  * walking past them; it resumes the march once that target is gone.
  * <p>
- * It also yields — without clearing the order — while stuck making no progress, so that
- * {@link SiegeBlockGoal} (lower priority, same {@link Flag#MOVE} flag) can dig through whatever is
- * blocking the path. Only after several such stall/dig cycles produce zero net progress (e.g. the
- * obstruction is unbreakable bedrock) does it finally give up and clear the order, so a unit isn't
- * pinned forever. Faction-generic — installed on any commandable {@link Mob}.
+ * It does not dig, and it does not fight {@link SiegeBlockGoal} for the {@link Flag#MOVE} flag:
+ * SiegeBlockGoal is installed at a higher priority, so when the path stalls at a breakable block it
+ * simply preempts this goal, breaks through, and hands movement back — at which point {@link #start()}
+ * resets the no-progress counter. That means a stall against a <em>breakable</em> obstruction never
+ * accumulates toward giving up (the digger keeps interrupting it), while a stall against something
+ * unbreakable (bedrock, a barrier, the void) has nothing to interrupt it and, after
+ * {@link #GIVE_UP_TICKS} of continuous no-progress, clears the order so the unit isn't pinned forever.
+ * Faction-generic — installed on any commandable {@link Mob}.
  */
 public class CommandedMoveGoal extends Goal {
     private static final double ARRIVE_DIST_SQR = 2.25; // ~1.5 blocks
-    private static final int NO_PROGRESS_LIMIT = 100;   // ~5s without getting closer → yield
-    private static final int STUCK_BACKOFF_TICKS = 40;  // ~2s yielded to let SiegeBlockGoal dig
-    private static final int MAX_BACKOFF_CYCLES = 6;    // consecutive stalls with zero net progress → give up
+    private static final int GIVE_UP_TICKS = 200;       // ~10s of uninterrupted no-progress → abandon the order
 
     private final Mob mob;
     private final double speed;
     private double lastDistSqr = Double.MAX_VALUE;
     private int noProgressTicks;
-    private int stuckBackoffTicks;
-    private int backoffCycles;
     @Nullable
     private BlockPos lastTarget;
 
@@ -54,19 +53,12 @@ public class CommandedMoveGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (this.stuckBackoffTicks > 0) {
-            this.stuckBackoffTicks--;
-            return false; // yielded — let a lower-priority goal (e.g. SiegeBlockGoal) use Flag.MOVE
-        }
         BlockPos target = target();
         return target != null && !arrived(target) && !hasLiveTarget();
     }
 
     @Override
     public boolean canContinueToUse() {
-        if (this.stuckBackoffTicks > 0) {
-            return false;
-        }
         BlockPos target = target();
         return target != null && !arrived(target) && !hasLiveTarget();
     }
@@ -81,12 +73,13 @@ public class CommandedMoveGoal extends Goal {
     public void start() {
         BlockPos target = target();
         if (!Objects.equals(target, this.lastTarget)) {
-            // A genuinely new order (not just resuming after a stuck-backoff yield) — reset the
-            // progress baseline and give-up counter so stale stall history doesn't carry over.
+            // A genuinely new order (not just resuming after SiegeBlockGoal dug an obstruction) —
+            // reset the progress baseline so stale stall history doesn't carry over.
             this.lastTarget = target;
             this.lastDistSqr = Double.MAX_VALUE;
-            this.backoffCycles = 0;
         }
+        // Resuming after a dig counts as a fresh attempt: the world just changed in our favour, so the
+        // no-progress clock restarts. This is what keeps a breakable wall from ever reaching GIVE_UP_TICKS.
         this.noProgressTicks = 0;
         moveTo(target);
     }
@@ -115,27 +108,22 @@ public class CommandedMoveGoal extends Goal {
         double dist = distSqr(target);
         if (dist < this.lastDistSqr - 0.25) {
             this.lastDistSqr = dist;
-            this.noProgressTicks = 0;
-            this.backoffCycles = 0; // real progress since the last stall — reset the give-up counter
-        } else if (++this.noProgressTicks > NO_PROGRESS_LIMIT) {
-            this.noProgressTicks = 0;
-            this.mob.getNavigation().stop();
-            if (++this.backoffCycles > MAX_BACKOFF_CYCLES) {
-                finish(); // several stall/dig cycles with zero net progress — truly stuck, give up
-                return;
-            }
-            this.stuckBackoffTicks = STUCK_BACKOFF_TICKS; // yield MOVE so SiegeBlockGoal can dig
+            this.noProgressTicks = 0; // getting closer than ever — reset the give-up clock
+        } else if (++this.noProgressTicks > GIVE_UP_TICKS) {
+            // Continuous no-progress with nothing preempting us to dig (see class doc) — the
+            // obstruction is unbreakable or the target is simply unreachable. Abandon the order.
+            finish();
             return;
         }
         if (this.mob.getNavigation().isDone()) {
+            // Stalled but still viable: leave navigation resolved-done between re-paths so a
+            // higher-priority SiegeBlockGoal can take over and dig if a breakable block is in the way.
             moveTo(target);
         }
     }
 
     private void finish() {
         this.mob.getNavigation().stop();
-        this.stuckBackoffTicks = 0;
-        this.backoffCycles = 0;
         this.lastTarget = null;
         CommandAttachments.clearOrder(this.mob);
     }

@@ -24,8 +24,14 @@ import org.jetbrains.annotations.Nullable;
  *   <li><b>Core assault</b>: when an enemy-faction {@link FactionCore} block entity is nearby, the
  *       unit walks up and hits it, draining its health until it collapses (firing the win/lose).</li>
  *   <li><b>Obstruction breaking</b>: when the unit is pursuing an order/target but its pathing has
- *       stalled, it digs the block directly in front of it so it can keep advancing.</li>
+ *       stalled (navigation done, not yet arrived), it digs the block between it and its destination
+ *       so it can keep advancing.</li>
  * </ul>
+ * Installed at <b>priority 0</b> (above {@link CommandedMoveGoal}/{@code MeleeAttackGoal}) so it
+ * cleanly preempts movement the moment the unit is stuck at a breakable block, holds the {@code MOVE}
+ * flag for the whole dig, then hands it back — rather than fighting a lower-priority goal for a
+ * too-short yield window. It stays out of the way while the unit is actually moving, because
+ * obstruction-breaking only triggers once navigation reports it is done (see {@code obstructionAhead}).
  * Installed on Zealots, Dragoons, Zerglings and Hydralisks — never on workers, so miners don't grief.
  * (The Photon Cannon is an entity, so retaliating against it needs no special case here — units
  * target and hit it back through the normal {@link RetaliateGoal}/{@code FactionTargetGoal} path.)
@@ -93,6 +99,9 @@ public class SiegeBlockGoal extends Goal {
     public void stop() {
         this.corePos = null;
         this.digPos = null;
+        // Re-scan immediately next time we're eligible, so chewing through a thick wall doesn't stall
+        // ~SCAN_COOLDOWN ticks between each block once movement has already stalled.
+        this.cooldown = 0;
         this.mob.getNavigation().stop();
     }
 
@@ -188,7 +197,9 @@ public class SiegeBlockGoal extends Goal {
         if (this.mob.blockPosition().closerThan(dest, 2.0)) {
             return null; // basically arrived
         }
-        Direction facing = this.mob.getDirection();
+        // Dig toward the destination, not wherever the body happens to be facing: a mob pressed against
+        // a wall can have its yaw drift off the obstruction, and getDirection() is cardinal-only anyway.
+        Direction facing = horizontalDirectionTo(dest);
         BlockPos foot = this.mob.blockPosition().relative(facing);
         BlockPos head = foot.above();
         Level level = this.mob.level();
@@ -199,6 +210,16 @@ public class SiegeBlockGoal extends Goal {
             return foot;
         }
         return null;
+    }
+
+    /** The cardinal direction from the mob toward {@code dest}, picking the dominant horizontal axis. */
+    private Direction horizontalDirectionTo(BlockPos dest) {
+        double dx = (dest.getX() + 0.5) - this.mob.getX();
+        double dz = (dest.getZ() + 0.5) - this.mob.getZ();
+        if (Math.abs(dx) >= Math.abs(dz)) {
+            return dx >= 0 ? Direction.EAST : Direction.WEST;
+        }
+        return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
     }
 
     @Nullable
