@@ -6,6 +6,7 @@ import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.building.SpawnSpots;
+import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.director.ZergSpawns;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
@@ -85,6 +86,20 @@ public final class GameBootstrap {
         BlockPos nexus = overworld.getData(GameAttachments.NEXUS_POS);
         player.sendSystemMessage(Component.translatable(
                 "message.asteriskcraft.nexus_location", nexus.getX(), nexus.getY(), nexus.getZ()));
+    }
+
+    /**
+     * Clears the departing player's selection glow. The selection attachment itself isn't
+     * serialized (it resets to empty on relog), but {@link net.bitflora.asteriskcraft.command.PlayerSelection#add}
+     * sets a vanilla glowing tag that persists on the entity — so without this sweep, units
+     * selected before logout would glow forever with no selection state left to clear them.
+     */
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && player.level() instanceof ServerLevel level) {
+            CommandAttachments.selection(player).clear(level);
+        }
     }
 
     private static void placeStartingBase(ServerLevel level, ServerPlayer player) {

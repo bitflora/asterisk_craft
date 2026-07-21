@@ -6,6 +6,9 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
+import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.game.GameAttachments;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -163,6 +166,45 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
     @Nullable
     protected BlockPos findDeliveryTarget() {
         return this.homePos.equals(BlockPos.ZERO) ? null : this.homePos;
+    }
+
+    /**
+     * Re-homes this worker onto the nearest surviving friendly core when its recorded home has
+     * been razed, so a Drone whose Hive is destroyed keeps delivering into a sibling Hive (all
+     * of a faction's cores share one {@code ArmyBank}) instead of carrying its load forever.
+     * Faction-generic: candidate cores come from the level's saved game state (Hives for Zerg,
+     * the Nexus for Protoss), and we keep only those that still expose an item capability.
+     * Returns {@code null} if no friendly core survives — the worker then keeps its load.
+     */
+    @Nullable
+    public BlockPos rehomeToNearestCore() {
+        if (!(this.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        BlockPos best = null;
+        double bestDistSqr = Double.MAX_VALUE;
+        for (BlockPos pos : coreCandidates(level, FactionAttachments.get(this))) {
+            if (level.getCapability(Capabilities.Item.BLOCK, pos, null) == null) {
+                continue;
+            }
+            double distSqr = pos.distSqr(this.blockPosition());
+            if (distSqr < bestDistSqr) {
+                bestDistSqr = distSqr;
+                best = pos;
+            }
+        }
+        return best;
+    }
+
+    private static List<BlockPos> coreCandidates(ServerLevel level, Faction faction) {
+        return switch (faction) {
+            case ZERG -> level.getData(GameAttachments.HIVE_POSITIONS);
+            case PROTOSS -> {
+                BlockPos nexus = level.getData(GameAttachments.NEXUS_POS);
+                yield nexus.equals(BlockPos.ZERO) ? List.of() : List.of(nexus);
+            }
+            case NEUTRAL -> List.of();
+        };
     }
 
     @Override
@@ -477,6 +519,12 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             }
             ResourceHandler<ItemResource> handler = this.probe.level().getCapability(Capabilities.Item.BLOCK, pos, null);
             if (handler == null) {
+                // Home core is gone (razed). Re-route to the nearest surviving friendly core so the
+                // carried load still gets deposited, rather than idling here forever.
+                BlockPos next = this.probe.rehomeToNearestCore();
+                if (next != null) {
+                    this.probe.setHomePos(next);
+                }
                 this.chestPos = null;
                 return;
             }
