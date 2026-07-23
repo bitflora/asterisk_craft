@@ -76,13 +76,13 @@ Key technical notes:
 
 ## Costs (wood/cobble/iron economy; amounts get a balance pass in V4)
 
-The whole economy runs on three vanilla resources Probes/Drones can harvest non-destructively: **wood** (logs, `#minecraft:logs`), **cobblestone** (from stone), and **iron** (from iron ore). Zerg costs no longer mirror Protoss exactly — Zergling/Hydralisk were rebalanced to a cheaper wood-or-cobblestone cost instead of the Zealot/Dragoon and-bundle.
+The whole economy runs on three vanilla resources Probes/Drones can harvest non-destructively: **wood** (logs, `#minecraft:logs`), **cobblestone** (from stone), and **iron** (from iron ore). Zerg costs no longer mirror Protoss exactly: Protoss stays picky about which resource pays for what, while every Zerg unit accepts **any item** in the shared Hive bank toward its flat cost (whatever mix of wood/cobble/iron the Drones happen to have delivered).
 
 | Protoss | Cost | Zerg equivalent | Cost |
 |---------|------|------------------|------|
-| Probe | 50 wood **or** 50 cobblestone | Drone | 50 wood **or** 50 cobblestone |
-| Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling | 25 wood **or** 25 cobblestone |
-| Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk | 100 wood **or** 100 cobblestone |
+| Probe | 50 wood **or** 50 cobblestone | Drone | 50 of any resource |
+| Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling | 25 of any resource |
+| Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk | 100 of any resource |
 | Gateway kit | 150 wood **or** 150 cobblestone | Spawning Pool (baked into Hive for MVP) | — |
 | Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony (post-MVP) | — |
 | Nexus / Hive | Not craftable in MVP (pre-placed) | — | — |
