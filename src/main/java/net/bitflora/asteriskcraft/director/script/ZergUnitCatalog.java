@@ -18,16 +18,15 @@ import java.util.Optional;
  * {@code ZergDirector} and {@code HiveBlockEntity}.
  *
  * <p>A unit's {@code costAlternatives} is a list of interchangeable cost bundles: paying any one
- * of them produces the unit. Combat units have a single bundle (e.g. wood <b>and</b> cobble); the
- * Drone has two (wood <b>or</b> cobble). Names resolve case-insensitively.
+ * of them produces the unit. Every unit currently costs wood <b>or</b> cobblestone (two
+ * single-resource bundles). Names resolve case-insensitively.
  */
 public final class ZergUnitCatalog {
-    // Amounts mirror the current live values (which in turn mirror the Protoss economy for the
-    // shared resources; the Hydralisk is the ranged unit and costs iron).
-    public static final int DRONE_COST = 50;               // wood OR cobble
-    public static final int ZERGLING_WOOD_COST = 50;
-    public static final int ZERGLING_COBBLE_COST = 50;
-    public static final int HYDRALISK_IRON_COST = 10;
+    public static final int DRONE_COST = 50;            // wood OR cobble
+    public static final int ZERGLING_WOOD_COST = 25;    // wood OR cobble
+    public static final int ZERGLING_COBBLE_COST = 25;
+    public static final int HYDRALISK_WOOD_COST = 100;  // wood OR cobble
+    public static final int HYDRALISK_COBBLE_COST = 100;
 
     /**
      * A producible unit: its entity type, the interchangeable cost bundles (pay any one), whether
@@ -71,12 +70,14 @@ public final class ZergUnitCatalog {
         UnitDef drone = new UnitDef(AsteriskCraft.DRONE.get(),
                 List.of(List.of(WOOD), List.of(COBBLE)), true, false);
         UnitDef zergling = new UnitDef(AsteriskCraft.ZERGLING.get(),
-                List.of(List.of(
-                        new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), ZERGLING_WOOD_COST),
-                        new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), ZERGLING_COBBLE_COST))),
+                List.of(
+                        List.of(new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), ZERGLING_WOOD_COST)),
+                        List.of(new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), ZERGLING_COBBLE_COST))),
                 false, false);
         UnitDef hydralisk = new UnitDef(AsteriskCraft.HYDRALISK.get(),
-                List.of(List.of(new ResourceBank.Cost(stack -> stack.is(Items.IRON_INGOT), HYDRALISK_IRON_COST))),
+                List.of(
+                        List.of(new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), HYDRALISK_WOOD_COST)),
+                        List.of(new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), HYDRALISK_COBBLE_COST))),
                 false, false);
         return Map.of("drone", drone, "zergling", zergling, "hydralisk", hydralisk);
     }
