@@ -74,6 +74,9 @@ public final class GameBootstrap {
     private static final int STARTING_ZERG_COBBLE = 128 * 3;
     private static final int STARTING_ZERG_IRON = 48 * 3;
     private static final int INITIAL_DRONES_PER_HIVE = 2;
+    // Static defence planted with each Hive, so an early rush into a Zerg base meets something with
+    // teeth even when its army is out on a wave.
+    private static final int SUNKEN_COLONIES_PER_HIVE = 1;
     // Zerg "creep": every exposed natural-ground surface block within this radius of a Hive is
     // overrun with mycelium.
     private static final int HIVE_INFEST_RADIUS = 10;
@@ -358,6 +361,9 @@ public final class GameBootstrap {
                 if (drone != null) {
                     drone.setHomePos(core);
                 }
+            }
+            for (int i = 0; i < SUNKEN_COLONIES_PER_HIVE; i++) {
+                UnitSpawns.spawn(level, core, AsteriskCraft.SUNKEN_COLONY.get(), Faction.ZERG, false);
             }
         }
         return core;

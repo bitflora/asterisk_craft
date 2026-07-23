@@ -15,7 +15,7 @@ import net.minecraft.util.Mth;
  * from a handful of boxes (no ported geometry). Silhouette cues: a hunched carapace body, a forward head
  * with bone mandibles and glowing eyes (the emissive zone lit by
  * {@link net.bitflora.asteriskcraft.client.UnitGlowLayer}), clawed front legs, hind legs, a pair of
- * raised back scythes, and a stub tail. Textured via flat colour zones (see tools/gen_zergling_texture.py).
+ * raised back scythes, and a stub tail. Each cube owns its own UV island; the texture is hand-painted in Blockbench via tools/blockbench_export.py.
  * Head-look plus a simple limb-swing walk are driven in setupAnim; armL/armR are the front legs.
  */
 public class ZerglingModel extends EntityModel<LivingEntityRenderState> {
@@ -60,8 +60,8 @@ public class ZerglingModel extends EntityModel<LivingEntityRenderState> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Flat colour zones on the atlas: CARAPACE = texOffs(0,0), CLAW/bone = texOffs(44,0),
-        // DARK = texOffs(0,24), EYE/emissive = texOffs(68,0).
+        // Each cube's texOffs points at its own packed UV island — do not hand-edit these; they are
+        // assigned by tools/blockbench_export.py and guarded by ModelUvLayoutTest.
         // Body sits low; the whole creature hangs off "body" so it reads as one crouched mass.
         PartDefinition body = root.addOrReplaceChild("body",
                 CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -3.0f, -5.0f, 8.0f, 6.0f, 10.0f),
@@ -69,48 +69,48 @@ public class ZerglingModel extends EntityModel<LivingEntityRenderState> {
 
         // --- Head (pivot at the front of the body) ----------------------------------------
         PartDefinition head = body.addOrReplaceChild("head",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-3.5f, -2.5f, -6.0f, 7.0f, 5.0f, 6.0f),
+                CubeListBuilder.create().texOffs(63, 0).addBox(-3.5f, -2.5f, -6.0f, 7.0f, 5.0f, 6.0f),
                 PartPose.offset(0.0f, 0.5f, -5.0f));
         head.addOrReplaceChild("mandibleL",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-0.5f, -0.5f, -4.0f, 1.0f, 1.0f, 4.0f),
+                CubeListBuilder.create().texOffs(29, 17).addBox(-0.5f, -0.5f, -4.0f, 1.0f, 1.0f, 4.0f),
                 PartPose.offsetAndRotation(2.2f, 2.0f, -5.5f, 0.0f, -0.25f, 0.0f));
         head.addOrReplaceChild("mandibleR",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-0.5f, -0.5f, -4.0f, 1.0f, 1.0f, 4.0f),
+                CubeListBuilder.create().texOffs(40, 17).addBox(-0.5f, -0.5f, -4.0f, 1.0f, 1.0f, 4.0f),
                 PartPose.offsetAndRotation(-2.2f, 2.0f, -5.5f, 0.0f, 0.25f, 0.0f));
         head.addOrReplaceChild("eyeL",
-                CubeListBuilder.create().texOffs(68, 0).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
+                CubeListBuilder.create().texOffs(51, 17).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
                 PartPose.offset(2.0f, -1.0f, -6.1f));
         head.addOrReplaceChild("eyeR",
-                CubeListBuilder.create().texOffs(68, 0).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
+                CubeListBuilder.create().texOffs(57, 17).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
                 PartPose.offset(-2.0f, -1.0f, -6.1f));
 
         // --- Front legs (clawed, pivot at the shoulders; reach forward-down to the ground) --
         body.addOrReplaceChild("armL",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 9.0f, 3.0f),
+                CubeListBuilder.create().texOffs(37, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 9.0f, 3.0f),
                 PartPose.offsetAndRotation(4.0f, 2.0f, -3.5f, 0.45f, 0.0f, -0.2f));
         body.addOrReplaceChild("armR",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 9.0f, 3.0f),
+                CubeListBuilder.create().texOffs(50, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 9.0f, 3.0f),
                 PartPose.offsetAndRotation(-4.0f, 2.0f, -3.5f, 0.45f, 0.0f, 0.2f));
 
         // --- Hind legs (pivot at the hips) ------------------------------------------------
         body.addOrReplaceChild("legL",
-                CubeListBuilder.create().texOffs(0, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 8.0f, 3.0f),
+                CubeListBuilder.create().texOffs(90, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 8.0f, 3.0f),
                 PartPose.offsetAndRotation(4.0f, 2.5f, 3.5f, -0.1f, 0.0f, -0.35f));
         body.addOrReplaceChild("legR",
-                CubeListBuilder.create().texOffs(0, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 8.0f, 3.0f),
+                CubeListBuilder.create().texOffs(103, 0).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 8.0f, 3.0f),
                 PartPose.offsetAndRotation(-4.0f, 2.5f, 3.5f, -0.1f, 0.0f, 0.35f));
 
         // --- Raised back scythes (decorative silhouette) ----------------------------------
         body.addOrReplaceChild("scytheL",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-0.75f, -9.0f, -1.0f, 1.5f, 9.0f, 2.0f),
+                CubeListBuilder.create().texOffs(116, 0).addBox(-0.75f, -9.0f, -1.0f, 1.5f, 9.0f, 2.0f),
                 PartPose.offsetAndRotation(2.5f, -2.5f, 2.5f, -0.5f, 0.0f, -0.35f));
         body.addOrReplaceChild("scytheR",
-                CubeListBuilder.create().texOffs(44, 0).addBox(-0.75f, -9.0f, -1.0f, 1.5f, 9.0f, 2.0f),
+                CubeListBuilder.create().texOffs(0, 17).addBox(-0.75f, -9.0f, -1.0f, 1.5f, 9.0f, 2.0f),
                 PartPose.offsetAndRotation(-2.5f, -2.5f, 2.5f, -0.5f, 0.0f, 0.35f));
 
         // --- Tail --------------------------------------------------------------------------
         body.addOrReplaceChild("tail",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5f, -1.5f, 0.0f, 3.0f, 3.0f, 7.0f),
+                CubeListBuilder.create().texOffs(8, 17).addBox(-1.5f, -1.5f, 0.0f, 3.0f, 3.0f, 7.0f),
                 PartPose.offsetAndRotation(0.0f, 1.5f, 4.5f, 0.35f, 0.0f, 0.0f));
 
         return LayerDefinition.create(mesh, 128, 64);

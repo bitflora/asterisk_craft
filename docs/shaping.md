@@ -23,6 +23,7 @@ Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring 
 | R6 | AI Zerg: 3 Hives, literal Drones mine resources into Hives, director spends them on units and attack waves; all Hives destroyed = victory | Must-have |
 | R7 | Every unit and building has a vanilla-item cost/recipe | Must-have |
 | R8 | Faction-generic architecture (race selection + PvP later) | Must-have |
+| R9 | Zerg static defence: a Sunken Colony rooted beside each Hive auto-attacks enemy-faction targets in range | Must-have |
 | — | Out of scope: air units, RTS camera, full tech tree, multiplayer balance | Out |
 
 ### R5 detail — select + orders
@@ -84,7 +85,7 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 | Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling | 25 of any resource |
 | Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk | 100 of any resource |
 | Gateway kit | 150 wood **or** 150 cobblestone | Spawning Pool (baked into Hive for MVP) | — |
-| Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony (post-MVP) | — |
+| Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony | Not buildable — one is pre-placed per Hive |
 | Nexus / Hive | Not craftable in MVP (pre-placed) | — | — |
 
 ## Slices (each ends demo-able)
@@ -98,6 +99,8 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 **V3 — Zerg AI + win/lose. `[DONE]`** 3 Hives placed at first join ~110 blocks east of the Nexus (inside simulation distance — no chunk tickets needed, see the technical note below), each seeded with resources + a surface resource garden + starter Drones. Per-Hive Drone mining loop (`HiveBlockEntity`); `ZergDirector` (`ServerTickEvent.Post`) runs an escalating **mixed Zergling + Hydralisk** wave schedule, spending pooled Hive resources and attack-moving the wave at the Nexus with an "under attack!" ping. Win/lose is reached through combat: all combat units (Zealot/Dragoon/Zergling/Hydralisk) carry a `SiegeBlockGoal` that batters down enemy `FactionCore` blocks (Nexus + Hives, which have siege HP) and digs through obstructing blocks; a core's removal fires the outcome via `preRemoveSideEffects` — victory on the last Hive razed, defeat on the Nexus razed. Unit tests cover the Zerg cost mirror, wave-escalation curves, and the win/lose decision. *Demo: full playable game loop, both outcomes reachable.*
 
 **V4 — Photon Cannon + real costs.** Cannon kit + auto-targeting (A7); wire all production/kit costs to actual item consumption (R7); first balance pass on wave scaling. *Demo: cannons repel a wave; production halts when the chest is empty.*
+
+**V4b — Sunken Colony (R9). `[DONE]`** The Zerg answer to the Photon Cannon: a rooted `SunkenColonyEntity` (150 HP, no movement goals, `FactionTargetGoal` + `RetaliateGoal`, deliberately not commandable) planted beside every Hive by `GameBootstrap`. Its `SunkenSpikeGoal` whips the tentacle every 32 ticks and drives a single `SunkenSpikeEntity` — an `EvokerFangs` subclass — out of the ground under a target up to 11 blocks away, for 20 damage. Vanilla fangs hardcode 6 damage and only spare vanilla-team allies, so both the damage and the faction filter are applied in `combat/SunkenSpikeDamageHandler` (see docs/neoforge-api-notes.md); the trade for hitting that hard is that the strike lands ~8 ticks later at a fixed spot, so a moving target can walk out of it. Ally/enemy spawn eggs included for testing. *Demo: walk into a Hive and get impaled; the spikes leave the Hive's own Drones untouched.*
 
 **V5 — Polish + extensibility groundwork.** Control groups (number-key bindings) on the Command Crystal; per-player client-only selection glow (replacing V2b's shared server glow); unit team-color visuals, sounds, particles; document the faction/race registry for future Terran/player-Zerg + PvP; optional start on tactical map GUI. *Demo: comfortable command UX in a full match.*
 

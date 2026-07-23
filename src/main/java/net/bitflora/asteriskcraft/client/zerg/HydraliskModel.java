@@ -14,8 +14,8 @@ import net.minecraft.util.Mth;
  * Original blocky Hydralisk model authored for AsteriskCraft — an upright, vanilla-style serpent built
  * from a handful of boxes (no ported geometry). Silhouette cues: a coiled carapace base, a torso rising
  * from it, a hooded head with a crest, twin bone scythe-arms, and orange-glowing back and crest spines
- * (the emissive zone lit by {@link net.bitflora.asteriskcraft.client.UnitGlowLayer}). Textured via flat
- * colour zones (see tools/gen_hydralisk_texture.py). It has no legs; head-look plus an arm-swing are
+ * (the emissive zone lit by {@link net.bitflora.asteriskcraft.client.UnitGlowLayer}). Each cube owns its own UV island; the texture is hand-painted in Blockbench via tools/blockbench_export.py.
+ * It has no legs; head-look plus an arm-swing are
  * driven in setupAnim.
  */
 public class HydraliskModel extends EntityModel<LivingEntityRenderState> {
@@ -50,8 +50,8 @@ public class HydraliskModel extends EntityModel<LivingEntityRenderState> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Flat colour zones on the atlas: CARAPACE = texOffs(0,0), CLAW/bone = texOffs(48,0),
-        // SPINE/emissive = texOffs(64,0).
+        // Each cube's texOffs points at its own packed UV island — do not hand-edit these; they are
+        // assigned by tools/blockbench_export.py and guarded by ModelUvLayoutTest.
         // --- Coiled base sitting on the ground (y 16..24) ---------------------------------
         PartDefinition base = root.addOrReplaceChild("base",
                 CubeListBuilder.create().texOffs(0, 0).addBox(-5.0f, -8.0f, -5.0f, 10.0f, 8.0f, 11.0f),
@@ -59,30 +59,30 @@ public class HydraliskModel extends EntityModel<LivingEntityRenderState> {
 
         // --- Torso rising from the base (leans forward slightly) --------------------------
         PartDefinition torso = base.addOrReplaceChild("torso",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -12.0f, -3.5f, 8.0f, 12.0f, 7.0f),
+                CubeListBuilder.create().texOffs(43, 0).addBox(-4.0f, -12.0f, -3.5f, 8.0f, 12.0f, 7.0f),
                 PartPose.offsetAndRotation(0.0f, -8.0f, -1.0f, -0.15f, 0.0f, 0.0f));
 
         // --- Hooded head (pivot at the top of the torso) ----------------------------------
         PartDefinition head = torso.addOrReplaceChild("head",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-3.0f, -4.0f, -5.0f, 6.0f, 5.0f, 5.0f),
+                CubeListBuilder.create().texOffs(23, 20).addBox(-3.0f, -4.0f, -5.0f, 6.0f, 5.0f, 5.0f),
                 PartPose.offsetAndRotation(0.0f, -12.0f, -1.0f, 0.2f, 0.0f, 0.0f));
         // Back hood/crest fanning up behind the head.
         head.addOrReplaceChild("hood",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -3.0f, 0.0f, 8.0f, 7.0f, 2.0f),
+                CubeListBuilder.create().texOffs(74, 20).addBox(-4.0f, -3.0f, 0.0f, 8.0f, 7.0f, 2.0f),
                 PartPose.offsetAndRotation(0.0f, -3.0f, 0.5f, -0.5f, 0.0f, 0.0f));
         // Two crest spines (emissive orange tips).
         head.addOrReplaceChild("crestSpineL",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -7.0f, -0.75f, 1.5f, 7.0f, 1.5f),
+                CubeListBuilder.create().texOffs(22, 32).addBox(-0.75f, -7.0f, -0.75f, 1.5f, 7.0f, 1.5f),
                 PartPose.offsetAndRotation(2.0f, -4.0f, 1.5f, -0.7f, 0.0f, -0.25f));
         head.addOrReplaceChild("crestSpineR",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -7.0f, -0.75f, 1.5f, 7.0f, 1.5f),
+                CubeListBuilder.create().texOffs(29, 32).addBox(-0.75f, -7.0f, -0.75f, 1.5f, 7.0f, 1.5f),
                 PartPose.offsetAndRotation(-2.0f, -4.0f, 1.5f, -0.7f, 0.0f, 0.25f));
         // Glowing eyes.
         head.addOrReplaceChild("eyeL",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
+                CubeListBuilder.create().texOffs(43, 32).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
                 PartPose.offset(1.6f, -1.5f, -5.1f));
         head.addOrReplaceChild("eyeR",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
+                CubeListBuilder.create().texOffs(49, 32).addBox(-0.75f, -0.75f, -0.5f, 1.5f, 1.5f, 1.0f),
                 PartPose.offset(-1.6f, -1.5f, -5.1f));
 
         // --- Scythe arms: three segments (upper arm -> forearm -> bone blade) --------------
@@ -90,41 +90,41 @@ public class HydraliskModel extends EntityModel<LivingEntityRenderState> {
         // forearm continues forward, and the bone blade (third segment) bends back down at the wrist.
         // armL/armR are swung by setupAnim.
         PartDefinition armL = torso.addOrReplaceChild("armL",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5f, -1.0f, -1.5f, 3.0f, 6.0f, 3.0f),
+                CubeListBuilder.create().texOffs(95, 20).addBox(-1.5f, -1.0f, -1.5f, 3.0f, 6.0f, 3.0f),
                 PartPose.offsetAndRotation(4.5f, -10.0f, -1.0f, -1.4f, 0.0f, -0.15f));
         PartDefinition foreArmL = armL.addOrReplaceChild("foreArmL",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.25f, 0.0f, -1.25f, 2.5f, 6.0f, 2.5f),
+                CubeListBuilder.create().texOffs(0, 32).addBox(-1.25f, 0.0f, -1.25f, 2.5f, 6.0f, 2.5f),
                 PartPose.offsetAndRotation(0.0f, 5.0f, 0.0f, 0.15f, 0.0f, 0.0f));
         foreArmL.addOrReplaceChild("bladeL",
-                CubeListBuilder.create().texOffs(48, 0).addBox(-1.0f, 0.0f, -1.5f, 2.0f, 12.0f, 3.0f),
+                CubeListBuilder.create().texOffs(74, 0).addBox(-1.0f, 0.0f, -1.5f, 2.0f, 12.0f, 3.0f),
                 PartPose.offsetAndRotation(0.0f, 5.5f, -0.5f, 1.4f, 0.0f, 0.0f));
         PartDefinition armR = torso.addOrReplaceChild("armR",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5f, -1.0f, -1.5f, 3.0f, 6.0f, 3.0f),
+                CubeListBuilder.create().texOffs(108, 20).addBox(-1.5f, -1.0f, -1.5f, 3.0f, 6.0f, 3.0f),
                 PartPose.offsetAndRotation(-4.5f, -10.0f, -1.0f, -1.4f, 0.0f, 0.15f));
         PartDefinition foreArmR = armR.addOrReplaceChild("foreArmR",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.25f, 0.0f, -1.25f, 2.5f, 6.0f, 2.5f),
+                CubeListBuilder.create().texOffs(11, 32).addBox(-1.25f, 0.0f, -1.25f, 2.5f, 6.0f, 2.5f),
                 PartPose.offsetAndRotation(0.0f, 5.0f, 0.0f, 0.15f, 0.0f, 0.0f));
         foreArmR.addOrReplaceChild("bladeR",
-                CubeListBuilder.create().texOffs(48, 0).addBox(-1.0f, 0.0f, -1.5f, 2.0f, 12.0f, 3.0f),
+                CubeListBuilder.create().texOffs(85, 0).addBox(-1.0f, 0.0f, -1.5f, 2.0f, 12.0f, 3.0f),
                 PartPose.offsetAndRotation(0.0f, 5.5f, -0.5f, 1.4f, 0.0f, 0.0f));
 
         // --- Back spines (emissive orange, up the spine) ----------------------------------
         torso.addOrReplaceChild("backSpine1",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -8.0f, -0.75f, 1.5f, 8.0f, 1.5f),
+                CubeListBuilder.create().texOffs(67, 20).addBox(-0.75f, -8.0f, -0.75f, 1.5f, 8.0f, 1.5f),
                 PartPose.offsetAndRotation(0.0f, -3.0f, 3.0f, -0.9f, 0.0f, 0.0f));
         torso.addOrReplaceChild("backSpine2",
-                CubeListBuilder.create().texOffs(64, 0).addBox(-0.75f, -6.0f, -0.75f, 1.5f, 6.0f, 1.5f),
+                CubeListBuilder.create().texOffs(36, 32).addBox(-0.75f, -6.0f, -0.75f, 1.5f, 6.0f, 1.5f),
                 PartPose.offsetAndRotation(0.0f, -8.0f, 3.0f, -0.9f, 0.0f, 0.0f));
 
         // --- Long trailing tail (three tapering segments off the back of the base) ---------
         PartDefinition tail1 = base.addOrReplaceChild("tail1",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-2.5f, -2.5f, 0.0f, 5.0f, 5.0f, 8.0f),
+                CubeListBuilder.create().texOffs(96, 0).addBox(-2.5f, -2.5f, 0.0f, 5.0f, 5.0f, 8.0f),
                 PartPose.offsetAndRotation(0.0f, -2.5f, 6.0f, 0.25f, 0.0f, 0.0f));
         PartDefinition tail2 = tail1.addOrReplaceChild("tail2",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5f, -1.5f, 0.0f, 3.0f, 3.0f, 8.0f),
+                CubeListBuilder.create().texOffs(0, 20).addBox(-1.5f, -1.5f, 0.0f, 3.0f, 3.0f, 8.0f),
                 PartPose.offsetAndRotation(0.0f, 0.0f, 8.0f, 0.25f, 0.0f, 0.0f));
         tail2.addOrReplaceChild("tail3",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.0f, -1.0f, 0.0f, 2.0f, 2.0f, 8.0f),
+                CubeListBuilder.create().texOffs(46, 20).addBox(-1.0f, -1.0f, 0.0f, 2.0f, 2.0f, 8.0f),
                 PartPose.offsetAndRotation(0.0f, 0.0f, 8.0f, 0.3f, 0.0f, 0.0f));
 
         return LayerDefinition.create(mesh, 128, 128);

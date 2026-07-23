@@ -17,10 +17,10 @@ import net.minecraft.util.Mth;
  *
  * <p>There is no 1.12 model to port (the old mod's {@code ModelDragoon} is an empty stub), so this is
  * net-new. It follows {@link PhotonCannonModel}'s conventions: authored in true pixel space
- * (16px = 1 block), "up" is negative y, and colour comes from flat single-colour <b>material zones</b>
- * of {@code textures/entity/dragoon.png} (see {@code tools/gen_dragoon_texture.py}). Every cube points
- * its {@code texOffs} at the top-left of its material's zone, so cubes of the same material freely
- * share offsets. Only the EYE zone is painted in {@code dragoon_glow.png}, so the emissive
+ * (16px = 1 block), "up" is negative y, and colour comes from {@code textures/entity/dragoon.png}, in
+ * which <b>every cube owns its own UV island</b> so it can be hand-painted independently — see
+ * {@code tools/blockbench_export.py}, which packs those islands and emits the Blockbench project.
+ * Only the eye is painted in {@code dragoon_glow.png}, so the emissive
  * {@link UnitGlowLayer} lights just the eye.
  *
  * <p>Each leg is a single animated {@link PartDefinition} pivoting at the body (thigh angled up-and-out,
@@ -32,12 +32,6 @@ import net.minecraft.util.Mth;
 public class DragoonModel extends EntityModel<LivingEntityRenderState> {
     private static final float DEG = (float) (Math.PI / 180.0);
     private static final float QUARTER = (float) (Math.PI / 4.0); // 45°: leg splay yaw + thigh lift
-
-    // Material zone offsets — match the zones painted by gen_dragoon_texture.py.
-    private static final int GOLD_U = 0, GOLD_V = 0;
-    private static final int BLUE_U = 0, BLUE_V = 64;
-    private static final int DARK_U = 60, DARK_V = 64;
-    private static final int EYE_U = 104, EYE_V = 64;
 
     private final ModelPart head;
     private final ModelPart legFrontRight;
@@ -101,67 +95,94 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
         PartDefinition body = root.addOrReplaceChild("body",
                 CubeListBuilder.create()
                         // Chunky rounded hull: two crossed gold boxes read as a wide, rounded pod.
-                        .texOffs(GOLD_U, GOLD_V).addBox(-6.0f, -5.0f, -7.0f, 12.0f, 9.0f, 14.0f)
-                        .texOffs(GOLD_U, GOLD_V).addBox(-7.0f, -4.0f, -6.0f, 14.0f, 7.0f, 12.0f)
+                        .texOffs(0, 0).addBox(-6.0f, -5.0f, -7.0f, 12.0f, 9.0f, 14.0f)
+                        .texOffs(53, 0).addBox(-7.0f, -4.0f, -6.0f, 14.0f, 7.0f, 12.0f)
                         // Raised back hump.
-                        .texOffs(GOLD_U, GOLD_V).addBox(-4.0f, -8.0f, -1.0f, 8.0f, 4.0f, 8.0f),
+                        .texOffs(41, 40).addBox(-4.0f, -8.0f, -1.0f, 8.0f, 4.0f, 8.0f),
                 PartPose.offset(0.0f, 8.0f, 0.0f));
         // Blue energy core underbelly.
         body.addOrReplaceChild("core",
                 CubeListBuilder.create()
-                        .texOffs(BLUE_U, BLUE_V).addBox(-5.0f, 3.0f, -5.0f, 10.0f, 3.0f, 10.0f),
+                        .texOffs(0, 40).addBox(-5.0f, 3.0f, -5.0f, 10.0f, 3.0f, 10.0f),
                 PartPose.ZERO);
 
         // Domed cockpit at the front-top, with a dark socket and a glowing eye.
         PartDefinition head = body.addOrReplaceChild("head",
                 CubeListBuilder.create()
-                        .texOffs(GOLD_U, GOLD_V).addBox(-5.0f, -4.0f, -4.0f, 10.0f, 7.0f, 8.0f)
-                        .texOffs(GOLD_U, GOLD_V).addBox(-4.0f, -6.0f, -3.0f, 8.0f, 3.0f, 6.0f),
+                        .texOffs(0, 24).addBox(-5.0f, -4.0f, -4.0f, 10.0f, 7.0f, 8.0f)
+                        .texOffs(74, 40).addBox(-4.0f, -6.0f, -3.0f, 8.0f, 3.0f, 6.0f),
                 PartPose.offset(0.0f, -3.0f, -7.0f));
         // Dark socket recessed into the front face so the eye reads against black.
         head.addOrReplaceChild("socket",
                 CubeListBuilder.create()
-                        .texOffs(DARK_U, DARK_V).addBox(-4.0f, -2.0f, -5.0f, 8.0f, 5.0f, 2.0f),
+                        .texOffs(103, 40).addBox(-4.0f, -2.0f, -5.0f, 8.0f, 5.0f, 2.0f),
                 PartPose.ZERO);
         // Glowing orange-red eye, protruding slightly from the socket.
         head.addOrReplaceChild("eye",
                 CubeListBuilder.create()
-                        .texOffs(EYE_U, EYE_V).addBox(-2.5f, -1.0f, -6.0f, 5.0f, 3.0f, 2.0f),
+                        .texOffs(58, 62).addBox(-2.5f, -1.0f, -6.0f, 5.0f, 3.0f, 2.0f),
                 PartPose.ZERO);
 
-        // Four legs at the pod's corners. Front legs splay forward-out, back legs back-out.
-        addLeg(body, "leg_front_right", -6.0f, -5.0f, -QUARTER, -QUARTER, false);
-        addLeg(body, "leg_front_left", 6.0f, -5.0f, QUARTER, QUARTER, true);
-        addLeg(body, "leg_back_right", -6.0f, 5.0f, QUARTER, -QUARTER, false);
-        addLeg(body, "leg_back_left", 6.0f, 5.0f, -QUARTER, QUARTER, true);
+        // Four legs at the pod's corners. Front legs splay forward-out, back legs back-out. Each leg is
+        // a thigh extending outward from the body pivot, a knee-bent shin dropping to a foot pad.
+        //
+        // Written out per leg rather than built by a shared helper: every cube needs its own editable
+        // texOffs literal so it can own a UV island and be hand-painted independently (see
+        // tools/blockbench_export.py). A helper called four times would force twelve cubes to share
+        // three offsets, which is exactly the flat-zone texturing this model moved away from.
+        PartDefinition legFR = body.addOrReplaceChild("leg_front_right",
+                CubeListBuilder.create()
+                        .texOffs(29, 62).addBox(-11.0f, -1.5f, -1.5f, 11.0f, 3.0f, 3.0f),
+                PartPose.offsetAndRotation(-6.0f, -1.0f, -5.0f, 0.0f, -QUARTER, -QUARTER));
+        PartDefinition legFRShin = legFR.addOrReplaceChild("leg_front_right_shin",
+                CubeListBuilder.create()
+                        .texOffs(76, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
+                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.15f));
+        legFRShin.addOrReplaceChild("leg_front_right_foot",
+                CubeListBuilder.create()
+                        .texOffs(51, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
+                PartPose.ZERO);
+
+        PartDefinition legFL = body.addOrReplaceChild("leg_front_left",
+                CubeListBuilder.create()
+                        .texOffs(0, 62).addBox(0.0f, -1.5f, -1.5f, 11.0f, 3.0f, 3.0f),
+                PartPose.offsetAndRotation(6.0f, -1.0f, -5.0f, 0.0f, QUARTER, QUARTER));
+        PartDefinition legFLShin = legFL.addOrReplaceChild("leg_front_left_shin",
+                CubeListBuilder.create()
+                        .texOffs(63, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
+                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.15f));
+        legFLShin.addOrReplaceChild("leg_front_left_foot",
+                CubeListBuilder.create()
+                        .texOffs(34, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
+                PartPose.ZERO);
+
+        PartDefinition legBR = body.addOrReplaceChild("leg_back_right",
+                CubeListBuilder.create()
+                        .texOffs(97, 54).addBox(-11.0f, -1.5f, -1.5f, 11.0f, 3.0f, 3.0f),
+                PartPose.offsetAndRotation(-6.0f, -1.0f, 5.0f, 0.0f, QUARTER, -QUARTER));
+        PartDefinition legBRShin = legBR.addOrReplaceChild("leg_back_right_shin",
+                CubeListBuilder.create()
+                        .texOffs(50, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
+                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.15f));
+        legBRShin.addOrReplaceChild("leg_back_right_foot",
+                CubeListBuilder.create()
+                        .texOffs(17, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
+                PartPose.ZERO);
+
+        PartDefinition legBL = body.addOrReplaceChild("leg_back_left",
+                CubeListBuilder.create()
+                        .texOffs(68, 54).addBox(0.0f, -1.5f, -1.5f, 11.0f, 3.0f, 3.0f),
+                PartPose.offsetAndRotation(6.0f, -1.0f, 5.0f, 0.0f, -QUARTER, QUARTER));
+        PartDefinition legBLShin = legBL.addOrReplaceChild("leg_back_left_shin",
+                CubeListBuilder.create()
+                        .texOffs(37, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
+                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.15f));
+        legBLShin.addOrReplaceChild("leg_back_left_foot",
+                CubeListBuilder.create()
+                        .texOffs(0, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
+                PartPose.ZERO);
 
         return LayerDefinition.create(mesh, 128, 128);
     }
 
-    /**
-     * Builds one arched spider leg pivoting at ({@code pivotX}, -1, {@code pivotZ}) on the body: a
-     * thigh angled up-and-out by {@code zRot} and splayed fore/aft by {@code yRot}, then a knee-bent
-     * shin dropping to a small foot. {@code left} legs extend along +x and bend the opposite way.
-     */
-    private static void addLeg(PartDefinition body, String name, float pivotX, float pivotZ,
-                               float yRot, float zRot, boolean left) {
-        int s = left ? 1 : -1;
-        float thighLen = 11.0f;
-        // Thigh extends outward from the pivot (−x for right, +x for left).
-        float thighMinX = left ? 0.0f : -thighLen;
-        PartDefinition leg = body.addOrReplaceChild(name,
-                CubeListBuilder.create()
-                        .texOffs(DARK_U, DARK_V).addBox(thighMinX, -1.5f, -1.5f, thighLen, 3.0f, 3.0f),
-                PartPose.offsetAndRotation(pivotX, -1.0f, pivotZ, 0.0f, yRot, zRot));
-        // Knee at the thigh's outer end; bend the shin back toward vertical (opposite the thigh lift).
-        PartDefinition shin = leg.addOrReplaceChild(name + "_shin",
-                CubeListBuilder.create()
-                        .texOffs(DARK_U, DARK_V).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
-                PartPose.offsetAndRotation(s * thighLen, 0.0f, 0.0f, 0.0f, 0.0f, s * 1.15f));
-        // Foot pad at the bottom of the shin.
-        shin.addOrReplaceChild(name + "_foot",
-                CubeListBuilder.create()
-                        .texOffs(DARK_U, DARK_V).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
-                PartPose.ZERO);
-    }
 }
