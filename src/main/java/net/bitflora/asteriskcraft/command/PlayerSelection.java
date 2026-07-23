@@ -9,6 +9,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,6 +76,14 @@ public class PlayerSelection {
             for (Mob unit : matching) {
                 add(unit);
             }
+        }
+    }
+
+    /** Replace the whole selection with this exact set of units (control-group recall). */
+    public void replaceWith(ServerLevel level, Collection<Mob> units) {
+        clear(level);
+        for (Mob unit : units) {
+            add(unit);
         }
     }
 

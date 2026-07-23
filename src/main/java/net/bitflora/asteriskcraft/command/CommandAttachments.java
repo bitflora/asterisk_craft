@@ -24,6 +24,10 @@ public final class CommandAttachments {
     public static final Supplier<AttachmentType<PlayerSelection>> SELECTION = ATTACHMENT_TYPES.register(
             "selection", () -> AttachmentType.<PlayerSelection>builder(PlayerSelection::new).build());
 
+    public static final Supplier<AttachmentType<ControlGroups>> CONTROL_GROUPS = ATTACHMENT_TYPES.register(
+            "control_groups", () -> AttachmentType.<ControlGroups>builder(ControlGroups::new)
+                    .serialize(ControlGroups.CODEC.fieldOf("groups")).build());
+
     private CommandAttachments() {
     }
 
@@ -41,5 +45,9 @@ public final class CommandAttachments {
 
     public static PlayerSelection selection(Player player) {
         return player.getData(SELECTION);
+    }
+
+    public static ControlGroups controlGroups(Player player) {
+        return player.getData(CONTROL_GROUPS);
     }
 }

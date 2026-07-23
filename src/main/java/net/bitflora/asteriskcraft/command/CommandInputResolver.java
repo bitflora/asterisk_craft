@@ -56,10 +56,7 @@ public final class CommandInputResolver {
                                      Faction owner, boolean ctrl, boolean shift) {
         Mob clicked = friendlyUnitAt(packet, level, owner);
         if (clicked == null) {
-            // Left-click on ground/air/enemy with no modifiers clears the selection.
-            if (!ctrl && !shift) {
-                selection.clear(level);
-            }
+            // A miss (empty air/block/enemy/non-friendly) leaves the current selection untouched.
             return;
         }
         if (ctrl && shift) {

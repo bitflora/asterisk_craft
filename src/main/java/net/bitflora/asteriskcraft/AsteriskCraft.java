@@ -17,6 +17,8 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
+import net.bitflora.asteriskcraft.command.ControlGroupPacket;
+import net.bitflora.asteriskcraft.command.ControlGroupResolver;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.combat.ZergRegenAttachments;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
@@ -309,6 +311,9 @@ public class AsteriskCraft {
         event.registrar("1").playToServer(CommandInputPacket.TYPE, CommandInputPacket.STREAM_CODEC,
                 (packet, context) -> context.enqueueWork(
                         () -> CommandInputResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
+        event.registrar("1").playToServer(ControlGroupPacket.TYPE, ControlGroupPacket.STREAM_CODEC,
+                (packet, context) -> context.enqueueWork(
+                        () -> ControlGroupResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {

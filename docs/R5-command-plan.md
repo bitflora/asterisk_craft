@@ -16,7 +16,7 @@ Command inputs fire **only while the Command Crystal is held in the main hand** 
 | Shift + Left-click | friendly unit | **Toggle** that unit in/out of selection (R5.2) |
 | Ctrl + Left-click | friendly unit | **Select all** friendly units of that unit's type within radius of the player (R5.3) |
 | Ctrl + Shift + Left-click | friendly unit | **Toggle all** friendly units of that type within radius (R5.4) |
-| Left-click | block / air / non-friendly | Clear selection (click on empty ground deselects) |
+| Left-click | block / air / non-friendly | No-op — current selection is left untouched |
 | Right-click | enemy unit | **Attack** — all selected units focus that target (R5.5) |
 | Right-click | block | **Move** — selected units path to that block (R5.6). A selected **Probe** on a harvestable block instead gets **Mine** (R5.12) |
 | Right-click | air (no hit) | **Move** — all selected units path toward the look vector, to the farthest point in view (R5.7) |
