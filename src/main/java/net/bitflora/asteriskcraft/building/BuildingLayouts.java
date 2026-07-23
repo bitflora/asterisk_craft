@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Code-defined multiblock layouts (relative position -> state). Used by the world
@@ -89,22 +90,53 @@ public final class BuildingLayouts {
     /** Relative offset of the Hive's core block within {@link #hive()}. */
     public static final BlockPos HIVE_CORE_OFFSET = new BlockPos(0, 1, 0);
 
-    /** Places a layout into the world, clearing head-room above the footprint first. */
-    public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout) {
+    /** Bounds the support fill so a deep or void column can't carve a quartz shaft down to bedrock. */
+    private static final int MAX_SUPPORT_DEPTH = 6;
+
+    /**
+     * Computes every block edit {@link #place} will apply, without touching the world, so the
+     * geometry (head-room clear, gap-filling support, layout stamp) is unit-testable. {@code isSolid}
+     * reports whether the EXISTING world block at a position is solid-render; support fill runs from
+     * just under the platform down to the first solid block in each column (fluids and air are not
+     * solid, so they get filled) with {@code support}, which keeps the platform on solid footing even
+     * when it was raised onto the highest ground in a dip. Edits are inserted air -> support -> layout
+     * so the layout wins on any shared position when applied in order.
+     */
+    static Map<BlockPos, BlockState> planPlacement(BlockPos origin, Map<BlockPos, BlockState> layout,
+            Predicate<BlockPos> isSolid, int maxSupportDepth, BlockState support) {
+        Map<BlockPos, BlockState> edits = new LinkedHashMap<>();
+        BlockState air = Blocks.AIR.defaultBlockState();
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 for (int dy = 1; dy <= 5; dy++) {
-                    level.setBlock(origin.offset(dx, dy, dz), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                    edits.put(origin.offset(dx, dy, dz), air);
                 }
-                // Solid footing under the platform so it never floats over a dip.
-                for (int dy = -2; dy <= -1; dy++) {
-                    BlockPos support = origin.offset(dx, dy, dz);
-                    if (!level.getBlockState(support).isSolidRender()) {
-                        level.setBlock(support, Blocks.SMOOTH_QUARTZ.defaultBlockState(), Block.UPDATE_ALL);
+                for (int dy = -1; dy >= -maxSupportDepth; dy--) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    if (isSolid.test(pos)) {
+                        break; // reached solid ground; stop filling this column
                     }
+                    edits.put(pos, support);
                 }
             }
         }
-        layout.forEach((offset, state) -> level.setBlock(origin.offset(offset.getX(), offset.getY(), offset.getZ()), state, Block.UPDATE_ALL));
+        layout.forEach((offset, state) ->
+                edits.put(origin.offset(offset.getX(), offset.getY(), offset.getZ()), state));
+        return edits;
+    }
+
+    /** Places a layout, filling support beneath the footprint with smooth quartz (the Protoss look). */
+    public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout) {
+        place(level, origin, layout, Blocks.SMOOTH_QUARTZ.defaultBlockState());
+    }
+
+    /**
+     * Places a layout into the world, clearing head-room and filling support beneath the footprint
+     * with {@code support} — Zerg Hives pass mycelium so the mound sits on a mycelium base rather
+     * than the Protoss quartz.
+     */
+    public static void place(ServerLevel level, BlockPos origin, Map<BlockPos, BlockState> layout, BlockState support) {
+        planPlacement(origin, layout, pos -> level.getBlockState(pos).isSolidRender(), MAX_SUPPORT_DEPTH, support)
+                .forEach((pos, state) -> level.setBlock(pos, state, Block.UPDATE_ALL));
     }
 }

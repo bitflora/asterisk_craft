@@ -14,21 +14,36 @@ import java.util.function.Supplier;
  * {@code stillValid} check), how many input slots it exposes, and the buttons the screen
  * should draw. Carries no cost predicates — those stay server-side in the block entity.
  * Serialized to the open-menu buffer by {@link #ordinal()} and rebuilt on the client.
+ *
+ * <p>The Nexus deliberately exposes separate Wood/Stone buttons per unit instead of one
+ * button that pays with a mix of both — see {@code NexusBlockEntity#trainOption}.
  */
 public enum ProductionKind {
     NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.probe"),
+                    Component.translatable("gui.asteriskcraft.option.probe_wood"),
                     new ItemStack(Items.GOLDEN_PICKAXE),
-                    Component.translatable("gui.asteriskcraft.cost.probe")),
+                    Component.translatable("gui.asteriskcraft.cost.probe_wood")),
             new OptionView(
-                    Component.translatable("block.asteriskcraft.gateway_core"),
+                    Component.translatable("gui.asteriskcraft.option.probe_stone"),
+                    new ItemStack(Items.GOLDEN_PICKAXE),
+                    Component.translatable("gui.asteriskcraft.cost.probe_stone")),
+            new OptionView(
+                    Component.translatable("gui.asteriskcraft.option.gateway_wood"),
                     new ItemStack(AsteriskCraft.GATEWAY_KIT.get()),
-                    Component.translatable("gui.asteriskcraft.cost.gateway")),
+                    Component.translatable("gui.asteriskcraft.cost.gateway_wood")),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.photon_cannon"),
+                    Component.translatable("gui.asteriskcraft.option.gateway_stone"),
+                    new ItemStack(AsteriskCraft.GATEWAY_KIT.get()),
+                    Component.translatable("gui.asteriskcraft.cost.gateway_stone")),
+            new OptionView(
+                    Component.translatable("gui.asteriskcraft.option.photon_cannon_wood"),
                     new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()),
-                    Component.translatable("gui.asteriskcraft.cost.photon_cannon")))),
+                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_wood")),
+            new OptionView(
+                    Component.translatable("gui.asteriskcraft.option.photon_cannon_stone"),
+                    new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()),
+                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_stone")))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Component.translatable("entity.asteriskcraft.zealot"),

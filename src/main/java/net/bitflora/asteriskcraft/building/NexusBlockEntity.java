@@ -31,11 +31,14 @@ import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Production logic for the Nexus: a small Probe queue paid for out of the shared Protoss
  * army bank (surfaced through {@link ProductionMenu}). Cost: 50 wood (any logs) OR
- * 50 cobblestone per Probe.
+ * 50 cobblestone per Probe. Same either/or split applies to the Gateway and Photon Cannon
+ * kits: the player picks a Wood or a Stone button per unit (see {@link #trainOption}) —
+ * there is deliberately no button that pays with a mix of both.
  *
  * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link GatewayBlockEntity}
  * reads and writes the same underlying data, so every Protoss production building draws from
@@ -43,7 +46,7 @@ import java.util.List;
  */
 public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, FactionCore, BeaconBeamOwner {
     public static final int PROBE_COST = 50;
-    /** Wood/cobblestone (any mix) to warp out a building kit — Gateway or Photon Cannon. */
+    /** All-wood or all-cobblestone (player's choice) to warp out a building kit — Gateway or Photon Cannon. */
     public static final int BUILDING_COST = 150;
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
@@ -65,7 +68,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
                 case ProductionMenu.DATA_BUILD_PROGRESS -> queued > 0 ? BUILD_TICKS - buildTicksRemaining : 0;
                 case ProductionMenu.DATA_BUILD_TOTAL -> BUILD_TICKS;
                 case ProductionMenu.DATA_WARP -> 0;
-                case ProductionMenu.DATA_QUEUE_BASE -> queued;
+                case ProductionMenu.DATA_QUEUE_BASE, ProductionMenu.DATA_QUEUE_BASE + 1 -> queued;
                 default -> 0;
             };
         }
@@ -145,23 +148,28 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
             return;
         }
         switch (optionIndex) {
-            case 0 -> trainProbe(player);
-            case 1 -> warpInKit(player, AsteriskCraft.GATEWAY_KIT.get(),
+            case 0 -> trainProbe(player, Resource.WOOD);
+            case 1 -> trainProbe(player, Resource.STONE);
+            case 2 -> warpInKit(player, AsteriskCraft.GATEWAY_KIT.get(), Resource.WOOD,
                     "message.asteriskcraft.nexus.gateway_ready");
-            case 2 -> warpInKit(player, AsteriskCraft.PHOTON_CANNON_KIT.get(),
+            case 3 -> warpInKit(player, AsteriskCraft.GATEWAY_KIT.get(), Resource.STONE,
+                    "message.asteriskcraft.nexus.gateway_ready");
+            case 4 -> warpInKit(player, AsteriskCraft.PHOTON_CANNON_KIT.get(), Resource.WOOD,
+                    "message.asteriskcraft.nexus.photon_cannon_ready");
+            case 5 -> warpInKit(player, AsteriskCraft.PHOTON_CANNON_KIT.get(), Resource.STONE,
                     "message.asteriskcraft.nexus.photon_cannon_ready");
             default -> {
             }
         }
     }
 
-    private void trainProbe(Player player) {
+    private void trainProbe(Player player, Resource resource) {
         if (this.queued >= MAX_QUEUE) {
             overlay(player, Component.translatable("message.asteriskcraft.nexus.queue_full"));
             return;
         }
-        if (!payProbeCost()) {
-            overlay(player, Component.translatable("message.asteriskcraft.nexus.cannot_afford", PROBE_COST));
+        if (!ResourceBank.extract(this, resource.matches, PROBE_COST)) {
+            overlay(player, Component.translatable("message.asteriskcraft.nexus.cannot_afford", PROBE_COST, resource.label));
             return;
         }
         this.queued++;
@@ -172,10 +180,10 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         overlay(player, Component.translatable("message.asteriskcraft.nexus.queued", this.queued));
     }
 
-    /** Warp-in kits are instant: pay the shared cost and hand the player the building kit item. */
-    private void warpInKit(Player player, Item kit, String readyKey) {
-        if (!payBuildingCost()) {
-            overlay(player, Component.translatable("message.asteriskcraft.nexus.cannot_afford_building", BUILDING_COST));
+    /** Warp-in kits are instant: pay the chosen resource's share and hand the player the building kit item. */
+    private void warpInKit(Player player, Item kit, Resource resource, String readyKey) {
+        if (!ResourceBank.extract(this, resource.matches, BUILDING_COST)) {
+            overlay(player, Component.translatable("message.asteriskcraft.nexus.cannot_afford_building", BUILDING_COST, resource.label));
             return;
         }
         giveOrDrop(player, new ItemStack(kit));
@@ -197,15 +205,18 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         }
     }
 
-    private boolean payProbeCost() {
-        return ResourceBank.extract(this, stack -> stack.is(ItemTags.LOGS), PROBE_COST)
-                || ResourceBank.extract(this, stack -> stack.is(Items.COBBLESTONE), PROBE_COST);
-    }
+    /** The two resources the Nexus can pay production costs with; each has its own dedicated button. */
+    private enum Resource {
+        WOOD(stack -> stack.is(ItemTags.LOGS), "wood"),
+        STONE(stack -> stack.is(Items.COBBLESTONE), "cobblestone");
 
-    /** Any mix of wood and cobblestone that together totals {@link #BUILDING_COST}. */
-    private boolean payBuildingCost() {
-        return ResourceBank.extract(this,
-                stack -> stack.is(ItemTags.LOGS) || stack.is(Items.COBBLESTONE), BUILDING_COST);
+        private final Predicate<ItemStack> matches;
+        private final String label;
+
+        Resource(Predicate<ItemStack> matches, String label) {
+            this.matches = matches;
+            this.label = label;
+        }
     }
 
     private void spawnProbe(ServerLevel level, BlockPos pos) {

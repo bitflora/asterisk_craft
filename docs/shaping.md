@@ -83,8 +83,8 @@ The whole economy runs on three vanilla resources Probes/Drones can harvest non-
 | Probe | 50 wood **or** 50 cobblestone | Drone (same) |
 | Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling (same) |
 | Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk (same) |
-| Gateway kit | 200 wood + 200 cobblestone | Spawning Pool (baked into Hive for MVP) |
-| Photon Cannon kit | 100 wood + 100 cobblestone + 20 iron | Sunken Colony (post-MVP) |
+| Gateway kit | 150 wood **or** 150 cobblestone | Spawning Pool (baked into Hive for MVP) |
+| Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony (post-MVP) |
 | Nexus / Hive | Not craftable in MVP (pre-placed) | — |
 
 ## Slices (each ends demo-able)
