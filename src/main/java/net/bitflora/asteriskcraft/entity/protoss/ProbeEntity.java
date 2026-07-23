@@ -67,7 +67,8 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
 
     /** Coarse resource category, used to prefer re-mining the same kind of node on the next trip. */
     enum ResourceType implements StringRepresentable {
-        WOOD("wood"), IRON("iron"), STONE("stone");
+        WOOD("wood"), IRON("iron"), STONE("stone"), COAL("coal"), COPPER("copper"),
+        GOLD("gold"), REDSTONE("redstone"), LAPIS("lapis"), DIAMOND("diamond"), EMERALD("emerald");
 
         static final Codec<ResourceType> CODEC = StringRepresentable.fromEnum(ResourceType::values);
         private final String name;
@@ -82,6 +83,27 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             }
             if (state.is(BlockTags.IRON_ORES)) {
                 return IRON;
+            }
+            if (state.is(BlockTags.COAL_ORES)) {
+                return COAL;
+            }
+            if (state.is(BlockTags.COPPER_ORES)) {
+                return COPPER;
+            }
+            if (state.is(BlockTags.GOLD_ORES)) {
+                return GOLD;
+            }
+            if (state.is(BlockTags.REDSTONE_ORES)) {
+                return REDSTONE;
+            }
+            if (state.is(BlockTags.LAPIS_ORES)) {
+                return LAPIS;
+            }
+            if (state.is(BlockTags.DIAMOND_ORES)) {
+                return DIAMOND;
+            }
+            if (state.is(BlockTags.EMERALD_ORES)) {
+                return EMERALD;
             }
             return STONE;
         }
@@ -234,6 +256,13 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             case WOOD -> new ItemStack(state.getBlock().asItem(), YIELD_PER_TRIP);
             case IRON -> new ItemStack(Items.IRON_INGOT, YIELD_PER_TRIP);
             case STONE -> new ItemStack(Items.COBBLESTONE, YIELD_PER_TRIP);
+            case COAL -> new ItemStack(Items.COAL, YIELD_PER_TRIP);
+            case COPPER -> new ItemStack(Items.COPPER_INGOT, YIELD_PER_TRIP);
+            case GOLD -> new ItemStack(Items.GOLD_INGOT, YIELD_PER_TRIP);
+            case REDSTONE -> new ItemStack(Items.REDSTONE, YIELD_PER_TRIP);
+            case LAPIS -> new ItemStack(Items.LAPIS_LAZULI, YIELD_PER_TRIP);
+            case DIAMOND -> new ItemStack(Items.DIAMOND, YIELD_PER_TRIP);
+            case EMERALD -> new ItemStack(Items.EMERALD, YIELD_PER_TRIP);
         };
     }
 

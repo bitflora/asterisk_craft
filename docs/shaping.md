@@ -76,7 +76,7 @@ Key technical notes:
 
 ## Costs (wood/cobble/iron economy; amounts get a balance pass in V4)
 
-The whole economy runs on three vanilla resources Probes/Drones can harvest non-destructively: **wood** (logs, `#minecraft:logs`), **cobblestone** (from stone), and **iron** (from iron ore). Zerg costs no longer mirror Protoss exactly: Protoss stays picky about which resource pays for what, while every Zerg unit accepts **any item** in the shared Hive bank toward its flat cost (whatever mix of wood/cobble/iron the Drones happen to have delivered).
+The whole economy runs on vanilla resources Probes/Drones can harvest non-destructively: **wood** (logs, `#minecraft:logs`), **cobblestone** (from stone), and every ore in the ground — **iron, coal, copper, gold, redstone, lapis, diamond, emerald** (via the matching `#minecraft:*_ores` tags), each yielding its usual smelted/refined form (e.g. iron ore → iron ingot, coal ore → coal) directly, with no separate smelting step. Zerg costs no longer mirror Protoss exactly: Protoss stays picky about which resource pays for what, while every Zerg unit accepts **any item** in the shared Hive bank toward its flat cost (whatever mix of resources the Drones happen to have delivered).
 
 | Protoss | Cost | Zerg equivalent | Cost |
 |---------|------|------------------|------|
