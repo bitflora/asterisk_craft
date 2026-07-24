@@ -14,6 +14,7 @@ import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
 import net.bitflora.asteriskcraft.client.protoss.ZealotModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
+import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.PartPose;
@@ -139,6 +140,7 @@ final class ModelGeometry {
         map.put("photon_cannon", PhotonCannonModel::createBodyLayer);
         map.put("zergling", ZerglingModel::createBodyLayer);
         map.put("hydralisk", HydraliskModel::createBodyLayer);
+        map.put("mutalisk", MutaliskModel::createBodyLayer);
         map.put("drone", DroneModel::createBodyLayer);
         map.put("sunken_colony", SunkenColonyModel::createBodyLayer);
         // Collections.unmodifiableMap, not Map.copyOf — the latter does not preserve insertion order.

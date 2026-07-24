@@ -26,6 +26,7 @@ public final class ZergUnitCatalog {
     public static final int DRONE_COST = 50;
     public static final int ZERGLING_COST = 25;
     public static final int HYDRALISK_COST = 100;
+    public static final int MUTALISK_COST = 100;
 
     /**
      * A producible unit: its entity type, the interchangeable cost bundles (pay any one), whether
@@ -71,6 +72,8 @@ public final class ZergUnitCatalog {
                 List.of(List.of(new ResourceBank.Cost(ANY_ITEM, ZERGLING_COST))), false, false);
         UnitDef hydralisk = new UnitDef(AsteriskCraft.HYDRALISK.get(),
                 List.of(List.of(new ResourceBank.Cost(ANY_ITEM, HYDRALISK_COST))), false, false);
-        return Map.of("drone", drone, "zergling", zergling, "hydralisk", hydralisk);
+        UnitDef mutalisk = new UnitDef(AsteriskCraft.MUTALISK.get(),
+                List.of(List.of(new ResourceBank.Cost(ANY_ITEM, MUTALISK_COST))), false, false);
+        return Map.of("drone", drone, "zergling", zergling, "hydralisk", hydralisk, "mutalisk", mutalisk);
     }
 }

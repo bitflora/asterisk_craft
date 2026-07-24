@@ -24,7 +24,8 @@ Mod in `C:\Users\timja\code\asterisk-craft` (formerly `star-mine`). Goal: bring 
 | R7 | Every unit and building has a vanilla-item cost/recipe | Must-have |
 | R8 | Faction-generic architecture (race selection + PvP later) | Must-have |
 | R9 | Zerg static defence: a Sunken Colony rooted beside each Hive auto-attacks enemy-faction targets in range | Must-have |
-| — | Out of scope: air units, RTS camera, full tech tree, multiplayer balance | Out |
+| R10 | Air units: a flyer cruises a fixed height above the terrain, engages ground targets from altitude, and is unreachable by melee ground units | Must-have |
+| — | Out of scope: RTS camera, full tech tree, multiplayer balance | Out |
 
 ### R5 detail — select + orders
 
@@ -84,6 +85,7 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 | Probe | 50 wood **or** 50 cobblestone | Drone | 50 of any resource |
 | Zealot (Zombie, melee) | 50 wood **and** 50 cobblestone | Zergling | 25 of any resource |
 | Dragoon (Skeleton, ranged) | 100 wood **and** 50 cobblestone | Hydralisk | 100 of any resource |
+| — (no Protoss air yet) | — | Mutalisk (air) | 100 of any resource |
 | Gateway kit | 150 wood **or** 150 cobblestone | Spawning Pool (baked into Hive for MVP) | — |
 | Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony | Not buildable — one is pre-placed per Hive |
 | Nexus / Hive | Not craftable in MVP (pre-placed) | — | — |
@@ -101,6 +103,8 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 **V4 — Photon Cannon + real costs.** Cannon kit + auto-targeting (A7); wire all production/kit costs to actual item consumption (R7); first balance pass on wave scaling. *Demo: cannons repel a wave; production halts when the chest is empty.*
 
 **V4b — Sunken Colony (R9). `[DONE]`** The Zerg answer to the Photon Cannon: a rooted `SunkenColonyEntity` (150 HP, no movement goals, `FactionTargetGoal` + `RetaliateGoal`, deliberately not commandable) planted beside every Hive by `GameBootstrap`. Its `SunkenSpikeGoal` whips the tentacle every 32 ticks and drives a single `SunkenSpikeEntity` — an `EvokerFangs` subclass — out of the ground under a target up to 11 blocks away, for 20 damage. Vanilla fangs hardcode 6 damage and only spare vanilla-team allies, so both the damage and the faction filter are applied in `combat/SunkenSpikeDamageHandler` (see docs/neoforge-api-notes.md); the trade for hitting that hard is that the strike lands ~8 ticks later at a fixed spot, so a moving target can walk out of it. Ally/enemy spawn eggs included for testing. *Demo: walk into a Hive and get impaled; the spikes leave the Hive's own Drones untouched.*
+
+**V4c — Mutalisk, the first air unit (R10). `[DONE]`** A `MutaliskEntity` (60 HP, 4.5 damage, 9-block range, 0 armour, 100 of any resource) that cruises 6 blocks above the terrain. Flight is two pieces neither of which any combat goal knows about: a vanilla `FlyingMoveControl` plus an `entity/ai/HoverFlyingNavigation` that lifts every destination to `ground + 6` **before** pathing — the altitude has to be baked into the path itself, because `PathNavigation.followThePath` only advances a node when the mob is within 1 block of it on Y, so a flyer over a ground-hugging path would thrash forever (see docs/neoforge-api-notes.md). Because every movement goal in the mod reaches the world through `getNavigation().moveTo(...)`, the existing `RangedAttackGoal`/`CommandedMoveGoal`/`GuardGoal`/`SiegeBlockGoal` all fly at altitude unchanged; `SiegeBlockGoal` only gained a per-unit reach so an air unit can batter a core from where it hovers, and an `entity/ai/HoverGoal` holds altitude in the gaps between orders. Melee ground units (Zealot, Zergling) genuinely cannot answer it — only ranged units and the Photon Cannon can, which is the intended counter-play. The enemy build script fields one from the fifth wave on. *Demo: a Mutalisk swings over the tree line, your Zealots mill uselessly beneath it, a Dragoon brings it down.*
 
 **V5 — Polish + extensibility groundwork.** Control groups (number-key bindings) on the Command Crystal; per-player client-only selection glow (replacing V2b's shared server glow); unit team-color visuals, sounds, particles; document the faction/race registry for future Terran/player-Zerg + PvP; optional start on tactical map GUI. *Demo: comfortable command UX in a full match.*
 

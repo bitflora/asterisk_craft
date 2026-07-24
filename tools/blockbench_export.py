@@ -81,6 +81,7 @@ UNITS = {
     "photon_cannon": ("protoss", "PhotonCannonModel"),
     "zergling": ("zerg", "ZerglingModel"),
     "hydralisk": ("zerg", "HydraliskModel"),
+    "mutalisk": ("zerg", "MutaliskModel"),
     "drone": ("zerg", "DroneModel"),
     "sunken_colony": ("zerg", "SunkenColonyModel"),
 }

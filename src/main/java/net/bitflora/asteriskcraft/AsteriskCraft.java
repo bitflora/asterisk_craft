@@ -28,6 +28,7 @@ import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
+import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
@@ -174,6 +175,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<MutaliskEntity>> MUTALISK =
+            ENTITY_TYPES.register("mutalisk", () -> EntityType.Builder.of(MutaliskEntity::new, MobCategory.MONSTER)
+                    // Wide and shallow: the winged silhouette is much broader than it is tall.
+                    .sized(1.4f, 0.9f)
+                    // Larger than the ground units': it cruises 6 blocks up, so it enters view sooner.
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("mutalisk"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<PhotonCannonEntity>> PHOTON_CANNON =
             ENTITY_TYPES.register("photon_cannon", () -> EntityType.Builder.of(PhotonCannonEntity::new, MobCategory.MISC)
                     .sized(2.6f, 2.5f) // 3x3-block star base + lens drum + domed head
@@ -228,6 +237,11 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("hydralisk_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("mutalisk_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, MUTALISK, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("mutalisk_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, MUTALISK, Faction.ZERG));
 
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.PROTOSS));
@@ -297,6 +311,8 @@ public class AsteriskCraft {
                 output.accept(ZERGLING_SPAWN_EGG_ENEMY.get());
                 output.accept(HYDRALISK_SPAWN_EGG_ALLY.get());
                 output.accept(HYDRALISK_SPAWN_EGG_ENEMY.get());
+                output.accept(MUTALISK_SPAWN_EGG_ALLY.get());
+                output.accept(MUTALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ALLY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ENEMY.get());
             }).build());
@@ -346,6 +362,7 @@ public class AsteriskCraft {
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
+        event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
         event.put(SUNKEN_COLONY.get(), SunkenColonyEntity.createAttributes().build());
         // No attributes for SUNKEN_SPIKE — it's a plain Entity, not a LivingEntity.

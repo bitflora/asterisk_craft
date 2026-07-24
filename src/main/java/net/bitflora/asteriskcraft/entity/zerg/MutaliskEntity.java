@@ -1,0 +1,116 @@
+package net.bitflora.asteriskcraft.entity.zerg;
+
+import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
+import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
+import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
+import net.bitflora.asteriskcraft.entity.ai.HoverFlyingNavigation;
+import net.bitflora.asteriskcraft.entity.ai.HoverGoal;
+import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
+import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+
+/**
+ * The Zerg air unit, and the mod's first flyer. It cruises {@link #HOVER_HEIGHT} blocks above the
+ * terrain and spits glaves at anything of an enemy faction below, which means melee ground units
+ * (Zealot, Zergling) simply cannot answer it — only ranged units and static defence can. That is
+ * deliberate, and matches StarCraft.
+ *
+ * <p>Flight comes from two pieces, neither of which any combat goal knows about: a vanilla
+ * {@link FlyingMoveControl} for the actual airborne motion, and a {@link HoverFlyingNavigation} that
+ * lifts every destination to cruising altitude before pathing (see that class for why the altitude has
+ * to be baked into the path rather than applied at the move control). A {@link HoverGoal} at the
+ * bottom of the goal list holds the unit up when nothing else is driving it.
+ *
+ * <p>{@link #ATTACK_RADIUS} is a 3D distance, so a Mutalisk sitting at cruising altitude still has
+ * {@code sqrt(9² − 6²) ≈ 6.7} blocks of horizontal reach on a ground target — a genuine ranged
+ * engagement, not a near-melee one. Its shot is the same {@link HitscanAttacks} beam the Hydralisk
+ * and Dragoon use.
+ */
+public class MutaliskEntity extends Monster implements RangedAttackMob {
+    public static final int MAX_HEALTH = 60;
+    public static final float ATTACK_DAMAGE = 4.5f;
+    /** Reach of the glave, in blocks. Out-ranges every other mobile unit in the mod. */
+    public static final float ATTACK_RADIUS = 9.0f;
+    /** One glave every 1.5s — the StarCraft cadence, slower than a Hydralisk's. */
+    public static final int ATTACK_COOLDOWN = 30;
+    /** Blocks above the terrain the Mutalisk cruises at. */
+    public static final int HOVER_HEIGHT = 6;
+
+    public MutaliskEntity(EntityType<? extends MutaliskEntity> type, Level level) {
+        super(type, level);
+        // hoversInPlace = true: the move control switches gravity off for us and, unlike the
+        // ground-falling variant, never switches it back on when it runs out of somewhere to go.
+        this.moveControl = new FlyingMoveControl(this, 20, true);
+        this.setPersistenceRequired();
+    }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, MAX_HEALTH)
+                .add(Attributes.ARMOR, 0.0)
+                // MOVEMENT_SPEED is only the fallback FlyingMoveControl uses while the unit is still
+                // touching the ground; FLYING_SPEED is what actually governs it in the air.
+                .add(Attributes.MOVEMENT_SPEED, 0.25)
+                .add(Attributes.FLYING_SPEED, 0.6)
+                .add(Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE)
+                .add(Attributes.FOLLOW_RANGE, 32.0);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        HoverFlyingNavigation navigation = new HoverFlyingNavigation(this, level, HOVER_HEIGHT);
+        navigation.setCanOpenDoors(false);
+        navigation.setCanFloat(true);
+        // The default path length is far shorter than this unit's 32-block follow range, so a
+        // Mutalisk would give up on distant targets mid-approach. (Vanilla's Bee raises it for the
+        // same reason.)
+        navigation.setRequiredPathLength(64.0f);
+        return navigation;
+    }
+
+    @Override
+    protected void registerGoals() {
+        // No FloatGoal: it flies, and the navigation is allowed to float across water anyway.
+        // Priority 0, as on the ground units: the siege goal must be able to preempt movement.
+        this.goalSelector.addGoal(0, new SiegeBlockGoal(this, ATTACK_RADIUS));
+        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, ATTACK_COOLDOWN, ATTACK_RADIUS));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 12.0f));
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        // Last: only holds altitude in the gaps between real orders.
+        this.goalSelector.addGoal(8, new HoverGoal(this, HOVER_HEIGHT, 1.0));
+        this.targetSelector.addGoal(-1, new RetaliateGoal(this));
+        this.targetSelector.addGoal(1, new FactionTargetGoal(this));
+        CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    @Override
+    public void performRangedAttack(LivingEntity target, float power) {
+        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
+                ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT);
+    }
+
+    @Override
+    public boolean causeFallDamage(double distance, float multiplier, DamageSource source) {
+        // Gravity is only switched off once the move control has somewhere to fly, so a Mutalisk
+        // warped in over a drop would otherwise take fall damage before it ever got airborne.
+        return false;
+    }
+
+    // No sound overrides: there are no Mutalisk .ogg assets to port, so it stays silent like the
+    // Dragoon rather than borrowing another unit's voice.
+}

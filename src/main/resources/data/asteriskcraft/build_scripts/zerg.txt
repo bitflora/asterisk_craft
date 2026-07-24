@@ -11,7 +11,7 @@
 #   Repeat N              loop the previous N commands endlessly (put it last)
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Zergling, 1 Hydralisk". Qty may be a range "3-5".
-#   Units: Zergling (melee), Hydralisk (ranged), Drone (worker).
+#   Units: Zergling (melee), Hydralisk (ranged), Mutalisk (air), Drone (worker).
 #
 # The AI waits until it can afford each unit, so a wave only leaves once fully trained.
 
@@ -28,10 +28,11 @@ Wave: 2 Zergling, 1 Hydralisk
 Wait 200
 Wave: 4 Zergling, 2 Hydralisk
 Wait 200
-Wave: 5-6 Zergling, 1-3 Hydralisk
+# First air: a lone Mutalisk. Melee units can't touch it — answer it with Dragoons or a Cannon.
+Wave: 5-6 Zergling, 1-3 Hydralisk, 1 Mutalisk
 Wait 220
 
 # Endless heavy waves from here on.
-Wave: 7-12 Zergling, 3-4 Hydralisk
+Wave: 7-12 Zergling, 3-4 Hydralisk, 1-2 Mutalisk
 Wait 220
 Repeat 2

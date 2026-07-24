@@ -32,13 +32,16 @@ import org.jetbrains.annotations.Nullable;
  * flag for the whole dig, then hands it back — rather than fighting a lower-priority goal for a
  * too-short yield window. It stays out of the way while the unit is actually moving, because
  * obstruction-breaking only triggers once navigation reports it is done (see {@code obstructionAhead}).
- * Installed on Zealots, Dragoons, Zerglings and Hydralisks — never on workers, so miners don't grief.
+ * Installed on Zealots, Dragoons, Zerglings, Hydralisks and Mutalisks — never on workers, so miners
+ * don't grief. Reach is per-unit (see the two-argument constructor) because an air unit sieges from
+ * altitude rather than from arm's length.
  * (The Photon Cannon is an entity, so retaliating against it needs no special case here — units
  * target and hit it back through the normal {@link RetaliateGoal}/{@code FactionTargetGoal} path.)
  */
 public class SiegeBlockGoal extends Goal {
     private static final int CORE_SCAN_RADIUS = 3;
-    private static final double REACH_SQR = 6.25; // ~2.5 blocks
+    /** Default melee reach: a ground unit has to walk up and put its hands on the block. */
+    private static final double DEFAULT_REACH = 2.5;
     private static final int ASSAULT_INTERVAL = 20; // one hit per second
     private static final int CORE_DAMAGE_PER_HIT = 20; // 300 hp -> ~15s for a lone unit, faster in a swarm
     private static final int DIG_TICKS = 40; // ~2s to break an obstructing block
@@ -47,6 +50,7 @@ public class SiegeBlockGoal extends Goal {
     private enum Mode {CORE, DIG}
 
     private final Mob mob;
+    private final double reachSqr;
     private Mode mode = Mode.CORE;
     @Nullable
     private BlockPos corePos;
@@ -57,7 +61,17 @@ public class SiegeBlockGoal extends Goal {
     private int digTimer;
 
     public SiegeBlockGoal(Mob mob) {
+        this(mob, DEFAULT_REACH);
+    }
+
+    /**
+     * @param reach how close the unit must be to a core before it starts hitting it. An air unit
+     *              hovering above the battlefield can never satisfy the melee default, so it passes
+     *              its own attack range instead and batters the core from where it flies.
+     */
+    public SiegeBlockGoal(Mob mob, double reach) {
         this.mob = mob;
+        this.reachSqr = reach * reach;
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -124,7 +138,7 @@ public class SiegeBlockGoal extends Goal {
         }
         BlockPos pos = this.corePos;
         this.mob.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        if (pos.distToCenterSqr(this.mob.position()) > REACH_SQR) {
+        if (pos.distToCenterSqr(this.mob.position()) > this.reachSqr) {
             this.mob.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.1);
             return;
         }

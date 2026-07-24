@@ -1,6 +1,5 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
-import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.zerg.SunkenSpikeGoal;
@@ -31,8 +30,9 @@ import net.minecraft.world.level.Level;
  * knows or cares which side is the enemy. It is deliberately <em>not</em> commandable (no
  * {@code CommandableGoals}) — a rooted building has nowhere to be ordered to.
  *
- * <p>Sounds are borrowed from the Hydralisk: no Sunken Colony audio was authored, and a silent
- * structure reads as broken.
+ * <p>The colony itself is silent — no hurt or death sound — since a rooted structure grunting or
+ * screaming like a creature doesn't fit. Its tentacle strike still makes noise (see
+ * {@link SunkenSpikeGoal}/{@link SunkenSpikeEntity}).
  */
 public class SunkenColonyEntity extends Monster {
     public static final int MAX_HEALTH = 150;
@@ -57,6 +57,7 @@ public class SunkenColonyEntity extends Monster {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, MAX_HEALTH)
+                .add(Attributes.ARMOR, 0.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE)
@@ -107,13 +108,15 @@ public class SunkenColonyEntity extends Monster {
         return false;
     }
 
+    // A rooted structure doesn't grunt when hit or die with a creature scream — only its tentacle
+    // strike (see SunkenSpikeGoal/SunkenSpikeEntity) makes any sound.
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return AsteriskCraft.HYDRALISK_HURT.get();
+        return null;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return AsteriskCraft.HYDRALISK_DEATH.get();
+        return null;
     }
 }
