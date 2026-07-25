@@ -31,18 +31,26 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.
-    public static final int IMAGE_WIDTH = 176;
+    // Options are arranged column-major (see ProductionKind): each unit gets its own column,
+    // holding its buttons (e.g. the Nexus's Wood/Stone pair) stacked vertically within it.
+    public static final int IMAGE_WIDTH = 208; // widened past the vanilla 176 to fit 3 unit columns
     public static final int INPUT_COLUMNS = 9;
-    public static final int IMAGE_HEIGHT = 306; // grown to fit the input bank's extra rows + up to six train buttons
+    public static final int IMAGE_HEIGHT = 250; // fits the input bank's rows + up to 2 stacked buttons per column
     public static final int SLOT_START_X = 8;
     public static final int INPUT_ROW_Y = 20;
-    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 136
-    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 194
-    public static final int BUTTON_X = 26;
+    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 168
+    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 226
+    public static final int BUTTON_X = 8;
+    public static final int BUTTON_AREA_WIDTH = 192; // total width available to a row of unit columns
+    public static final int BUTTON_COLUMN_GAP = 6;
     public static final int BUTTON_Y = 80;
-    public static final int BUTTON_W = 124;
-    public static final int BUTTON_H = 20;
-    public static final int BUTTON_SPACING = 22;
+    public static final int BUTTON_H = 36; // tall enough for a centered icon above a centered name
+    public static final int BUTTON_ROW_SPACING = 40; // vertical distance between stacked buttons in a column
+
+    /** Width of one unit column's button, given how many columns share {@link #BUTTON_AREA_WIDTH}. */
+    public static int buttonWidth(int columns) {
+        return (BUTTON_AREA_WIDTH - (columns - 1) * BUTTON_COLUMN_GAP) / columns;
+    }
 
     private final ProductionKind kind;
     @Nullable
