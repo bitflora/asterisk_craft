@@ -108,6 +108,12 @@ public class AsteriskCraft {
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingLayouts::gateway, BuildingLayouts.GATEWAY_CORE_OFFSET));
 
+    // Bought from the Nexus's own production menu (paid from the shared army bank) rather than
+    // crafted, unlike the other kits — see NexusBlockEntity#trainOption. An expansion Nexus, so
+    // it's deliberately not offered as a cheap personal-inventory crafting-table recipe.
+    public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
+            props -> new BuildingKitItem(props, BuildingLayouts::nexus, BuildingLayouts.NEXUS_CORE_OFFSET));
+
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
     public static final DeferredItem<FactionSpawnEggItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
@@ -302,6 +308,7 @@ public class AsteriskCraft {
                 output.accept(GATEWAY_CORE_ITEM.get());
                 output.accept(GATEWAY_KIT.get());
                 output.accept(PHOTON_CANNON_KIT.get());
+                output.accept(NEXUS_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());

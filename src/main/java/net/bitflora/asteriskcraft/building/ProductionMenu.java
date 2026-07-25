@@ -27,29 +27,40 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_BUILD_TOTAL = 2;    // ticks a unit takes (for the fraction)
     public static final int DATA_WARP = 3;           // warp-in ticks remaining (0 = ready)
     public static final int DATA_QUEUE_BASE = 4;     // queued count per option
-    public static final int MAX_OPTIONS = 6; // Nexus: Probe/Gateway/Photon Cannon, each with a Wood and a Stone button
+    // Nexus: Probe/Gateway/Photon Cannon (Wood + Stone buttons each) + Nexus Kit (one button).
+    public static final int MAX_OPTIONS = 7;
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.
     // Options are arranged column-major (see ProductionKind): each unit gets its own column,
     // holding its buttons (e.g. the Nexus's Wood/Stone pair) stacked vertically within it.
-    public static final int IMAGE_WIDTH = 208; // widened past the vanilla 176 to fit 3 unit columns
+    // Every button is icon-sized, so the whole grid packs tight and the panel stays at the
+    // vanilla 176 width — the 9-wide slot grid, not the buttons, is what sets the width.
+    public static final int IMAGE_WIDTH = 176;
     public static final int INPUT_COLUMNS = 9;
-    public static final int IMAGE_HEIGHT = 250; // fits the input bank's rows + up to 2 stacked buttons per column
-    public static final int SLOT_START_X = 8;
+    public static final int IMAGE_HEIGHT = 230; // input bank's 3 rows + 2 button rows + player inventory
+    public static final int SLOT_START_X = (IMAGE_WIDTH - INPUT_COLUMNS * 18) / 2; // 7
     public static final int INPUT_ROW_Y = 20;
-    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 168
-    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 226
-    public static final int BUTTON_X = 8;
-    public static final int BUTTON_AREA_WIDTH = 192; // total width available to a row of unit columns
-    public static final int BUTTON_COLUMN_GAP = 6;
+    public static final int PLAYER_INV_Y = IMAGE_HEIGHT - 82; // 148
+    public static final int HOTBAR_Y = IMAGE_HEIGHT - 24;     // 206
     public static final int BUTTON_Y = 80;
-    public static final int BUTTON_H = 36; // tall enough for a centered icon above a centered name
-    public static final int BUTTON_ROW_SPACING = 40; // vertical distance between stacked buttons in a column
+    // The button is sized to just fit its 16x16 icon, plus a px of padding either side and a
+    // thin strip along the bottom for the progress bar. Columns/rows are spaced by the button
+    // size plus a small gap, so the grid is only as large as the buttons themselves need.
+    public static final int BUTTON_W = 20;
+    public static final int BUTTON_H = 22;
+    public static final int BUTTON_COLUMN_GAP = 4;
+    public static final int BUTTON_ROW_GAP = 4;
+    public static final int BUTTON_ROW_SPACING = BUTTON_H + BUTTON_ROW_GAP; // 26
 
-    /** Width of one unit column's button, given how many columns share {@link #BUTTON_AREA_WIDTH}. */
-    public static int buttonWidth(int columns) {
-        return (BUTTON_AREA_WIDTH - (columns - 1) * BUTTON_COLUMN_GAP) / columns;
+    /** Total width of a {@code columns}-wide button grid. */
+    public static int buttonGridWidth(int columns) {
+        return columns * BUTTON_W + (columns - 1) * BUTTON_COLUMN_GAP;
+    }
+
+    /** Left edge of the button grid, centered in the panel so it stays balanced at any column count. */
+    public static int buttonStartX(int columns) {
+        return (IMAGE_WIDTH - buttonGridWidth(columns)) / 2;
     }
 
     private final ProductionKind kind;

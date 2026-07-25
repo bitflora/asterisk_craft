@@ -15,51 +15,47 @@ import java.util.function.Supplier;
  * should draw. Carries no cost predicates — those stay server-side in the block entity.
  * Serialized to the open-menu buffer by {@link #ordinal()} and rebuilt on the client.
  *
- * <p>Options are laid out column-major: {@link #columns} unit columns, each holding
- * {@link #optionsPerColumn()} stacked buttons. The Nexus uses this to give every unit its
- * own column with a Wood button above a Stone button — deliberately two separate buttons
- * instead of one that pays with a mix of both, see {@code NexusBlockEntity#trainOption} —
- * while keeping the button label itself just the unit's icon and name; the resource a given
- * button pays with is only in its tooltip, not the label.
+ * <p>Options are laid out column-major: each {@link OptionView} names the unit column it
+ * belongs to (see {@link #columns}), stacked top-to-bottom in list order within that column.
+ * Columns don't need equal height — the Nexus gives Probe/Gateway/Photon Cannon a Wood button
+ * above a Stone button (two separate buttons instead of one that pays with a mix of both, see
+ * {@code NexusBlockEntity#trainOption}) but only a single button for the Nexus Kit. Buttons
+ * show only their icon — no name label — the icon identifies the unit, and the hover tooltip
+ * gives its cost (including which resource a Wood/Stone pair's button pays with).
  */
 public enum ProductionKind {
-    NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), NexusBlockEntity.INPUT_SLOTS, 3, List.of(
+    NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.probe"),
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
-                    Component.translatable("gui.asteriskcraft.cost.probe_wood")),
+                    Component.translatable("gui.asteriskcraft.cost.probe_wood"), 0),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.probe"),
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
-                    Component.translatable("gui.asteriskcraft.cost.probe_stone")),
+                    Component.translatable("gui.asteriskcraft.cost.probe_stone"), 0),
             new OptionView(
-                    Component.translatable("block.asteriskcraft.gateway_core"),
                     Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.gateway_wood")),
+                    Component.translatable("gui.asteriskcraft.cost.gateway_wood"), 1),
             new OptionView(
-                    Component.translatable("block.asteriskcraft.gateway_core"),
                     Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.gateway_stone")),
+                    Component.translatable("gui.asteriskcraft.cost.gateway_stone"), 1),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.photon_cannon"),
                     Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_wood")),
+                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_wood"), 2),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.photon_cannon"),
                     Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_stone")))),
-    GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, 1, List.of(
+                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_stone"), 2),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.zealot"),
+                    Icon.ofItem(new ItemStack(AsteriskCraft.NEXUS_KIT.get())),
+                    Component.translatable("gui.asteriskcraft.cost.nexus_kit"), 3))),
+    GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
+            new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/zealot.png"), 116, 121),
-                    Component.translatable("gui.asteriskcraft.cost.zealot")),
+                    Component.translatable("gui.asteriskcraft.cost.zealot"), 0),
             new OptionView(
-                    Component.translatable("entity.asteriskcraft.dragoon"),
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dragoon.png"), 113, 112),
-                    Component.translatable("gui.asteriskcraft.cost.dragoon"))));
+                    Component.translatable("gui.asteriskcraft.cost.dragoon"), 1)));
 
-    /** One train button: unit label, an icon, and a cost tooltip (the tooltip carries any resource-specific detail). */
-    public record OptionView(Component label, Icon icon, Component costTooltip) {
+    /** One train button: an icon, a cost tooltip, and the unit column it stacks into (see class docs). */
+    public record OptionView(Icon icon, Component costTooltip, int column) {
     }
 
     /**
@@ -85,14 +81,23 @@ public enum ProductionKind {
 
     private final Supplier<Block> block;
     private final int inputSlotCount;
-    private final int columns;
     private final List<OptionView> options;
+    private final int columns;
+    private final int[] rowsPerColumn;
 
-    ProductionKind(Supplier<Block> block, int inputSlotCount, int columns, List<OptionView> options) {
+    ProductionKind(Supplier<Block> block, int inputSlotCount, List<OptionView> options) {
         this.block = block;
         this.inputSlotCount = inputSlotCount;
-        this.columns = columns;
         this.options = options;
+        int columnCount = 0;
+        for (OptionView option : options) {
+            columnCount = Math.max(columnCount, option.column() + 1);
+        }
+        this.columns = columnCount;
+        this.rowsPerColumn = new int[columnCount];
+        for (OptionView option : options) {
+            this.rowsPerColumn[option.column()]++;
+        }
     }
 
     public Block block() {
@@ -112,9 +117,18 @@ public enum ProductionKind {
         return this.columns;
     }
 
-    /** Buttons stacked within a single column; {@link #options()} is ordered column-major. */
-    public int optionsPerColumn() {
-        return this.options.size() / this.columns;
+    /** Buttons stacked in the given column; columns may hold different counts. */
+    public int rowsInColumn(int column) {
+        return this.rowsPerColumn[column];
+    }
+
+    /** Tallest column, used to vertically center shorter columns against it. */
+    public int maxRows() {
+        int max = 0;
+        for (int rows : this.rowsPerColumn) {
+            max = Math.max(max, rows);
+        }
+        return max;
     }
 
     public static ProductionKind byId(int id) {

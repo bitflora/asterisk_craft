@@ -46,6 +46,9 @@ public final class BuildingLayouts {
         return layout;
     }
 
+    /** Relative offset of the Nexus's interactive core block within {@link #nexus()}. */
+    public static final BlockPos NEXUS_CORE_OFFSET = new BlockPos(0, 2, 0);
+
     /** 3x3 cobblestone platform with two purpur pillars framing the Gateway core arch. */
     public static Map<BlockPos, BlockState> gateway() {
         Map<BlockPos, BlockState> layout = new LinkedHashMap<>();

@@ -88,7 +88,7 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 | — (no Protoss air yet) | — | Mutalisk (air) | 100 of any resource |
 | Gateway kit | 150 wood **or** 150 cobblestone | Spawning Pool (baked into Hive for MVP) | — |
 | Photon Cannon kit | 150 wood **or** 150 cobblestone | Sunken Colony | Not buildable — one is pre-placed per Hive |
-| Nexus / Hive | Not craftable in MVP (pre-placed) | — | — |
+| Nexus kit (expansion) | 400 cobblestone only (no wood alternative) | Hive | Not buildable — pre-placed only |
 
 ## Slices (each ends demo-able)
 

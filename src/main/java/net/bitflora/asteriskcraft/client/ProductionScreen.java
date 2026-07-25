@@ -21,9 +21,9 @@ import java.util.List;
  * primitives (no texture), laid out column-major per {@link ProductionKind#columns()} — one
  * column per unit, each holding that unit's buttons stacked vertically (e.g. the Nexus's
  * Wood/Stone pair). Each button is otherwise empty (vanilla draws just its background); the
- * icon, unit name, live training progress bar, and queued count are all drawn manually over
- * it from the menu's synced data slots, with the icon centered above the name so neither
- * collides at these narrow column widths.
+ * icon, live training progress bar, and queued count are all drawn manually over it from the
+ * menu's synced data slots. Buttons carry no visible name — the icon identifies the unit and
+ * the tooltip gives its cost.
  *
  * <p>Uses this version's render-state extraction pipeline: {@code extractBackground} draws
  * behind everything in absolute coordinates, {@code extractLabels} draws the foreground in
@@ -51,26 +51,50 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         this.inventoryLabelY = this.imageHeight - 94;
     }
 
+    /** Top-left of one option's (icon-sized) button, in local coordinates relative to (leftPos, topPos). */
+    private record Placement(int x, int y) {
+    }
+
+    /**
+     * Assigns every option a cell in its {@link ProductionKind.OptionView#column()}, stacked
+     * top-to-bottom in list order. Cells are exactly button-sized (see {@link ProductionMenu}),
+     * so the grid packs tight; it's centered in the panel as a whole, and a column shorter than
+     * {@link ProductionKind#maxRows()} is vertically centered against the tallest one instead of
+     * hugging the top.
+     */
+    private static List<Placement> layOutOptions(ProductionKind kind) {
+        List<ProductionKind.OptionView> options = kind.options();
+        int startX = ProductionMenu.buttonStartX(kind.columns());
+        int maxRows = kind.maxRows();
+        int[] rowCounter = new int[kind.columns()];
+        List<Placement> placements = new ArrayList<>(options.size());
+        for (ProductionKind.OptionView option : options) {
+            int col = option.column();
+            int row = rowCounter[col]++;
+            int verticalOffset = (maxRows - kind.rowsInColumn(col)) * ProductionMenu.BUTTON_ROW_SPACING / 2;
+            int x = startX + col * (ProductionMenu.BUTTON_W + ProductionMenu.BUTTON_COLUMN_GAP);
+            int y = ProductionMenu.BUTTON_Y + verticalOffset + row * ProductionMenu.BUTTON_ROW_SPACING;
+            placements.add(new Placement(x, y));
+        }
+        return placements;
+    }
+
     @Override
     protected void init() {
         super.init();
         this.optionButtons.clear();
         ProductionKind kind = this.menu.getKind();
         List<ProductionKind.OptionView> options = kind.options();
-        int rowsPerColumn = kind.optionsPerColumn();
-        int buttonWidth = ProductionMenu.buttonWidth(kind.columns());
+        List<Placement> placements = layOutOptions(kind);
         for (int i = 0; i < options.size(); i++) {
             final int optionIndex = i;
             ProductionKind.OptionView option = options.get(i);
-            int col = i / rowsPerColumn;
-            int row = i % rowsPerColumn;
-            int bx = this.leftPos + ProductionMenu.BUTTON_X + col * (buttonWidth + ProductionMenu.BUTTON_COLUMN_GAP);
-            int by = this.topPos + ProductionMenu.BUTTON_Y + row * ProductionMenu.BUTTON_ROW_SPACING;
-            // Empty label: the icon and unit name are drawn manually in extractLabels so they can
-            // be stacked (icon above name) instead of vanilla Button's single centered line, which
-            // would collide with the icon at these narrow column widths.
+            Placement placement = placements.get(i);
+            int bx = this.leftPos + placement.x();
+            int by = this.topPos + placement.y();
+            // Empty label: buttons show no name, just the icon drawn manually in extractLabels.
             Button button = Button.builder(Component.empty(), b -> onTrain(optionIndex))
-                    .bounds(bx, by, buttonWidth, ProductionMenu.BUTTON_H)
+                    .bounds(bx, by, ProductionMenu.BUTTON_W, ProductionMenu.BUTTON_H)
                     .tooltip(Tooltip.create(option.costTooltip()))
                     .build();
             this.optionButtons.add(button);
@@ -85,6 +109,7 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
     }
 
     private static final int ICON_SIZE = 16;
+    private static final int PROGRESS_BAR_HEIGHT = 4;
 
     /**
      * Draws a button's {@link ProductionKind.Icon}, centered horizontally on {@code centerX}
@@ -138,36 +163,33 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         // Coordinates here are already translated to (leftPos, topPos); use local offsets.
         ProductionKind kind = this.menu.getKind();
         List<ProductionKind.OptionView> options = kind.options();
-        int rowsPerColumn = kind.optionsPerColumn();
-        int buttonWidth = ProductionMenu.buttonWidth(kind.columns());
+        List<Placement> placements = layOutOptions(kind);
         int buildingIndex = this.menu.buildingOptionIndex();
         int total = this.menu.buildTotal();
         int progress = this.menu.buildProgress();
 
         for (int i = 0; i < options.size(); i++) {
-            int col = i / rowsPerColumn;
-            int row = i % rowsPerColumn;
-            int bx = ProductionMenu.BUTTON_X + col * (buttonWidth + ProductionMenu.BUTTON_COLUMN_GAP);
-            int by = ProductionMenu.BUTTON_Y + row * ProductionMenu.BUTTON_ROW_SPACING;
-            int centerX = bx + buttonWidth / 2;
+            int bx = placements.get(i).x();
+            int by = placements.get(i).y();
+            int centerX = bx + ProductionMenu.BUTTON_W / 2;
 
-            // Icon centered on top, unit name centered below it — no resource mention in the
-            // label itself; that only appears in the button's cost tooltip on hover.
-            drawIcon(graphics, options.get(i).icon(), centerX, by + 3);
-            graphics.centeredText(this.font, options.get(i).label(), centerX, by + 21, TEXT_COLOR);
+            // Icon centered in the space above the progress bar — no name label; the icon
+            // identifies the unit and the resource it pays with is only in the hover tooltip.
+            int iconTop = by + (ProductionMenu.BUTTON_H - PROGRESS_BAR_HEIGHT - ICON_SIZE) / 2;
+            drawIcon(graphics, options.get(i).icon(), centerX, iconTop);
 
             // Queued count badge in the top-right corner.
             int queued = this.menu.queuedCount(i);
             if (queued > 0) {
                 Component count = Component.literal("x" + queued);
                 int tw = this.font.width(count);
-                graphics.text(this.font, count, bx + buttonWidth - tw - 3, by + 3, TEXT_COLOR, true);
+                graphics.text(this.font, count, bx + ProductionMenu.BUTTON_W - tw - 3, by + 3, TEXT_COLOR, true);
             }
 
             // Progress bar along the bottom edge while this option is the one building.
             int barLeft = bx + 1;
-            int barRight = bx + buttonWidth - 1;
-            int barTop = by + ProductionMenu.BUTTON_H - 4;
+            int barRight = bx + ProductionMenu.BUTTON_W - 1;
+            int barTop = by + ProductionMenu.BUTTON_H - PROGRESS_BAR_HEIGHT;
             graphics.fill(barLeft, barTop, barRight, barTop + 3, BAR_BG);
             if (i == buildingIndex && total > 0) {
                 int filled = (int) ((barRight - barLeft) * (long) progress / total);
@@ -178,7 +200,7 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         if (this.menu.warpTicks() > 0) {
             int secs = (this.menu.warpTicks() + 19) / 20;
             Component warp = Component.translatable("gui.asteriskcraft.warping", secs);
-            int cy = ProductionMenu.BUTTON_Y + ProductionMenu.BUTTON_ROW_SPACING * rowsPerColumn / 2;
+            int cy = ProductionMenu.BUTTON_Y + ProductionMenu.BUTTON_ROW_SPACING * kind.maxRows() / 2;
             graphics.centeredText(this.font, warp, this.imageWidth / 2, cy, WARP_COLOR);
         }
     }
