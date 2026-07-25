@@ -99,7 +99,7 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
                         .texOffs(53, 0).addBox(-7.0f, -4.0f, -6.0f, 14.0f, 7.0f, 12.0f)
                         // Raised back hump.
                         .texOffs(41, 40).addBox(-4.0f, -8.0f, -1.0f, 8.0f, 4.0f, 8.0f),
-                PartPose.offset(0.0f, 8.0f, 0.0f));
+                PartPose.offset(0.0f, 5.5f, 0.0f));
         // Blue energy core underbelly.
         body.addOrReplaceChild("core",
                 CubeListBuilder.create()
@@ -124,7 +124,11 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
                 PartPose.ZERO);
 
         // Four legs at the pod's corners. Front legs splay forward-out, back legs back-out. Each leg is
-        // a thigh extending outward from the body pivot, a knee-bent shin dropping to a foot pad.
+        // a thigh angled up-and-out from the body pivot, then a knee-bent shin that drops straight down
+        // to a foot pad planted on the ground. Each shin's rotation is the exact inverse of its thigh's
+        // (xRot/yRot/zRot below), so the shin — whatever the thigh's splay — hangs world-vertical and the
+        // foot pad lands flat at model y=24 (the ground line; see PhotonCannonModel). With the body pod
+        // offset to y=5.5 the knees sit at y=10 and the 14px shins reach exactly to y=24.
         //
         // Written out per leg rather than built by a shared helper: every cube needs its own editable
         // texOffs literal so it can own a UV island and be hand-painted independently (see
@@ -137,7 +141,7 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
         PartDefinition legFRShin = legFR.addOrReplaceChild("leg_front_right_shin",
                 CubeListBuilder.create()
                         .texOffs(76, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
-                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.15f));
+                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, 0.6155f, 0.5236f, 0.9553f));
         legFRShin.addOrReplaceChild("leg_front_right_foot",
                 CubeListBuilder.create()
                         .texOffs(51, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
@@ -150,7 +154,7 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
         PartDefinition legFLShin = legFL.addOrReplaceChild("leg_front_left_shin",
                 CubeListBuilder.create()
                         .texOffs(63, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
-                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.15f));
+                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, 0.6155f, -0.5236f, -0.9553f));
         legFLShin.addOrReplaceChild("leg_front_left_foot",
                 CubeListBuilder.create()
                         .texOffs(34, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
@@ -163,7 +167,7 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
         PartDefinition legBRShin = legBR.addOrReplaceChild("leg_back_right_shin",
                 CubeListBuilder.create()
                         .texOffs(50, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
-                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.15f));
+                PartPose.offsetAndRotation(-11.0f, 0.0f, 0.0f, -0.6155f, -0.5236f, 0.9553f));
         legBRShin.addOrReplaceChild("leg_back_right_foot",
                 CubeListBuilder.create()
                         .texOffs(17, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
@@ -176,7 +180,7 @@ public class DragoonModel extends EntityModel<LivingEntityRenderState> {
         PartDefinition legBLShin = legBL.addOrReplaceChild("leg_back_left_shin",
                 CubeListBuilder.create()
                         .texOffs(37, 24).addBox(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f),
-                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.15f));
+                PartPose.offsetAndRotation(11.0f, 0.0f, 0.0f, -0.6155f, 0.5236f, -0.9553f));
         legBLShin.addOrReplaceChild("leg_back_left_foot",
                 CubeListBuilder.create()
                         .texOffs(0, 54).addBox(-2.0f, 11.0f, -2.0f, 4.0f, 3.0f, 4.0f),
