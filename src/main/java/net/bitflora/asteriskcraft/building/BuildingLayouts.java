@@ -20,21 +20,25 @@ public final class BuildingLayouts {
     private BuildingLayouts() {
     }
 
-    /** 5x5 quartz platform, purpur pillar corners, gold pedestal, Nexus core on top. */
+    /** 3x3 quartz pedestal, purpur pillar corners capped with end rods, gold pedestal, Nexus core on top. */
     public static Map<BlockPos, BlockState> nexus() {
         Map<BlockPos, BlockState> layout = new LinkedHashMap<>();
         BlockState platform = Blocks.SMOOTH_QUARTZ.defaultBlockState();
         BlockState corner = Blocks.PURPUR_BLOCK.defaultBlockState();
         BlockState pillar = Blocks.PURPUR_PILLAR.defaultBlockState();
 
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                boolean isCorner = Math.abs(dx) == 2 && Math.abs(dz) == 2;
-                layout.put(new BlockPos(dx, 0, dz), isCorner ? corner : platform);
-                if (isCorner) {
-                    layout.put(new BlockPos(dx, 1, dz), pillar);
-                    layout.put(new BlockPos(dx, 2, dz), Blocks.END_ROD.defaultBlockState());
-                }
+        // 3x3 quartz pedestal — the wider 5x5 platform that used to surround it is gone.
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                layout.put(new BlockPos(dx, 0, dz), platform);
+            }
+        }
+        // Four purpur corner pillars at the 5x5 corners (step by 4), capped with end rods.
+        for (int dx = -2; dx <= 2; dx += 4) {
+            for (int dz = -2; dz <= 2; dz += 4) {
+                layout.put(new BlockPos(dx, 0, dz), corner);
+                layout.put(new BlockPos(dx, 1, dz), pillar);
+                layout.put(new BlockPos(dx, 2, dz), Blocks.END_ROD.defaultBlockState());
             }
         }
         layout.put(new BlockPos(0, 1, 0), Blocks.GOLD_BLOCK.defaultBlockState());

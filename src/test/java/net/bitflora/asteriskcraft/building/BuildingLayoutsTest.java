@@ -16,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Guards the Nexus multiblock definition (R1): a 5x5 platform with the interactive
- * core block on top of the center pedestal. Runs under the bootstrapped NeoForge
+ * Guards the Nexus multiblock definition (R1): a 3x3 quartz pedestal with four corner
+ * pillars, and the interactive core block on top of the center gold pedestal. Runs under the bootstrapped NeoForge
  * environment so mod-registered blocks and vanilla blocks resolve.
  */
 class BuildingLayoutsTest {
@@ -32,12 +32,21 @@ class BuildingLayoutsTest {
     }
 
     @Test
-    void nexusHasAFullFiveByFivePlatform() {
+    void nexusHasAThreeByThreePedestalWithNoOuterRing() {
         Map<BlockPos, BlockState> layout = BuildingLayouts.nexus();
+        BlockState quartz = Blocks.SMOOTH_QUARTZ.defaultBlockState();
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {
-                assertTrue(layout.containsKey(new BlockPos(dx, 0, dz)),
-                        "missing platform block at " + dx + "," + dz);
+                boolean inPedestal = Math.abs(dx) <= 1 && Math.abs(dz) <= 1;
+                boolean isCorner = Math.abs(dx) == 2 && Math.abs(dz) == 2;
+                BlockState at = layout.get(new BlockPos(dx, 0, dz));
+                if (inPedestal) {
+                    assertEquals(quartz, at, "3x3 pedestal must be quartz at " + dx + "," + dz);
+                } else if (isCorner) {
+                    assertNotNull(at, "corner footing must remain at " + dx + "," + dz);
+                } else {
+                    assertNull(at, "outer-ring block should be removed at " + dx + "," + dz);
+                }
             }
         }
     }

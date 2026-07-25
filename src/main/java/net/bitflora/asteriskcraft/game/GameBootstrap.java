@@ -46,6 +46,9 @@ public final class GameBootstrap {
     private static final int STARTING_LOGS = 100;
     private static final int STARTING_COBBLESTONE = 100;
     private static final int INITIAL_PROBES = 4;
+    // The Nexus is a 5x5 platform (footprint radius 2); clear trees a little past its edge so the
+    // starting base is never stamped into — or left standing under — a tree, just like the Hives.
+    private static final int NEXUS_CLEAR_RADIUS = 5;
 
     // Each AI Hive is planted in its own random direction around the Nexus, at a random distance
     // in this range. The max stays inside typical simulation distance so wave units and Drones
@@ -126,7 +129,10 @@ public final class GameBootstrap {
     private static void placeStartingBase(ServerLevel level, ServerPlayer player) {
         int x = player.blockPosition().getX() + NEXUS_OFFSET;
         int z = player.blockPosition().getZ() + NEXUS_OFFSET;
-        int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+        // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
+        // which used to leave the Nexus perched high up in a tree) and clear the trees over the footprint.
+        clearTrees(level, x, z, NEXUS_CLEAR_RADIUS);
+        int y = highestGround(level, x, z);
         BlockPos origin = new BlockPos(x, y, z);
 
         BuildingLayouts.place(level, origin, BuildingLayouts.nexus());

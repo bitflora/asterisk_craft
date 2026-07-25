@@ -166,7 +166,8 @@ public class SiegeBlockGoal extends Goal {
         }
         this.digTimer = 0;
         if (this.mob.level() instanceof ServerLevel serverLevel && isBreakable(serverLevel.getBlockState(pos), pos)) {
-            serverLevel.destroyBlock(pos, false);
+            // Drop the block's mined item form, as if a player had dug it.
+            serverLevel.destroyBlock(pos, true);
         }
         this.digPos = null;
     }
