@@ -118,6 +118,9 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
     private ItemStack carried = ItemStack.EMPTY;
     @Nullable
     private ResourceType lastResourceType;
+    /** Where this probe last mined; the search ranks candidates by proximity to it to keep the probe on one vein. */
+    @Nullable
+    private BlockPos lastMinedPos;
 
     public ProbeEntity(EntityType<? extends ProbeEntity> type, Level level) {
         super(type, level);
@@ -239,6 +242,9 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         if (this.lastResourceType != null) {
             output.store("LastResourceType", ResourceType.CODEC, this.lastResourceType);
         }
+        if (this.lastMinedPos != null) {
+            output.store("LastMinedPos", BlockPos.CODEC, this.lastMinedPos);
+        }
     }
 
     @Override
@@ -247,6 +253,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         this.homePos = input.read("HomePos", BlockPos.CODEC).orElse(BlockPos.ZERO);
         this.carried = input.read("Carried", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         this.lastResourceType = input.read("LastResourceType", ResourceType.CODEC).orElse(null);
+        this.lastMinedPos = input.read("LastMinedPos", BlockPos.CODEC).orElse(null);
     }
 
     /** What a harvested block yields: a flat {@link #YIELD_PER_TRIP} of the matching item. */
@@ -385,6 +392,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             BlockState state = level.getBlockState(pos);
             this.probe.carried = yieldFor(state);
             this.probe.lastResourceType = ResourceType.of(state);
+            this.probe.lastMinedPos = pos.immutable();
             level.levelEvent(2001, pos, Block.getId(state));
             level.setBlock(pos, AsteriskCraft.DEPLETED_NODE.get().defaultBlockState(), Block.UPDATE_ALL);
             if (level.getBlockEntity(pos) instanceof DepletedNodeBlockEntity node) {
@@ -426,15 +434,21 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
 
         /**
          * Picks a node the probe can actually walk to. Candidates are ranked (same-type-as-last
-         * first so a probe keeps working one vein, then nearest), and the top few are verified with
-         * a real pathfind — the first that yields a reachable path wins. Recently-abandoned nodes
-         * are skipped until their cooldown lapses. Returns {@code null} if nothing reachable is in range.
+         * first so a probe keeps working one vein, then nearest to the block it last mined — not to
+         * the probe's current spot, which after a delivery is always back at home), and the top few
+         * are verified with a real pathfind — the first that yields a reachable path wins.
+         * Recently-abandoned nodes are skipped until their cooldown lapses. Returns {@code null} if
+         * nothing reachable is in range.
          */
         @Nullable
         private BlockPos findNearestHarvestable() {
             Level level = this.probe.level();
             BlockPos home = this.probe.homePos;
             ResourceType preferred = this.probe.lastResourceType;
+            // Rank by proximity to the last-mined block so the probe returns to its vein; a probe that
+            // has never mined falls back to its current position.
+            BlockPos ref = this.probe.lastMinedPos != null
+                    ? this.probe.lastMinedPos : this.probe.blockPosition();
             long now = level.getGameTime();
             this.unreachable.entrySet().removeIf(e -> e.getValue() <= now);
 
@@ -455,7 +469,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
                 if (this.unreachable.containsKey(immutable)) {
                     continue;
                 }
-                double dist = pos.distSqr(this.probe.blockPosition());
+                double dist = pos.distSqr(ref);
                 boolean sameType = preferred != null && ResourceType.of(state) == preferred;
                 candidates.add(new Candidate(immutable, dist, sameType));
             }
