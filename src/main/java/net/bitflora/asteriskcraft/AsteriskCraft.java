@@ -151,9 +151,11 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<DragoonEntity>> DRAGOON =
             ENTITY_TYPES.register("dragoon", () -> EntityType.Builder.of(DragoonEntity::new, MobCategory.MONSTER)
-                    // Squat, wide footprint matching the four-legged spider walker (was the tall
-                    // 0.6x1.99 Skeleton box). See client/DragoonModel.
-                    .sized(1.1f, 1.2f)
+                    // Wide footprint matching the four-legged spider walker (was the 0.6-wide Skeleton
+                    // box). Height reaches the top of the visible model — the body pod rides high on
+                    // tall vertical legs, so the rendered walker stands ~1.98 blocks (see
+                    // client/DragoonModel: feet at model y=24, cockpit dome at ~-3.5, x1.15 render scale).
+                    .sized(1.1f, 2.0f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dragoon"))));
 
