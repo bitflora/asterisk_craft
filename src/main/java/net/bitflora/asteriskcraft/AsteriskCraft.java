@@ -288,6 +288,9 @@ public class AsteriskCraft {
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_DEATH =
             SOUND_EVENTS.register("entity.drone.death", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.death")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_AMBIENT =
+            SOUND_EVENTS.register("entity.dragoon.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.ambient")));
+
     // --- Creative tab ---
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()

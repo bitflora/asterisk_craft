@@ -88,5 +88,13 @@
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.drone.death",
     "sounds": ["asteriskcraft:mob/drone/drone-death"]
+  },
+  "entity.dragoon.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dragoon.ambient",
+    "sounds": [
+      "asteriskcraft:mob/dragoon/dragoon-live1",
+      "asteriskcraft:mob/dragoon/dragoon-live2"
+    ]
   }
 }

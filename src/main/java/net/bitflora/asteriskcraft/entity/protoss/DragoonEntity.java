@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
@@ -7,6 +8,7 @@ import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -62,6 +64,16 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    @Override
+    public int getAmbientSoundInterval() {
+        return 1200; // ~10x the vanilla default (80): ambient barks average ~1/minute, not ~1/6s.
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return AsteriskCraft.DRAGOON_AMBIENT.get();
     }
 
     @Override
