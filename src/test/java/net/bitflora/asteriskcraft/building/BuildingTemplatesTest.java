@@ -1,59 +1,158 @@
 package net.bitflora.asteriskcraft.building;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Guards the two hand-authored structure templates the Protoss buildings are stamped from.
+ * Guards the hand-authored structure templates every building is stamped from, and the
+ * site-preparation geometry they are stamped onto.
  *
  * <p>The templates are read straight out of the resource files rather than through
  * {@link BuildingTemplates}: {@code StructureTemplateManager} needs a running server's resource
  * manager, which the JUnit bootstrap has no equivalent of, so placement itself is verified with
  * {@code runClient}. Everything here therefore stays on raw NBT — no block/state lookups — which
- * is enough to cover what the placement code actually assumes about a template:
- * an odd-sized footprint (so a center column exists) holding exactly one core block, centered.
- * Re-exporting a redesigned building is expected to keep those true; its shape is free to change.
+ * covers what the placement code actually assumes about a template: that it holds exactly one core
+ * block, which is what anchors it in the world. Re-exporting a redesigned building is expected to
+ * keep that true; its shape and bounding box are free to change.
  */
 class BuildingTemplatesTest {
 
     @Test
-    void nexusTemplateHasOneCenteredCore() {
-        assertCenteredCore("nexus", "asteriskcraft:nexus_core");
+    void nexusTemplateHasOneCore() {
+        assertSingleCore("nexus", "asteriskcraft:nexus_core");
     }
 
     @Test
-    void gatewayTemplateHasOneCenteredCore() {
-        assertCenteredCore("gateway", "asteriskcraft:gateway_core");
+    void gatewayTemplateHasOneCore() {
+        assertSingleCore("gateway", "asteriskcraft:gateway_core");
     }
 
-    private static void assertCenteredCore(String template, String coreBlockId) {
+    @Test
+    void hiveTemplateHasOneCore() {
+        assertSingleCore("hive", "asteriskcraft:hive_core");
+    }
+
+    private static void assertSingleCore(String template, String coreBlockId) {
         CompoundTag tag = load(template);
-        BlockPos size = readSize(tag);
+        BlockPos size = readPos(tag.getListOrEmpty("size"));
         assertTrue(size.getX() > 0 && size.getY() > 0 && size.getZ() > 0,
                 template + " template is empty: " + size);
-        // BuildingTemplates anchors a template on the center column of its bottom layer, which only
-        // exists when both horizontal extents are odd.
-        assertTrue(size.getX() % 2 == 1 && size.getZ() % 2 == 1,
-                template + " template must be odd-sized horizontally to have a center column, was " + size);
 
         List<BlockPos> cores = findBlocks(tag, coreBlockId);
         assertEquals(1, cores.size(), template + " template must contain exactly one " + coreBlockId);
+        // The core anchors the building, so it has to be inside the template's own bounds.
         BlockPos core = cores.getFirst();
-        assertEquals((size.getX() - 1) / 2, core.getX(), coreBlockId + " must sit on the center column");
-        assertEquals((size.getZ() - 1) / 2, core.getZ(), coreBlockId + " must sit on the center column");
+        assertTrue(core.getX() < size.getX() && core.getY() < size.getY() && core.getZ() < size.getZ(),
+                coreBlockId + " at " + core + " lies outside the template bounds " + size);
+    }
+
+    // --- site-prep geometry, exercised through the pure planSitePrep (no live ServerLevel needed) ---
+    // The probe is a Predicate<BlockPos> reporting whether an EXISTING world block is solid-render;
+    // support fill treats anything non-solid (air OR fluids) as needing footing.
+
+    /** Min corner of the prepared footprint — the template's bottom-layer corner, not its center. */
+    private static final BlockPos MIN = new BlockPos(0, 64, 0);
+    /** Flat ground: every block strictly below the platform is solid, so support fill stops immediately. */
+    private static final Predicate<BlockPos> FLAT_GROUND = pos -> pos.getY() < MIN.getY();
+    /** Support material fed to planSitePrep; the fill mechanism is material-agnostic. */
+    private static final BlockState SUPPORT = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+
+    @Test
+    void headroomIsClearedOverTheWholeFootprint() {
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, FLAT_GROUND, 5, 6, SUPPORT);
+        BlockState air = Blocks.AIR.defaultBlockState();
+        for (int dx = 0; dx < 7; dx++) {
+            for (int dz = 0; dz < 7; dz++) {
+                for (int dy = 1; dy <= 5; dy++) {
+                    assertEquals(air, edits.get(MIN.offset(dx, dy, dz)),
+                            "head-room not cleared at " + dx + "," + dy + "," + dz);
+                }
+            }
+        }
+        assertNull(edits.get(MIN.offset(7, 1, 0)), "prep must not spill outside the footprint");
+        assertNull(edits.get(MIN.offset(0, 6, 0)), "prep must not clear above the requested head-room");
+    }
+
+    @Test
+    void flatGroundGetsNoSupportFill() {
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, FLAT_GROUND, 5, 6, SUPPORT);
+        assertFalse(edits.containsValue(SUPPORT), "flat ground should need no support fill");
+    }
+
+    @Test
+    void nullSupportLeavesTheGroundAlone() {
+        // The Protoss buildings sit on their own stonework, so nothing is stamped under them even
+        // where the terrain falls away — head-room is still cleared.
+        Predicate<BlockPos> probe = pos -> pos.getY() < MIN.getY() - 3; // a three-deep gap below
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 5, 5, probe, 5, 6, null);
+        for (int dy = -1; dy >= -6; dy--) {
+            assertNull(edits.get(MIN.offset(0, dy, 0)), "nothing may be placed below the platform");
+        }
+        assertEquals(Blocks.AIR.defaultBlockState(), edits.get(MIN.above()), "head-room is still cleared");
+    }
+
+    @Test
+    void dipIsFilledDownToGround() {
+        // Column at world (3,0) has its ground three blocks below the platform; everything else is flat.
+        Predicate<BlockPos> probe = pos -> (pos.getX() == 3 && pos.getZ() == 0)
+                ? pos.getY() <= 60 : pos.getY() <= 63;
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, probe, 5, 6, SUPPORT);
+        assertEquals(SUPPORT, edits.get(new BlockPos(3, 63, 0)));
+        assertEquals(SUPPORT, edits.get(new BlockPos(3, 62, 0)));
+        assertEquals(SUPPORT, edits.get(new BlockPos(3, 61, 0)));
+        assertNull(edits.get(new BlockPos(3, 60, 0)), "fill must stop at the first solid ground block");
+    }
+
+    @Test
+    void supportFillIsBoundedByMaxDepth() {
+        // Column at world (3,3) is bottomless void; fill must cap at maxSupportDepth, never a runaway shaft.
+        Predicate<BlockPos> probe = pos -> !(pos.getX() == 3 && pos.getZ() == 3) && pos.getY() <= 63;
+        int maxDepth = 6;
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, probe, 5, maxDepth, SUPPORT);
+        for (int dy = -1; dy >= -maxDepth; dy--) {
+            assertEquals(SUPPORT, edits.get(MIN.offset(3, dy, 3)), "expected support at dy=" + dy);
+        }
+        assertNull(edits.get(MIN.offset(3, -maxDepth - 1, 3)), "fill must not exceed maxSupportDepth");
+    }
+
+    @Test
+    void fluidPocketUnderPlatformIsFilled() {
+        // A fluid pocket reads as non-solid, so the two water blocks below (2,2) get footing.
+        Predicate<BlockPos> probe = pos -> (pos.getX() == 2 && pos.getZ() == 2)
+                ? pos.getY() <= 61 : pos.getY() <= 63;
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, probe, 5, 6, SUPPORT);
+        assertEquals(SUPPORT, edits.get(new BlockPos(2, 63, 2)));
+        assertEquals(SUPPORT, edits.get(new BlockPos(2, 62, 2)));
+        assertNull(edits.get(new BlockPos(2, 61, 2)), "fill stops at the solid floor under the water");
+    }
+
+    @Test
+    void supportMaterialIsHonored() {
+        // Zerg Hives fill their footing with mycelium — the same material as the creep around them.
+        BlockState mycelium = Blocks.MYCELIUM.defaultBlockState();
+        Predicate<BlockPos> probe = pos -> pos.getY() <= 62; // one air block below the platform
+        Map<BlockPos, BlockState> edits = BuildingTemplates.planSitePrep(MIN, 7, 7, probe, 5, 6, mycelium);
+        assertEquals(mycelium, edits.get(new BlockPos(0, 63, 0)), "support fill must use the given material");
+        assertFalse(edits.containsValue(SUPPORT), "no quartz should appear when mycelium is the support material");
     }
 
     /** Every position holding {@code blockId}, in template-local coordinates. */
@@ -75,10 +174,6 @@ class BuildingTemplatesTest {
             }
         }
         return found;
-    }
-
-    private static BlockPos readSize(CompoundTag tag) {
-        return readPos(tag.getListOrEmpty("size"));
     }
 
     private static BlockPos readPos(ListTag list) {

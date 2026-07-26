@@ -2,7 +2,6 @@ package net.bitflora.asteriskcraft.game;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.ArmyBank;
-import net.bitflora.asteriskcraft.building.BuildingLayouts;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
@@ -30,6 +29,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +56,6 @@ public final class GameBootstrap {
     // in this range. The max stays inside typical simulation distance so wave units and Drones
     // never freeze in unloaded chunks (V3 keeps chunk tickets out of scope; see docs/shaping.md).
     private static final int HIVE_COUNT = 3;
-    // The Hive mound is a code-defined 3x3 layout (see BuildingLayouts#hive).
-    private static final int HIVE_FOOTPRINT_RADIUS = 1;
     private static final int HIVE_MIN_DISTANCE = 95;
     private static final int HIVE_MAX_DISTANCE = 120;
     // WORLD_SURFACE reports the topmost solid block in a column, which can be far underground
@@ -186,6 +184,12 @@ public final class GameBootstrap {
         // Seed off the world seed so the same seed always reproduces the same Hive layout (the Nexus
         // location is itself seed-derived), instead of drawing from the level's shared, non-reproducible RNG.
         RandomSource random = RandomSource.create(level.getSeed() ^ HIVE_PLACEMENT_SALT);
+        Vec3i hiveSize = BuildingTemplates.size(level, BuildingTemplates.HIVE);
+        if (hiveSize == null) {
+            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the Zerg Hives");
+            return;
+        }
+        int footprint = BuildingTemplates.footprintRadius(hiveSize);
         List<BlockPos> cores = new ArrayList<>();
         for (int i = 0; i < HIVE_COUNT; i++) {
             BlockPos chosen = null;
@@ -196,7 +200,7 @@ public final class GameBootstrap {
                 int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
                 int x = nexusX + Math.round(Mth.cos(angle) * distance);
                 int z = nexusZ + Math.round(Mth.sin(angle) * distance);
-                int y = highestGround(level, x, z, HIVE_FOOTPRINT_RADIUS);
+                int y = highestGround(level, x, z, footprint);
                 BlockPos candidate = new BlockPos(x, y, z);
                 fallback = candidate;
 
@@ -373,13 +377,19 @@ public final class GameBootstrap {
         }
     }
 
-    private static BlockPos placeHive(ServerLevel level, int x, int y, int z) {
+    private static @Nullable BlockPos placeHive(ServerLevel level, int x, int y, int z) {
         BlockPos origin = new BlockPos(x, y, z);
         clearTrees(level, x, z, HIVE_INFEST_RADIUS);
-        BuildingLayouts.place(level, origin, BuildingLayouts.hive(), Blocks.MYCELIUM.defaultBlockState());
+        // Creep first, mound second: infestGround rewrites exposed surface blocks, and the Hive's
+        // own template has dirt speckled through its mycelium that the sweep would otherwise eat.
         infestGround(level, x, z);
-        BlockPos core = origin.offset(BuildingLayouts.HIVE_CORE_OFFSET.getX(),
-                BuildingLayouts.HIVE_CORE_OFFSET.getY(), BuildingLayouts.HIVE_CORE_OFFSET.getZ());
+        // The mound keeps a mycelium footing under it — same material as the creep it sits in, so
+        // unlike the Protoss stonework there is nothing foreign to see.
+        BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
+                AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
+        if (core == null) {
+            return null;
+        }
         if (level.getBlockEntity(core) instanceof HiveBlockEntity hive) {
             hive.setFaction(Faction.ZERG);
             for (int i = 0; i < INITIAL_DRONES_PER_HIVE; i++) {

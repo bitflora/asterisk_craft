@@ -44,7 +44,7 @@ public class BuildingKitItem extends Item {
         }
 
         BlockPos origin = context.getClickedPos().relative(context.getClickedFace());
-        if (!BuildingTemplates.isSiteClear(serverLevel, origin, this.template)) {
+        if (!BuildingTemplates.isSiteClear(serverLevel, origin, this.template, this.coreBlock.get())) {
             overlay(player, Component.translatable("message.asteriskcraft.kit.blocked"));
             return InteractionResult.FAIL;
         }
