@@ -35,7 +35,7 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Production logic for the Gateway: a Zealot/Dragoon queue, gated by a one-time
+ * Production logic for the Gateway: a Zealot/Dragoon/Scout queue, gated by a one-time
  * warp-in countdown after the kit places the structure. Costs are paid atomically out of the
  * shared Protoss army bank (surfaced through {@link ProductionMenu}).
  *
@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding {
     public enum UnitType implements StringRepresentable {
-        ZEALOT("zealot"), DRAGOON("dragoon");
+        ZEALOT("zealot"), DRAGOON("dragoon"), SCOUT("scout");
 
         public static final Codec<UnitType> CODEC = StringRepresentable.fromEnum(UnitType::values);
         public static final Codec<List<UnitType>> LIST_CODEC = CODEC.listOf();
@@ -66,6 +66,10 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     public static final int ZEALOT_COBBLE_COST = 50;
     public static final int DRAGOON_WOOD_COST = 100;
     public static final int DRAGOON_COBBLE_COST = 50;
+    // The air unit is the first thing in the mod paid for in refined metal rather than wood: Probes
+    // already deliver iron ore as ingots straight into the bank, so no new economy plumbing is needed.
+    public static final int SCOUT_COBBLE_COST = 150;
+    public static final int SCOUT_IRON_COST = 20;
     public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
     public static final int WARP_TICKS = 200; // 10 seconds to warp in
@@ -86,6 +90,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
                 case ProductionMenu.DATA_WARP -> warpTicksRemaining;
                 case ProductionMenu.DATA_QUEUE_BASE -> countQueued(UnitType.ZEALOT);
                 case ProductionMenu.DATA_QUEUE_BASE + 1 -> countQueued(UnitType.DRAGOON);
+                case ProductionMenu.DATA_QUEUE_BASE + 2 -> countQueued(UnitType.SCOUT);
                 default -> 0;
             };
         }
@@ -174,6 +179,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
         UnitType type = switch (optionIndex) {
             case 0 -> UnitType.ZEALOT;
             case 1 -> UnitType.DRAGOON;
+            case 2 -> UnitType.SCOUT;
             default -> null;
         };
         if (type != null) {
@@ -216,6 +222,9 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
             case DRAGOON -> ResourceBank.extractAll(this, List.of(
                     new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), DRAGOON_WOOD_COST),
                     new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), DRAGOON_COBBLE_COST)));
+            case SCOUT -> ResourceBank.extractAll(this, List.of(
+                    new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), SCOUT_COBBLE_COST),
+                    new ResourceBank.Cost(stack -> stack.is(Items.IRON_INGOT), SCOUT_IRON_COST)));
         };
     }
 
@@ -223,6 +232,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
         EntityType<? extends Mob> entityType = switch (type) {
             case ZEALOT -> AsteriskCraft.ZEALOT.get();
             case DRAGOON -> AsteriskCraft.DRAGOON.get();
+            case SCOUT -> AsteriskCraft.SCOUT.get();
         };
         UnitSpawns.spawn(level, pos, entityType, this.faction, false);
     }

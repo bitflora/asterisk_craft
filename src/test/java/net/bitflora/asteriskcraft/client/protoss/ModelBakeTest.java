@@ -32,6 +32,11 @@ class ModelBakeTest {
     }
 
     @Test
+    void scoutModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new ScoutModel(ScoutModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
     void zerglingModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new ZerglingModel(ZerglingModel.createBodyLayer().bakeRoot()));
     }

@@ -96,5 +96,15 @@
       "asteriskcraft:mob/dragoon/dragoon-live1",
       "asteriskcraft:mob/dragoon/dragoon-live2"
     ]
+  },
+  "entity.scout.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.scout.ambient",
+    "sounds": [
+      "asteriskcraft:mob/scout/scout-live1",
+      "asteriskcraft:mob/scout/scout-live2",
+      "asteriskcraft:mob/scout/scout-live3",
+      "asteriskcraft:mob/scout/scout-live4"
+    ]
   }
 }

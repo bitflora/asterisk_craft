@@ -52,7 +52,10 @@ public enum ProductionKind {
                     Component.translatable("gui.asteriskcraft.cost.zealot"), 0),
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dragoon.png"), 113, 112),
-                    Component.translatable("gui.asteriskcraft.cost.dragoon"), 1)));
+                    Component.translatable("gui.asteriskcraft.cost.dragoon"), 1),
+            new OptionView(
+                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 113, 112),
+                    Component.translatable("gui.asteriskcraft.cost.scout"), 2)));
 
     /** One train button: an icon, a cost tooltip, and the unit column it stacks into (see class docs). */
     public record OptionView(Icon icon, Component costTooltip, int column) {
@@ -61,7 +64,7 @@ public enum ProductionKind {
     /**
      * A button's icon: either a real registered item's render (used for the Gateway/Photon
      * Cannon kits, which are actual items) or a hand-picked command-card style texture (used
-     * for units that have no item form of their own — Probe, Zealot, Dragoon).
+     * for units that have no item form of their own — Probe, Zealot, Dragoon, Scout).
      */
     public sealed interface Icon {
         record FromItem(ItemStack stack) implements Icon {

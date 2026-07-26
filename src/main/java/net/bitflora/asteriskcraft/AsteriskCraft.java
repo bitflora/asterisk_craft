@@ -27,6 +27,7 @@ import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
@@ -169,6 +170,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dragoon"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<ScoutEntity>> SCOUT =
+            ENTITY_TYPES.register("scout", () -> EntityType.Builder.of(ScoutEntity::new, MobCategory.MONSTER)
+                    // Wide and shallow like the Mutalisk's, a touch broader for the wingspan.
+                    .sized(1.6f, 0.9f)
+                    // Larger than the ground units': it cruises 6 blocks up, so it enters view sooner.
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scout"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
             ENTITY_TYPES.register("drone", () -> EntityType.Builder.of(DroneEntity::new, MobCategory.CREATURE)
                     .sized(0.7f, 0.9f)
@@ -235,6 +244,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> DRAGOON_SPAWN_EGG_ENEMY = ITEMS.registerItem("dragoon_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, DRAGOON, Faction.ZERG));
 
+    public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ALLY = ITEMS.registerItem("scout_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, SCOUT, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ENEMY = ITEMS.registerItem("scout_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, SCOUT, Faction.ZERG));
+
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ALLY = ITEMS.registerItem("drone_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, DRONE, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ENEMY = ITEMS.registerItem("drone_spawn_egg_enemy",
@@ -300,6 +314,8 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_AMBIENT =
             SOUND_EVENTS.register("entity.dragoon.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_AMBIENT =
+            SOUND_EVENTS.register("entity.scout.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.ambient")));
 
     // --- Creative tab ---
 
@@ -321,6 +337,8 @@ public class AsteriskCraft {
                 output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ENEMY.get());
+                output.accept(SCOUT_SPAWN_EGG_ALLY.get());
+                output.accept(SCOUT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRONE_SPAWN_EGG_ALLY.get());
                 output.accept(DRONE_SPAWN_EGG_ENEMY.get());
                 output.accept(ZERGLING_SPAWN_EGG_ALLY.get());
@@ -375,6 +393,7 @@ public class AsteriskCraft {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
+        event.put(SCOUT.get(), ScoutEntity.createAttributes().build());
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());

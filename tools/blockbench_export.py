@@ -78,6 +78,7 @@ UNITS = {
     "probe": ("protoss", "ProbeModel"),
     "zealot": ("protoss", "ZealotModel"),
     "dragoon": ("protoss", "DragoonModel"),
+    "scout": ("protoss", "ScoutModel"),
     "photon_cannon": ("protoss", "PhotonCannonModel"),
     "zergling": ("zerg", "ZerglingModel"),
     "hydralisk": ("zerg", "HydraliskModel"),
