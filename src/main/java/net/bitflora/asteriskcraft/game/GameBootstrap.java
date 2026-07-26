@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.game;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingLayouts;
+import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
@@ -13,6 +14,7 @@ import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,14 +48,16 @@ public final class GameBootstrap {
     private static final int STARTING_LOGS = 100;
     private static final int STARTING_COBBLESTONE = 100;
     private static final int INITIAL_PROBES = 4;
-    // The Nexus is a 5x5 platform (footprint radius 2); clear trees a little past its edge so the
-    // starting base is never stamped into — or left standing under — a tree, just like the Hives.
-    private static final int NEXUS_CLEAR_RADIUS = 5;
+    // How far past the Nexus's own footprint to clear trees, so the starting base is never stamped
+    // into — or left standing under — a tree, just like the Hives.
+    private static final int NEXUS_CLEAR_MARGIN = 2;
 
     // Each AI Hive is planted in its own random direction around the Nexus, at a random distance
     // in this range. The max stays inside typical simulation distance so wave units and Drones
     // never freeze in unloaded chunks (V3 keeps chunk tickets out of scope; see docs/shaping.md).
     private static final int HIVE_COUNT = 3;
+    // The Hive mound is a code-defined 3x3 layout (see BuildingLayouts#hive).
+    private static final int HIVE_FOOTPRINT_RADIUS = 1;
     private static final int HIVE_MIN_DISTANCE = 95;
     private static final int HIVE_MAX_DISTANCE = 120;
     // WORLD_SURFACE reports the topmost solid block in a column, which can be far underground
@@ -129,15 +133,31 @@ public final class GameBootstrap {
     private static void placeStartingBase(ServerLevel level, ServerPlayer player) {
         int x = player.blockPosition().getX() + NEXUS_OFFSET;
         int z = player.blockPosition().getZ() + NEXUS_OFFSET;
+        // The Nexus's footprint comes from its structure template, so redesigning the building in
+        // Blockbench/a structure block automatically widens the ground work below.
+        Vec3i size = BuildingTemplates.size(level, BuildingTemplates.NEXUS);
+        if (size == null) {
+            // A missing template is a broken install, not a crash: bail before touching the terrain
+            // and leave the world un-bootstrapped, so a fixed jar still places the base on the next join.
+            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the starting Nexus");
+            return;
+        }
+        int footprint = BuildingTemplates.footprintRadius(size);
         // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
         // which used to leave the Nexus perched high up in a tree) and clear the trees over the footprint.
-        clearTrees(level, x, z, NEXUS_CLEAR_RADIUS);
-        int y = highestGround(level, x, z);
+        clearTrees(level, x, z, footprint + NEXUS_CLEAR_MARGIN);
+        int y = highestGround(level, x, z, footprint);
         BlockPos origin = new BlockPos(x, y, z);
 
-        BuildingLayouts.place(level, origin, BuildingLayouts.nexus());
+        // No support fill under the Nexus: its end-stone-brick platform is the base, and a quartz
+        // apron poking out from under it read as a mistake.
+        BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.NEXUS,
+                AsteriskCraft.NEXUS_CORE.get(), null);
+        if (core == null) {
+            AsteriskCraft.LOGGER.error("AsteriskCraft: the Nexus template holds no core block");
+            return;
+        }
 
-        BlockPos core = origin.offset(0, 2, 0);
         level.setData(GameAttachments.NEXUS_POS, core);
         if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
             seedNexus(nexus);
@@ -176,7 +196,7 @@ public final class GameBootstrap {
                 int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
                 int x = nexusX + Math.round(Mth.cos(angle) * distance);
                 int z = nexusZ + Math.round(Mth.sin(angle) * distance);
-                int y = highestGround(level, x, z);
+                int y = highestGround(level, x, z, HIVE_FOOTPRINT_RADIUS);
                 BlockPos candidate = new BlockPos(x, y, z);
                 fallback = candidate;
 
@@ -310,14 +330,14 @@ public final class GameBootstrap {
     }
 
     /**
-     * Highest solid surface (top-block Y) across the Hive's 3x3 footprint, so the mound rests on top
-     * of the highest ground and never sinks below its own neighbours in a dip or a super-flat step
-     * (which reads as a hole). On flat terrain this equals the center column's {@code WORLD_SURFACE - 1}.
+     * Highest solid surface (top-block Y) across a building's footprint, so it rests on top of the
+     * highest ground and never sinks below its own neighbours in a dip or a super-flat step (which
+     * reads as a hole). On flat terrain this equals the center column's {@code WORLD_SURFACE - 1}.
      */
-    private static int highestGround(ServerLevel level, int cx, int cz) {
+    private static int highestGround(ServerLevel level, int cx, int cz, int radius) {
         int max = Integer.MIN_VALUE;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
                 max = Math.max(max, groundHeight(level, cx + dx, cz + dz));
             }
         }

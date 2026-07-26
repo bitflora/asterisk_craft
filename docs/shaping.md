@@ -51,7 +51,7 @@ Expanded from the top-level R5 to pin down the exact control scheme (see shape A
 | Part | Mechanism |
 |------|-----------|
 | **A1** | **Faction system** — `SavedData` faction registry (`PLAYER_PROTOSS`, `AI_ZERG`); NeoForge data attachments tag entities + block entities with a faction id; single `FactionRelations.isEnemy(a,b)` used by all targeting |
-| **A2** | **Warp-in kits** (chosen: A2-B) — each building is a craftable kit item; right-click ground → validates footprint → structure template materializes over ~10s with particles/sound. One generic `WarpInHandler` + per-building structure template `.nbt` |
+| **A2** | **Warp-in kits** (chosen: A2-B) — each building is a craftable kit item; right-click ground → validates footprint → structure template materializes over ~10s with particles/sound. One generic `WarpInHandler` + per-building structure template `.nbt`. **Shipped as:** `BuildingKitItem` + `BuildingTemplates`, stamping `data/asteriskcraft/structure/{nexus,gateway}.nbt` — the Protoss buildings are authored in-game with a structure block and re-exported, not written out in Java. The warp-in is instant with the core block entity running its own countdown, rather than a materializing animation. The Zerg Hive has no template yet and is still the code-defined `BuildingLayouts.hive()` |
 | **A3** | **Nexus** — controller block entity + GUI with Probe production queue; defeat trigger when core block is destroyed; gates crafting of other kits (recipes unlock via advancement granted at game start) |
 | **A4** | **Probe** — small custom entity; goal chain: find nearest block in `#asteriskcraft:harvestable` tag (preferring the same resource type it last mined) → mine-beam N seconds → block enters depleted/cooldown state (never removed) → carry drops straight into the home Nexus's inventory |
 | **A5** | **Vanilla-item economy** (chosen: user variant of A5-B) — resources are real items in building inventories; kits are crafted normally; production buildings consume items from a shared per-army inventory (`ArmyBank`), which workers deliver into directly. Every building in an army — Nexus + Gateway for Protoss, all three Hives for Zerg — acts as a "linked chest" (`ArmyLinkedContainer`) onto one pooled `Container` per faction rather than each holding its own independent stock |
@@ -65,7 +65,7 @@ Expanded from the top-level R5 to pin down the exact control scheme (see shape A
 Package root `net.bitflora.asteriskcraft`:
 
 - `faction/` — Faction, FactionSavedData, FactionAttachment, FactionRelations
-- `building/` — WarpInHandler, BuildingKitItem, NexusBlock(Entity), GatewayBlock(Entity), HiveBlock(Entity), `PhotonCannonTargeting` (pure targeting rule), structure templates in `data/asteriskcraft/structure/`
+- `building/` — BuildingKitItem, BuildingTemplates (+ BuildingLayouts for the Hive), NexusBlock(Entity), GatewayBlock(Entity), HiveBlock(Entity), `PhotonCannonTargeting` (pure targeting rule), structure templates in `data/asteriskcraft/structure/`
 - `entity/` — ProbeEntity, DroneEntity, PhotonCannonEntity; `ai/` goals: HarvestBlockGoal, DeliverToContainerGoal, FactionTargetGoal, CommandedMoveGoal, CannonFireGoal
 - `command/` — CursorItem (held marker), CommandInputPacket + client input handler, CommandInputResolver (server), PlayerSelection attachment, CommandOrder attachment + `ai/CommandedMoveGoal`/`ai/CommandedAttackGoal`
 - `director/` — ZergDirector (server tick handler, wave scheduler)
@@ -92,7 +92,7 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 
 ## Slices (each ends demo-able)
 
-**V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus, seeded with starting resources, on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore (preferring to keep mining the same resource type) and delivers a flat 3 per trip straight into the Nexus; Probe costs 50 wood or 50 cobble from the Nexus's own inventory. Unit tests cover faction rules, the Nexus multiblock layout, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and deposit into the Nexus.*
+**V1 — Mod skeleton + Nexus + Probe economy. `[DONE]`** MDK setup for NeoForge 26.1; faction core (A1); world bootstrap places the Nexus, seeded with starting resources, on first player join (no slash commands — moved off server-start after testing showed the heightmap isn't settled that early); Nexus block entity + GUI queue; Probe entity that non-destructively harvests wood/stone/iron ore (preferring to keep mining the same resource type) and delivers a flat 3 per trip straight into the Nexus; Probe costs 50 wood or 50 cobble from the Nexus's own inventory. Unit tests cover faction rules, the building site-prep geometry, and economy constants. *Demo: create a new world, find the Nexus standing near you, queue a Probe, watch it mine and deposit into the Nexus.*
 
 **V2a — Gateway + Zealots/Dragoons. `[DONE]`** Warp-in kit framework (A2); Gateway production (A6) of Zealots (zombies, 50 wood + 50 cobble) and Dragoons (skeletons, 100 wood + 50 cobble); rally points. *Demo: craft Gateway kit, warp it in, produce a mixed squad.*
 
@@ -110,7 +110,7 @@ The whole economy runs on vanilla resources Probes/Drones can harvest non-destru
 
 ## Verification
 
-- `./gradlew test` for deterministic logic (faction rules, multiblock layout, economy constants) — tags and item components aren't bound in the JUnit bootstrap, so tag-dependent behavior (e.g. block→item yield mapping) isn't unit-testable and needs the checks below instead.
+- `./gradlew test` for deterministic logic (faction rules, site-prep geometry, economy constants) — tags and item components aren't bound in the JUnit bootstrap, and structure templates need a running server's resource manager, so tag-dependent behavior (e.g. block→item yield mapping) and template placement aren't unit-testable and need the checks below instead. `BuildingTemplatesTest` covers what it can by reading the `.nbt` files as raw NBT.
 - `./gradlew runClient` per slice; execute each slice's demo script manually.
 - `./gradlew runServer` at V3+ — all logic must be server-side safe (dedicated-server crash is the classic modding failure).
 - V3 end-to-end: play one full match to victory (raze 3 Hives) and one to defeat (let Zerg kill the Nexus).

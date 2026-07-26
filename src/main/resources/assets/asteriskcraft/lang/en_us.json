@@ -1,5 +1,5 @@
 {
-  "itemGroup.asteriskcraft": "AsteriskCraft",
+  "itemGroup.asteriskcraft": "*Craft",
   "block.asteriskcraft.nexus_core": "Nexus",
   "block.asteriskcraft.depleted_node": "Depleted Node",
   "block.asteriskcraft.gateway_core": "Gateway",
@@ -8,6 +8,7 @@
   "item.asteriskcraft.photon_cannon_kit": "Photon Cannon Kit",
   "item.asteriskcraft.nexus_kit": "Nexus Kit",
   "item.asteriskcraft.cursor": "Cursor",
+  "item.asteriskcraft.tab_icon": "*Craft",
   "item.asteriskcraft.probe_spawn_egg_ally": "Allied Probe Spawn Egg",
   "item.asteriskcraft.probe_spawn_egg_enemy": "Enemy Probe Spawn Egg",
   "item.asteriskcraft.zealot_spawn_egg_ally": "Allied Zealot Spawn Egg",

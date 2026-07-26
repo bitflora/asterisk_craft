@@ -16,67 +16,29 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Guards the Nexus multiblock definition (R1): a 3x3 quartz pedestal with four corner
- * pillars, and the interactive core block on top of the center gold pedestal. Runs under the bootstrapped NeoForge
- * environment so mod-registered blocks and vanilla blocks resolve.
+ * Guards the Zerg Hive's code-defined multiblock layout and the site-preparation geometry every
+ * building is placed on — including the {@code .nbt}-driven Protoss ones, whose own shapes are
+ * covered by {@link BuildingTemplatesTest}. Runs under the bootstrapped NeoForge environment so
+ * mod-registered blocks and vanilla blocks resolve.
  */
 class BuildingLayoutsTest {
 
     @Test
-    void nexusCoreSitsOnTopOfCenter() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.nexus();
-        BlockState core = layout.get(new BlockPos(0, 2, 0));
-        assertNotNull(core, "expected a block at the core position (0,2,0)");
-        assertEquals(AsteriskCraft.NEXUS_CORE.get(), core.getBlock(),
-                "the top-center block must be the interactive Nexus core");
+    void hiveCoreSitsOnTopOfCenter() {
+        Map<BlockPos, BlockState> layout = BuildingLayouts.hive();
+        BlockState core = layout.get(BuildingLayouts.HIVE_CORE_OFFSET);
+        assertNotNull(core, "expected a block at the declared Hive core offset");
+        assertEquals(AsteriskCraft.HIVE_CORE.get(), core.getBlock(),
+                "the declared offset must hold the interactive Hive core");
     }
 
     @Test
-    void nexusHasAThreeByThreePedestalWithNoOuterRing() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.nexus();
-        BlockState quartz = Blocks.SMOOTH_QUARTZ.defaultBlockState();
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                boolean inPedestal = Math.abs(dx) <= 1 && Math.abs(dz) <= 1;
-                boolean isCorner = Math.abs(dx) == 2 && Math.abs(dz) == 2;
-                BlockState at = layout.get(new BlockPos(dx, 0, dz));
-                if (inPedestal) {
-                    assertEquals(quartz, at, "3x3 pedestal must be quartz at " + dx + "," + dz);
-                } else if (isCorner) {
-                    assertNotNull(at, "corner footing must remain at " + dx + "," + dz);
-                } else {
-                    assertNull(at, "outer-ring block should be removed at " + dx + "," + dz);
-                }
-            }
-        }
-    }
-
-    @Test
-    void nexusHasFourCornerPillars() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.nexus();
-        int[][] corners = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}};
-        for (int[] c : corners) {
-            assertNotNull(layout.get(new BlockPos(c[0], 1, c[1])),
-                    "expected a pillar above corner " + c[0] + "," + c[1]);
-        }
-    }
-
-    @Test
-    void gatewayCoreSitsAtItsDeclaredOffset() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.gateway();
-        BlockState core = layout.get(BuildingLayouts.GATEWAY_CORE_OFFSET);
-        assertNotNull(core, "expected a block at the declared Gateway core offset");
-        assertEquals(AsteriskCraft.GATEWAY_CORE.get(), core.getBlock(),
-                "the declared offset must hold the interactive Gateway core");
-    }
-
-    @Test
-    void gatewayHasAFullThreeByThreePlatform() {
-        Map<BlockPos, BlockState> layout = BuildingLayouts.gateway();
+    void hiveHasAFullThreeByThreeMound() {
+        Map<BlockPos, BlockState> layout = BuildingLayouts.hive();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 assertTrue(layout.containsKey(new BlockPos(dx, 0, dz)),
-                        "missing platform block at " + dx + "," + dz);
+                        "missing mound block at " + dx + "," + dz);
             }
         }
     }
@@ -103,6 +65,31 @@ class BuildingLayoutsTest {
                 }
             }
         }
+    }
+
+    @Test
+    void sitePrepFollowsTheGivenFootprint() {
+        // A wide, short template (the Nexus is 9x9): prep must reach its whole footprint, or the
+        // outer ring would be left overhanging raw terrain.
+        Predicate<BlockPos> probe = pos -> pos.getY() < ORIGIN.getY() - 1; // one air layer below
+        Map<BlockPos, BlockState> edits = BuildingLayouts.planSitePrep(ORIGIN, probe, 4, 4, 3, 6, SUPPORT);
+        BlockState air = Blocks.AIR.defaultBlockState();
+        assertEquals(air, edits.get(ORIGIN.offset(4, 3, 4)), "head-room must cover the footprint corner");
+        assertEquals(SUPPORT, edits.get(ORIGIN.offset(4, -1, 4)), "support must reach the footprint corner");
+        assertNull(edits.get(ORIGIN.offset(5, 1, 0)), "prep must not spill outside the footprint");
+        assertNull(edits.get(ORIGIN.offset(0, 4, 0)), "prep must not clear above the requested head-room");
+    }
+
+    @Test
+    void nullSupportLeavesTheGroundAlone() {
+        // The Protoss buildings sit on their own stonework, so nothing is stamped under them even
+        // where the terrain falls away — head-room is still cleared.
+        Predicate<BlockPos> probe = pos -> pos.getY() < ORIGIN.getY() - 3; // a three-deep gap below
+        Map<BlockPos, BlockState> edits = BuildingLayouts.planSitePrep(ORIGIN, probe, 2, 2, 5, 6, null);
+        for (int dy = -1; dy >= -6; dy--) {
+            assertNull(edits.get(ORIGIN.offset(0, dy, 0)), "nothing may be placed below the platform");
+        }
+        assertEquals(Blocks.AIR.defaultBlockState(), edits.get(ORIGIN.above()), "head-room is still cleared");
     }
 
     @Test

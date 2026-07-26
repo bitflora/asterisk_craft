@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.building;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -10,24 +11,25 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Block;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * A generic warp-in kit: right-click the ground to place a building's full layout
+ * A generic warp-in kit: right-click the ground to stamp a building's structure template
  * immediately, leaving the core block entity to run its own warp-in countdown.
  * Reusable by later kits (Photon Cannon, etc.) that share this place-then-warm-up shape.
  */
 public class BuildingKitItem extends Item {
-    private final Supplier<Map<BlockPos, BlockState>> layout;
-    private final BlockPos coreOffset;
+    private final Identifier template;
+    // A supplier, not the Block itself: kits are registered alongside the blocks they place, so
+    // the block isn't resolvable yet at construction time.
+    private final Supplier<? extends Block> coreBlock;
 
-    public BuildingKitItem(Properties properties, Supplier<Map<BlockPos, BlockState>> layout, BlockPos coreOffset) {
+    public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock) {
         super(properties);
-        this.layout = layout;
-        this.coreOffset = coreOffset;
+        this.template = template;
+        this.coreBlock = coreBlock;
     }
 
     @Override
@@ -42,14 +44,19 @@ public class BuildingKitItem extends Item {
         }
 
         BlockPos origin = context.getClickedPos().relative(context.getClickedFace());
-        Map<BlockPos, BlockState> structure = this.layout.get();
-        if (!isFootprintClear(serverLevel, origin, structure)) {
+        if (!BuildingTemplates.isSiteClear(serverLevel, origin, this.template)) {
             overlay(player, Component.translatable("message.asteriskcraft.kit.blocked"));
             return InteractionResult.FAIL;
         }
 
-        BuildingLayouts.place(serverLevel, origin, structure);
-        BlockPos corePos = origin.offset(this.coreOffset.getX(), this.coreOffset.getY(), this.coreOffset.getZ());
+        // No support fill: the template's own stonework is the base, so a gap under a sloping
+        // edge is left as a gap rather than plugged with a foreign block.
+        BlockPos corePos = BuildingTemplates.place(serverLevel, origin, this.template, this.coreBlock.get(), null);
+        if (corePos == null) {
+            // The template failed to load, so nothing was stamped — don't eat the kit for it.
+            overlay(player, Component.translatable("message.asteriskcraft.kit.blocked"));
+            return InteractionResult.FAIL;
+        }
         // Every kit is placed by the player for now, so it's always PROTOSS; a real
         // player->faction registry arrives with race selection/PvP (see docs/shaping.md V5).
         if (serverLevel.getBlockEntity(corePos) instanceof WarpInBuilding building) {
@@ -58,16 +65,6 @@ public class BuildingKitItem extends Item {
         context.getItemInHand().shrink(1);
         overlay(player, Component.translatable("message.asteriskcraft.kit.warping"));
         return InteractionResult.SUCCESS;
-    }
-
-    private static boolean isFootprintClear(Level level, BlockPos origin, Map<BlockPos, BlockState> layout) {
-        for (BlockPos offset : layout.keySet()) {
-            BlockState current = level.getBlockState(origin.offset(offset.getX(), offset.getY(), offset.getZ()));
-            if (!current.isAir() && !current.canBeReplaced()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static void overlay(Player player, Component message) {

@@ -3,7 +3,7 @@ package net.bitflora.asteriskcraft;
 import com.mojang.logging.LogUtils;
 import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
-import net.bitflora.asteriskcraft.building.BuildingLayouts;
+import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
@@ -45,6 +45,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -106,13 +107,13 @@ public class AsteriskCraft {
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
-            props -> new BuildingKitItem(props, BuildingLayouts::gateway, BuildingLayouts.GATEWAY_CORE_OFFSET));
+            props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE));
 
     // Bought from the Nexus's own production menu (paid from the shared army bank) rather than
     // crafted, unlike the other kits — see NexusBlockEntity#trainOption. An expansion Nexus, so
     // it's deliberately not offered as a cheap personal-inventory crafting-table recipe.
     public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
-            props -> new BuildingKitItem(props, BuildingLayouts::nexus, BuildingLayouts.NEXUS_CORE_OFFSET));
+            props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE));
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
@@ -121,6 +122,9 @@ public class AsteriskCraft {
 
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
+
+    // Icon-only item for the creative tab button; not added to displayItems.
+    public static final DeferredItem<Item> TAB_ICON = ITEMS.registerSimpleItem("tab_icon");
 
     // --- Block entities ---
 
@@ -302,7 +306,7 @@ public class AsteriskCraft {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.asteriskcraft"))
             .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> NEXUS_CORE_ITEM.get().getDefaultInstance())
+            .icon(() -> TAB_ICON.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(NEXUS_CORE_ITEM.get());
                 output.accept(GATEWAY_CORE_ITEM.get());
