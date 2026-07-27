@@ -11,10 +11,10 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.resources.Identifier;
 
 /**
- * Renders the Dragoon as the custom four-legged {@link DragoonModel} instead of a vanilla skeleton.
- * Being a plain {@link MobRenderer} (not a humanoid renderer), it deliberately does not draw the bow
- * the underlying Skeleton spawns holding — the walker has no hands, and its ranged attack is unchanged.
- * The emissive {@link UnitGlowLayer} lights the cockpit eye at full brightness (see the glow texture).
+ * Renders the Dragoon as the custom four-legged {@link DragoonModel}. A plain {@link MobRenderer}
+ * rather than a humanoid one: the walker has no hands and carries nothing, so there is no held-item
+ * or armour layer to draw. The emissive {@link UnitGlowLayer} lights the blue energy lens and the
+ * barrel tip at full brightness — those are the only zones painted into the glow texture.
  */
 public class DragoonRenderer extends MobRenderer<DragoonEntity, LivingEntityRenderState, DragoonModel> {
     private static final Identifier TEXTURE = AsteriskCraft.id("textures/entity/dragoon.png");
