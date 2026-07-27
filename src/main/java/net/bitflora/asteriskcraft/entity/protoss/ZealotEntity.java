@@ -6,7 +6,11 @@ import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -27,10 +31,24 @@ import net.minecraft.world.level.Level;
  */
 public class ZealotEntity extends Monster implements Shielded {
     public static final int SHIELD = 30;
+    /** Length of the blade cross-slash the client plays on each swing. */
+    public static final int ATTACK_ANIM_TICKS = 10;
+
+    // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
+    // just its start) and can't collide with a vanilla LivingEntity event byte. Same shape as
+    // SunkenColonyEntity, the mod's other animated attacker.
+    private static final EntityDataAccessor<Integer> ATTACK_TICKS =
+            SynchedEntityData.defineId(ZealotEntity.class, EntityDataSerializers.INT);
 
     public ZealotEntity(EntityType<? extends ZealotEntity> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(ATTACK_TICKS, 0);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -54,6 +72,36 @@ public class ZealotEntity extends Monster implements Shielded {
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    /**
+     * The single hook for the strike animation. {@code MeleeAttackGoal} calls
+     * {@code mob.swing(InteractionHand.MAIN_HAND)} on every attack and {@link SiegeBlockGoal} calls it
+     * while battering through an obstruction; the one-argument {@code LivingEntity.swing} delegates
+     * here, so overriding this form covers both without either goal knowing about the animation.
+     */
+    @Override
+    public void swing(InteractionHand hand, boolean sendToSwingingEntity) {
+        super.swing(hand, sendToSwingingEntity);
+        if (!this.level().isClientSide()) {
+            this.entityData.set(ATTACK_TICKS, ATTACK_ANIM_TICKS);
+        }
+    }
+
+    /** Ticks remaining in the strike animation; 0 when idle. Read by the renderer. */
+    public int getAttackTicks() {
+        return this.entityData.get(ATTACK_TICKS);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide()) {
+            int remaining = this.getAttackTicks();
+            if (remaining > 0) {
+                this.entityData.set(ATTACK_TICKS, remaining - 1);
+            }
+        }
     }
 
     @Override

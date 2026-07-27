@@ -156,7 +156,17 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
-                    .sized(0.6f, 1.95f)
+                    // Deliberately narrower than the rendered model: the pauldrons and their horns
+                    // reach ~1.25 blocks across, but the pathfinder sizes nodes by ceil(width), so
+                    // 0.8 still occupies one node and the Zealot keeps fitting through one-block
+                    // gaps. Matching the true width (like the Dragoon's 1.1) would make the mod's
+                    // main melee unit two nodes wide and quietly change how it navigates. The
+                    // shoulders overhanging the hitbox is the better trade.
+                    //
+                    // Height does reach the top of the visible model: horn tips sit at model y=-9.4
+                    // against feet at y=24, i.e. 1.98 blocks at the renderer's 0.95 scale. Going from
+                    // 1.95 to 2.0 costs nothing, since the pathfinder rounds height up to 2 either way.
+                    .sized(0.8f, 2.0f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("zealot"))));
 
