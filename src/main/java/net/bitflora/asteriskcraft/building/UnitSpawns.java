@@ -31,7 +31,7 @@ public final class UnitSpawns {
         if (unit == null) {
             return null;
         }
-        BlockPos spot = SpawnSpots.findGroundSpot(level, near);
+        BlockPos spot = SpawnSpots.findGroundSpot(level, near, type);
         unit.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
         EventHooks.finalizeMobSpawn(unit, level, level.getCurrentDifficultyAt(spot), EntitySpawnReason.TRIGGERED, null);
         FactionAttachments.set(unit, faction);

@@ -386,7 +386,7 @@ public final class GameBootstrap {
         // The mound keeps a mycelium footing under it — same material as the creep it sits in, so
         // unlike the Protoss stonework there is nothing foreign to see.
         BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
-                AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
+                AsteriskCraft.HIVE_CORE.get(), null);
         if (core == null) {
             return null;
         }
