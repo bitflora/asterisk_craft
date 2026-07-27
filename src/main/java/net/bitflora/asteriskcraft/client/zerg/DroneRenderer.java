@@ -7,31 +7,40 @@ import net.bitflora.asteriskcraft.client.UnitGlowLayer;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.resources.Identifier;
 
-public class DroneRenderer extends MobRenderer<DroneEntity, LivingEntityRenderState, DroneModel> {
+public class DroneRenderer extends MobRenderer<DroneEntity, DroneRenderState, DroneModel> {
     private static final Identifier TEXTURE = AsteriskCraft.id("textures/entity/drone.png");
     private static final Identifier GLOW = AsteriskCraft.id("textures/entity/drone_glow.png");
 
     public DroneRenderer(EntityRendererProvider.Context context) {
-        super(context, new DroneModel(context.bakeLayer(AsteriskCraftClient.DRONE_LAYER)), 0.3f);
+        // Wide shadow: this one is a squat crab, broader than it is tall.
+        super(context, new DroneModel(context.bakeLayer(AsteriskCraftClient.DRONE_LAYER)), 0.4f);
         this.addLayer(new UnitGlowLayer<>(this, GLOW));
     }
 
     @Override
-    public LivingEntityRenderState createRenderState() {
-        return new LivingEntityRenderState();
+    public DroneRenderState createRenderState() {
+        return new DroneRenderState();
     }
 
     @Override
-    protected void scale(LivingEntityRenderState state, PoseStack poseStack) {
-        // Small hovering worker; built at true pixel scale. Tuned via runClient.
+    public void extractRenderState(DroneEntity drone, DroneRenderState state, float partialTicks) {
+        super.extractRenderState(drone, state, partialTicks);
+        // getAttackAnim already interpolates the swing 0 -> 1 across partial ticks, so the chop stays
+        // smooth instead of stepping once per tick. HarvestGoal re-swings every tick it is in range of
+        // a node, which is what keeps the Drone chopping for as long as it mines.
+        state.swingProgress = drone.getAttackAnim(partialTicks);
+    }
+
+    @Override
+    protected void scale(DroneRenderState state, PoseStack poseStack) {
+        // Small squat worker; built at true pixel scale. Tuned via runClient.
         poseStack.scale(0.9f, 0.9f, 0.9f);
     }
 
     @Override
-    public Identifier getTextureLocation(LivingEntityRenderState state) {
+    public Identifier getTextureLocation(DroneRenderState state) {
         return TEXTURE;
     }
 }

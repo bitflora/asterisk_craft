@@ -190,7 +190,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
             ENTITY_TYPES.register("drone", () -> EntityType.Builder.of(DroneEntity::new, MobCategory.CREATURE)
-                    .sized(0.7f, 0.9f)
+                    // Squat and wide, matching its carapace: broader than it is tall. Still under 1.0
+                    // wide, so it can squeeze through a 1-block gap exactly as before.
+                    .sized(0.9f, 0.8f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("drone"))));
 
