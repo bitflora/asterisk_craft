@@ -171,6 +171,11 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         return SHIELD;
     }
 
+    /** Whether this worker will mine the given block. Overridable so a subtype can narrow the shared tag. */
+    protected boolean canHarvest(BlockState state) {
+        return state.is(HARVESTABLE);
+    }
+
     public void setHomePos(BlockPos pos) {
         this.homePos = pos.immutable();
     }
@@ -309,7 +314,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             CommandOrder order = CommandAttachments.getOrder(this.probe);
             if (order.kind() == CommandOrder.Kind.MINE && order.pos().isPresent()) {
                 BlockPos commanded = order.pos().get();
-                if (this.probe.level().getBlockState(commanded).is(HARVESTABLE)) {
+                if (this.probe.canHarvest(this.probe.level().getBlockState(commanded))) {
                     this.target = commanded.immutable();
                     this.commandedTarget = true;
                     return true;
@@ -332,7 +337,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         public boolean canContinueToUse() {
             return this.target != null
                     && !this.probe.isCarrying()
-                    && this.probe.level().getBlockState(this.target).is(HARVESTABLE);
+                    && this.probe.canHarvest(this.probe.level().getBlockState(this.target));
         }
 
         @Override
@@ -457,7 +462,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
                     home.offset(-SEARCH_RADIUS, -SEARCH_VERTICAL, -SEARCH_RADIUS),
                     home.offset(SEARCH_RADIUS, SEARCH_VERTICAL, SEARCH_RADIUS))) {
                 BlockState state = level.getBlockState(pos);
-                if (!state.is(HARVESTABLE)) {
+                if (!this.probe.canHarvest(state)) {
                     continue;
                 }
                 // Cheap pre-filter: some passable neighbor to stand at. A real pathfind (below)
