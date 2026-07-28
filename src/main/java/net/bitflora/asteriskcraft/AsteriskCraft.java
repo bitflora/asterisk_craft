@@ -204,6 +204,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<HydraliskEntity>> HYDRALISK =
             ENTITY_TYPES.register("hydralisk", () -> EntityType.Builder.of(HydraliskEntity::new, MobCategory.MONSTER)
+                    // The model is built to fit this, not the other way round: at the renderer's 1.0
+                    // scale the coil rests on y=24 and the crest spines top out at y≈-7.4, i.e. 1.96
+                    // blocks, and nothing but the tail reaches past 4.8px of half-width.
                     .sized(0.6f, 1.99f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("hydralisk"))));

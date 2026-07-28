@@ -83,6 +83,13 @@ This version has a **render-state extraction** GUI pipeline — screens don't dr
   - Overlay: extend `RenderLayer<S,M>` and in `submit(...)` call the inherited `coloredCutoutModelCopyLayerRender(getParentModel(), overlayTexture, pose, collector, light, state, -1 /*color*/, 1 /*order*/)` (uses `RenderTypes.entityCutout`). See `client/UnitOverlayLayer`.
   - Attach in the renderer ctor via `this.addLayer(new UnitOverlayLayer<>(this, OVERLAY))`. `RenderTypes` (plural) is the factory class in `net.minecraft.client.renderer.rendertype`; it also has `entityTranslucentEmissive(...)` if a translucent glow is wanted.
 - **Per-entity render scale** goes in an override of `LivingEntityRenderer#scale(S state, PoseStack poseStack)` — `poseStack.scale(f,f,f)` (replaces the old `preRenderCallback` + `GlStateManager.scale`).
+- **A `PartPose` xRot's *visible* direction depends on which way the cube grows from its pivot**, and getting this backwards silently produces a plausible-looking-but-wrong pose rather than an error. Rotation about x sends a local point `(0,y,z)` to `(0, y·cosθ − z·sinθ, y·sinθ + z·cosθ)`. Since "up" is `−y` here, a **positive** xRot tips a part's own long axis *forward* (toward `−z`). So for the same `+0.5`:
+  - a box growing **up** from its pivot (a spine, a hood, a torso) leans **forward**, and negative rakes it **back**;
+  - a box growing **down** (an arm hanging off a shoulder) swings **back**, and negative throws it **forward**;
+  - a box growing along **+z** (a tail segment) tips **down**, and negative lifts it **up**;
+  - a box growing along **−z** (a jaw, a snout, a mandible) tips **down** too — same sign as `+z`, since it is the part's axis and not the world that rotates.
+
+  Chains compound: a limb's real angle is the sum down the parent chain, which is how a curve gets faked out of straight boxes (`ZerglingModel`'s kaiser blades, `HydraliskModel`'s scythes). Worth checking each rotation against its box's growth direction before trusting a pose — `HydraliskModel` was authored once with the up-growing convention applied to everything and came out with the tail buried in the ground and the arms reaching backwards.
 
 ## Concrete API facts (verified while porting 1.12 unit sounds — Zealot/Zergling/Hydralisk/Probe)
 
