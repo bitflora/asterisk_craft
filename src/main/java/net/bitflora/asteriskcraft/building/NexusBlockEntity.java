@@ -60,6 +60,8 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
     /** Game time of the next allowed "under attack" alert. Deliberately not saved: the cooldown resets on reload. */
     private long nextAlertTime = 0L;
+    /** Whether this Nexus has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
+    private boolean enrolled = false;
     /** Tracks whether the Nexus can see the sky (dormant when buried); cancels the queue on going dark. */
     private final SkyGate skyGate = new SkyGate();
 
@@ -92,6 +94,10 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, NexusBlockEntity nexus) {
+        if (!nexus.enrolled) {
+            CoreCensus.ensureRegistered(level, nexus.coreFaction(), pos);
+            nexus.enrolled = true;
+        }
         if (!nexus.skyGate.update(level, pos, nexus::cancelQueueOnDormant)) {
             return; // dormant: no clear path to the sky, production is frozen
         }
@@ -264,7 +270,9 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     public void preRemoveSideEffects(BlockPos pos, BlockState state) {
         // Deliberately skip super: vanilla would drop+clear this Container's contents, but that
         // Container is the shared Protoss army bank (ArmyLinkedContainer) — the Nexus breaking
-        // must not dump/clear resources Gateways still depend on.
+        // must not dump/clear resources Gateways still depend on. CoreSpoils knocks a measured
+        // share of that pool loose instead.
+        CoreSpoils.spill(this.level, this.coreFaction(), pos, this);
         GameOutcome.onCoreDestroyed(this.level, pos);
     }
 

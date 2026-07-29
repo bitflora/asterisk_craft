@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
+import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
@@ -380,6 +381,7 @@ public class AsteriskCraft {
         ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ZergRegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
+        CoreCensus.ATTACHMENT_TYPES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(this::registerPayloads);

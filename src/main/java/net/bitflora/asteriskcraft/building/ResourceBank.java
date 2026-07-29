@@ -1,9 +1,13 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -58,5 +62,60 @@ public final class ResourceBank {
         }
         container.setChanged();
         return true;
+    }
+
+    /**
+     * Removes one share of everything in {@code container} — {@code floor(total / denominator)} of
+     * each distinct item — and returns the removed stacks. Used to spill part of an army's pooled
+     * resources when one of its cores is destroyed ({@link CoreSpoils}).
+     *
+     * <p>Items are pooled by {@link ItemStack#getItem()} across slots, so a resource split over
+     * several stacks is shared as one total (data components are deliberately ignored — the bank
+     * only ever holds plain vanilla resources). The removal itself is per slot, so every returned
+     * stack is already within its max stack size and needs no further splitting.
+     */
+    public static List<ItemStack> extractShare(Container container, int denominator) {
+        if (denominator <= 0) {
+            return List.of();
+        }
+
+        Map<Item, Integer> totals = new LinkedHashMap<>();
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack stack = container.getItem(i);
+            if (!stack.isEmpty()) {
+                totals.merge(stack.getItem(), stack.getCount(), Integer::sum);
+            }
+        }
+
+        Map<Item, Integer> owed = new LinkedHashMap<>();
+        totals.forEach((item, total) -> {
+            int share = total / denominator;
+            if (share > 0) {
+                owed.put(item, share);
+            }
+        });
+        if (owed.isEmpty()) {
+            return List.of();
+        }
+
+        List<ItemStack> removed = new ArrayList<>();
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack stack = container.getItem(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            Item item = stack.getItem();
+            int remaining = owed.getOrDefault(item, 0);
+            if (remaining <= 0) {
+                continue;
+            }
+            ItemStack taken = container.removeItem(i, Math.min(remaining, stack.getCount()));
+            if (!taken.isEmpty()) {
+                owed.put(item, remaining - taken.getCount());
+                removed.add(taken);
+            }
+        }
+        container.setChanged();
+        return removed;
     }
 }

@@ -36,6 +36,8 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     private int coreHealth = FactionCore.CORE_MAX_HEALTH;
     /** Tracks whether the Hive can see the sky (dormant when buried). */
     private final SkyGate skyGate = new SkyGate();
+    /** Whether this Hive has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
+    private boolean enrolled = false;
 
     public HiveBlockEntity(BlockPos pos, BlockState state) {
         super(AsteriskCraft.HIVE_BLOCK_ENTITY.get(), pos, state);
@@ -47,6 +49,10 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, HiveBlockEntity hive) {
+        if (!hive.enrolled) {
+            CoreCensus.ensureRegistered(level, hive.faction, pos);
+            hive.enrolled = true;
+        }
         // The Hive's only per-tick job now is tracking whether it's under open sky (dormant if buried);
         // the director reads isAwake() to decide where to train. Worker/wave production lives there.
         hive.skyGate.update(level, pos, () -> {});
@@ -85,7 +91,9 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     public void preRemoveSideEffects(BlockPos pos, BlockState state) {
         // Deliberately skip super: vanilla would drop+clear this Container's contents, but that
         // Container is the shared Zerg army bank (ArmyLinkedContainer) — one Hive breaking must
-        // not dump/clear resources the other two Hives still depend on.
+        // not dump/clear resources the other two Hives still depend on. CoreSpoils knocks a
+        // measured share of that pool loose instead.
+        CoreSpoils.spill(this.level, this.faction, pos, this);
         GameOutcome.onCoreDestroyed(this.level, pos);
     }
 
