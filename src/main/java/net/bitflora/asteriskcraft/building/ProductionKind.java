@@ -54,7 +54,7 @@ public enum ProductionKind {
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dragoon.png"), 113, 112),
                     Component.translatable("gui.asteriskcraft.cost.dragoon"), 1),
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 113, 112),
+                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 112, 111),
                     Component.translatable("gui.asteriskcraft.cost.scout"), 2)));
 
     /** One train button: an icon, a cost tooltip, and the unit column it stacks into (see class docs). */
