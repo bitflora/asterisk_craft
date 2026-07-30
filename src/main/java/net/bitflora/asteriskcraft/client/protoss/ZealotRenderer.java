@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.client.AsteriskCraftClient;
 import net.bitflora.asteriskcraft.client.UnitGlowLayer;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
@@ -32,7 +33,7 @@ public class ZealotRenderer extends MobRenderer<ZealotEntity, ZealotRenderState,
         int remaining = zealot.getAttackTicks();
         state.attackProgress = remaining <= 0
                 ? 0.0f
-                : 1.0f - Mth.clamp((remaining - partialTicks) / ZealotEntity.ATTACK_ANIM_TICKS, 0.0f, 1.0f);
+                : 1.0f - Mth.clamp((remaining - partialTicks) / UnitStats.ZEALOT.attackAnimTicks(), 0.0f, 1.0f);
     }
 
     @Override

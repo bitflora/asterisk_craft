@@ -7,6 +7,9 @@ import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -27,16 +30,13 @@ import net.minecraft.world.level.Level;
  * The Protoss ranged unit: a plain hostile mob (not a repurposed Skeleton — see
  * docs/neoforge-api-notes.md) with vanilla player-aggression goals replaced by pure faction
  * targeting. Its ranged attack is a custom hitscan (see {@link HitscanAttacks}) fired on a fixed
- * {@link #ATTACK_COOLDOWN} cadence via the plain {@link RangedAttackGoal}.
+ * cadence via the plain {@link RangedAttackGoal}.
+ *
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#DRAGOON} — not here.
  */
 public class DragoonEntity extends Monster implements Shielded, RangedAttackMob {
-    public static final int SHIELD = 40;
-    public static final int ATTACK_COOLDOWN = 40;
-    /**
-     * Range the {@link RangedAttackGoal} holds at: once within it the unit stops advancing and fires
-     * in place instead of closing to melee. The Dragoon is the longer-ranged unit.
-     */
-    public static final float ATTACK_RADIUS = 8.0f;
+    private static final UnitStat STAT = UnitStats.DRAGOON;
+    private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 
     public DragoonEntity(EntityType<? extends DragoonEntity> type, Level level) {
         super(type, level);
@@ -44,12 +44,7 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 50.0)
-                .add(Attributes.ARMOR, 0.5)
-                .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 10.0)
-                .add(Attributes.FOLLOW_RANGE, 32.0);
+        return UnitAttributes.apply(Monster.createMonsterAttributes(), UnitStats.DRAGOON);
     }
 
     @Override
@@ -58,7 +53,7 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
         // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
         // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.
         this.goalSelector.addGoal(0, new SiegeBlockGoal(this));
-        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, ATTACK_COOLDOWN, ATTACK_RADIUS));
+        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, RANGED.cooldown(), RANGED.range()));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
@@ -82,6 +77,6 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
     }
 
     public int getShield() {
-        return SHIELD;
+        return STAT.shield();
     }
 }

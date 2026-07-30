@@ -3,21 +3,19 @@ package net.bitflora.asteriskcraft.building;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Guards the Photon Cannon's design constants: the kit costs 100 wood + 100 cobblestone
- * + 20 iron (docs/shaping.md V4), and it warps in and attacks on real cadences.
+ * Guards the Photon Cannon's warp-in timing. It has no direct cost of its own — the kit that warps
+ * it in is bought at the Nexus for {@code NexusBlockEntity.BUILDING_COST} (150 wood or 150
+ * cobblestone). Its combat stats (range, damage, cooldown) now live in
+ * {@code net.bitflora.asteriskcraft.stats.UnitStats.PHOTON_CANNON} — see {@code stats.UnitStatsTest}.
  */
 class PhotonCannonEconomyTest {
 
     @Test
     void combatTimingIsSane() {
         assertTrue(PhotonCannonEntity.WARP_TICKS > 0, "the cannon must take time to warp in");
-        assertTrue(PhotonCannonEntity.RANGE > 0, "the cannon must have a positive attack range");
-        assertTrue(PhotonCannonEntity.ATTACK_DAMAGE > 0, "each shot must deal damage");
-        assertTrue(PhotonCannonEntity.ATTACK_COOLDOWN > 0, "shots must be spaced out in time");
     }
 
 }

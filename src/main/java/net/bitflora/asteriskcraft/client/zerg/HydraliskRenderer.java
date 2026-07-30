@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.client.AsteriskCraftClient;
 import net.bitflora.asteriskcraft.client.UnitGlowLayer;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
@@ -33,7 +34,7 @@ public class HydraliskRenderer extends MobRenderer<HydraliskEntity, HydraliskRen
         int remaining = hydralisk.getFireTicks();
         state.attackProgress = remaining <= 0
                 ? 0.0f
-                : 1.0f - Mth.clamp((remaining - partialTicks) / HydraliskEntity.FIRE_ANIM_TICKS, 0.0f, 1.0f);
+                : 1.0f - Mth.clamp((remaining - partialTicks) / UnitStats.HYDRALISK.attackAnimTicks(), 0.0f, 1.0f);
     }
 
     @Override

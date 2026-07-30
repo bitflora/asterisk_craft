@@ -4,6 +4,9 @@ import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.zerg.SunkenSpikeGoal;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -11,7 +14,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 
@@ -33,16 +35,11 @@ import net.minecraft.world.level.Level;
  * <p>The colony itself is silent — no hurt or death sound — since a rooted structure grunting or
  * screaming like a creature doesn't fit. Its tentacle strike still makes noise (see
  * {@link SunkenSpikeGoal}/{@link SunkenSpikeEntity}).
+ *
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#SUNKEN_COLONY} — not here.
  */
 public class SunkenColonyEntity extends Monster {
-    public static final int MAX_HEALTH = 150;
-    public static final float ATTACK_DAMAGE = 20.0f;
-    /** Reach of the tentacle, in blocks — comfortably out-ranging every mobile unit in the mod. */
-    public static final double RANGE = 11.0;
-    /** One strike every 1.6s. */
-    public static final int ATTACK_COOLDOWN = 32;
-    /** Length of the rear-back-and-whip animation the client plays on each strike. */
-    public static final int ATTACK_ANIM_TICKS = 12;
+    private static final UnitStat STAT = UnitStats.SUNKEN_COLONY;
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
     // just its start) and can't collide with a vanilla LivingEntity event byte.
@@ -55,15 +52,7 @@ public class SunkenColonyEntity extends Monster {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, MAX_HEALTH)
-                .add(Attributes.ARMOR, 0.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.0)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
-                .add(Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE)
-                // Equal to RANGE so the target selector never acquires something the tentacle can't
-                // reach — a rooted attacker can't close the gap.
-                .add(Attributes.FOLLOW_RANGE, RANGE);
+        return UnitAttributes.apply(Monster.createMonsterAttributes(), UnitStats.SUNKEN_COLONY);
     }
 
     @Override
@@ -82,7 +71,7 @@ public class SunkenColonyEntity extends Monster {
 
     /** Starts the strike animation on every client tracking this colony. */
     public void triggerAttackAnimation() {
-        this.entityData.set(ATTACK_TICKS, ATTACK_ANIM_TICKS);
+        this.entityData.set(ATTACK_TICKS, STAT.attackAnimTicks());
     }
 
     /** Ticks remaining in the strike animation; 0 when idle. Read by the renderer. */

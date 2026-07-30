@@ -406,6 +406,9 @@ public class AsteriskCraft {
                         () -> ControlGroupResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
     }
 
+    // One line per net.bitflora.asteriskcraft.stats.UnitStats entry — stats.UnitStatsTest pins the
+    // roster size, so a new unit can't be added without landing here too. DroneEntity.createAttributes()
+    // is its own method (not inherited from ProbeEntity), so its numbers are its own UnitStats entry.
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());

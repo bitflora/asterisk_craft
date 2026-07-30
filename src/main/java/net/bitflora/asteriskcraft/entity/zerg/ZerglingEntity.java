@@ -6,11 +6,12 @@ import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -25,6 +26,8 @@ import net.minecraft.world.level.Level;
  * installed, plus a {@link SiegeBlockGoal} so it can batter down the Nexus. Faster and squishier than
  * a Zealot to read as a swarm unit. Sun-immune because its EntityType is never added to
  * {@code #minecraft:burn_in_daylight}.
+ *
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#ZERGLING} — not here.
  */
 public class ZerglingEntity extends Monster {
 
@@ -34,12 +37,7 @@ public class ZerglingEntity extends Monster {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 17.5)
-                .add(Attributes.ARMOR, 0.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.30)
-                .add(Attributes.ATTACK_DAMAGE, 2.5)
-                .add(Attributes.FOLLOW_RANGE, 32.0);
+        return UnitAttributes.apply(Monster.createMonsterAttributes(), UnitStats.ZERGLING);
     }
 
     @Override

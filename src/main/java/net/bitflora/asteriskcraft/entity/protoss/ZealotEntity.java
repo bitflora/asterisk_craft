@@ -6,6 +6,9 @@ import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -14,7 +17,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -28,11 +30,11 @@ import net.minecraft.world.level.Level;
  * docs/neoforge-api-notes.md for why) with vanilla player-aggression goals
  * replaced by pure faction targeting (see {@link FactionTargetGoal}). Sun-immune
  * because it's a distinct EntityType never added to {@code #minecraft:burn_in_daylight}.
+ *
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#ZEALOT} — not here.
  */
 public class ZealotEntity extends Monster implements Shielded {
-    public static final int SHIELD = 30;
-    /** Length of the blade cross-slash the client plays on each swing. */
-    public static final int ATTACK_ANIM_TICKS = 10;
+    private static final UnitStat STAT = UnitStats.ZEALOT;
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
     // just its start) and can't collide with a vanilla LivingEntity event byte. Same shape as
@@ -52,12 +54,7 @@ public class ZealotEntity extends Monster implements Shielded {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 50.0)
-                .add(Attributes.ARMOR, 0.5)
-                .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 4.0)
-                .add(Attributes.FOLLOW_RANGE, 32.0);
+        return UnitAttributes.apply(Monster.createMonsterAttributes(), UnitStats.ZEALOT);
     }
 
     @Override
@@ -84,7 +81,7 @@ public class ZealotEntity extends Monster implements Shielded {
     public void swing(InteractionHand hand, boolean sendToSwingingEntity) {
         super.swing(hand, sendToSwingingEntity);
         if (!this.level().isClientSide()) {
-            this.entityData.set(ATTACK_TICKS, ATTACK_ANIM_TICKS);
+            this.entityData.set(ATTACK_TICKS, STAT.attackAnimTicks());
         }
     }
 
@@ -125,6 +122,6 @@ public class ZealotEntity extends Monster implements Shielded {
     }
 
     public int getShield() {
-        return SHIELD;
+        return STAT.shield();
     }
 }

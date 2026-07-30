@@ -1,9 +1,9 @@
 package net.bitflora.asteriskcraft.combat;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,7 +16,8 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
  * the Sunken Colony's rules have to be applied from outside the spike:
  *
  * <ul>
- *   <li>a hit is worth {@link SunkenColonyEntity#ATTACK_DAMAGE}, not 6;</li>
+ *   <li>a hit is worth {@link net.bitflora.asteriskcraft.stats.UnitStats#SUNKEN_COLONY}'s attack
+ *       damage, not 6;</li>
  *   <li>only enemies of the colony's faction are hurt — a strike aimed at the player must not
  *       shred the Zerglings standing next to them, which vanilla's team check knows nothing about.</li>
  * </ul>
@@ -45,6 +46,6 @@ public final class SunkenSpikeDamageHandler {
             event.setCanceled(true);
             return;
         }
-        event.setAmount(SunkenColonyEntity.ATTACK_DAMAGE);
+        event.setAmount((float) UnitStats.SUNKEN_COLONY.attackDamageOrThrow());
     }
 }

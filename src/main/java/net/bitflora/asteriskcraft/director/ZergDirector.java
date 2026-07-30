@@ -2,7 +2,6 @@ package net.bitflora.asteriskcraft.director;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.building.ResourceBank;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
@@ -17,6 +16,7 @@ import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
+import net.bitflora.asteriskcraft.stats.CostPayment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -145,12 +145,7 @@ public final class ZergDirector {
 
     /** Pays any one of a unit's interchangeable cost bundles from the shared bank; false if none affordable. */
     private static boolean payAny(HiveBlockEntity bank, UnitDef def) {
-        for (List<ResourceBank.Cost> alternative : def.costAlternatives()) {
-            if (ResourceBank.extractAll(bank, alternative)) {
-                return true;
-            }
-        }
-        return false;
+        return CostPayment.payAny(bank, def.cost());
     }
 
     /** The interpreter's live-world adapter: spawns/pays at the Hives and issues orders for one tick. */

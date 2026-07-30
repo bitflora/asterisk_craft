@@ -3,6 +3,10 @@ package net.bitflora.asteriskcraft.building;
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.stats.CostPayment;
+import net.bitflora.asteriskcraft.stats.CostText;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -10,7 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -20,7 +23,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -67,14 +69,6 @@ public class GatewayBlockEntity extends BlockEntity
         }
     }
 
-    public static final int ZEALOT_WOOD_COST = 50;
-    public static final int ZEALOT_COBBLE_COST = 50;
-    public static final int DRAGOON_WOOD_COST = 100;
-    public static final int DRAGOON_COBBLE_COST = 50;
-    // The air unit is the first thing in the mod paid for in refined metal rather than wood: Probes
-    // already deliver iron ore as ingots straight into the bank, so no new economy plumbing is needed.
-    public static final int SCOUT_COBBLE_COST = 150;
-    public static final int SCOUT_IRON_COST = 20;
     public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
     public static final int WARP_TICKS = 20 * 60; // 1 minute to warp in
@@ -217,7 +211,9 @@ public class GatewayBlockEntity extends BlockEntity
             return;
         }
         if (!payCost(type)) {
-            overlay(player, Component.translatable("message.asteriskcraft.gateway.cannot_afford"));
+            overlay(player, Component.translatable("message.asteriskcraft.gateway.cannot_afford",
+                    Component.translatable("entity.asteriskcraft." + type.getSerializedName()),
+                    CostText.costOnly(statFor(type).cost(), 0)));
             return;
         }
         this.queue.add(type);
@@ -235,16 +231,14 @@ public class GatewayBlockEntity extends BlockEntity
     }
 
     private boolean payCost(UnitType type) {
+        return CostPayment.payAny(this, statFor(type).cost());
+    }
+
+    private static UnitStat statFor(UnitType type) {
         return switch (type) {
-            case ZEALOT -> ResourceBank.extractAll(this, List.of(
-                    new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), ZEALOT_WOOD_COST),
-                    new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), ZEALOT_COBBLE_COST)));
-            case DRAGOON -> ResourceBank.extractAll(this, List.of(
-                    new ResourceBank.Cost(stack -> stack.is(ItemTags.LOGS), DRAGOON_WOOD_COST),
-                    new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), DRAGOON_COBBLE_COST)));
-            case SCOUT -> ResourceBank.extractAll(this, List.of(
-                    new ResourceBank.Cost(stack -> stack.is(Items.COBBLESTONE), SCOUT_COBBLE_COST),
-                    new ResourceBank.Cost(stack -> stack.is(Items.IRON_INGOT), SCOUT_IRON_COST)));
+            case ZEALOT -> UnitStats.ZEALOT;
+            case DRAGOON -> UnitStats.DRAGOON;
+            case SCOUT -> UnitStats.SCOUT;
         };
     }
 

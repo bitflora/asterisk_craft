@@ -1,6 +1,9 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.stats.CostText;
+import net.bitflora.asteriskcraft.stats.Resource;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -12,8 +15,12 @@ import java.util.function.Supplier;
 /**
  * Client-safe description of a production building: which block it is (for the menu's
  * {@code stillValid} check), how many input slots it exposes, and the buttons the screen
- * should draw. Carries no cost predicates — those stay server-side in the block entity.
- * Serialized to the open-menu buffer by {@link #ordinal()} and rebuilt on the client.
+ * should draw. Serialized to the open-menu buffer by {@link #ordinal()} and rebuilt on the client.
+ *
+ * <p>Tooltip text is built from {@code stats.UnitStats} via {@link CostText}, so the numbers
+ * shown here can never drift from what {@code CostPayment} actually charges. Referencing
+ * {@code stats.Resource} is client-safe on its own — its predicates are lambdas never evaluated at
+ * class-init — but nothing here evaluates one; only the server-side {@code CostPayment} does.
  *
  * <p>Options are laid out column-major: each {@link OptionView} names the unit column it
  * belongs to (see {@link #columns}), stacked top-to-bottom in list order within that column.
@@ -27,35 +34,35 @@ public enum ProductionKind {
     NEXUS(() -> AsteriskCraft.NEXUS_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
-                    Component.translatable("gui.asteriskcraft.cost.probe_wood"), 0),
+                    CostText.tooltip(UnitStats.PROBE.cost(), 0), 0),
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
-                    Component.translatable("gui.asteriskcraft.cost.probe_stone"), 0),
+                    CostText.tooltip(UnitStats.PROBE.cost(), 1), 0),
             new OptionView(
                     Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.gateway_wood"), 1),
+                    CostText.tooltip(NexusBlockEntity.BUILDING_COST, Resource.WOOD), 1),
             new OptionView(
                     Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.gateway_stone"), 1),
+                    CostText.tooltip(NexusBlockEntity.BUILDING_COST, Resource.STONE), 1),
             new OptionView(
                     Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_wood"), 2),
+                    CostText.tooltip(NexusBlockEntity.BUILDING_COST, Resource.WOOD), 2),
             new OptionView(
                     Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.photon_cannon_stone"), 2),
+                    CostText.tooltip(NexusBlockEntity.BUILDING_COST, Resource.STONE), 2),
             new OptionView(
                     Icon.ofItem(new ItemStack(AsteriskCraft.NEXUS_KIT.get())),
-                    Component.translatable("gui.asteriskcraft.cost.nexus_kit"), 3))),
+                    CostText.tooltip(NexusBlockEntity.NEXUS_KIT_COST, Resource.STONE), 3))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), NexusBlockEntity.INPUT_SLOTS, List.of(
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/zealot.png"), 116, 121),
-                    Component.translatable("gui.asteriskcraft.cost.zealot"), 0),
+                    CostText.tooltip(UnitStats.ZEALOT.cost(), 0), 0),
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dragoon.png"), 113, 112),
-                    Component.translatable("gui.asteriskcraft.cost.dragoon"), 1),
+                    CostText.tooltip(UnitStats.DRAGOON.cost(), 0), 1),
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 112, 111),
-                    Component.translatable("gui.asteriskcraft.cost.scout"), 2)));
+                    CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2)));
 
     /** One train button: an icon, a cost tooltip, and the unit column it stacks into (see class docs). */
     public record OptionView(Icon icon, Component costTooltip, int column) {

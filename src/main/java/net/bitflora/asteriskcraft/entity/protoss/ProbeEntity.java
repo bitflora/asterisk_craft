@@ -9,6 +9,9 @@ import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -23,7 +26,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -56,14 +58,19 @@ import org.jetbrains.annotations.Nullable;
  * The Protoss worker. Finds a harvestable block near its home Nexus, preferring the same
  * resource type it last mined, mines it non-destructively (the block is swapped for a
  * regenerating depleted node), then delivers the yield straight into the Nexus.
+ *
+ * <p>Its combat stats (health, speed, shield) live in
+ * {@link net.bitflora.asteriskcraft.stats.UnitStats#PROBE} — not here. The harvest-loop constants
+ * below are pure mining logic, not balance numbers, and stay put.
  */
 public class ProbeEntity extends PathfinderMob implements Shielded {
+    private static final UnitStat STAT = UnitStats.PROBE;
+
     public static final TagKey<Block> HARVESTABLE = BlockTags.create(AsteriskCraft.id("harvestable"));
     public static final int YIELD_PER_TRIP = 3;
     public static final int MINE_TICKS = 60;
     public static final int SEARCH_RADIUS = 24;
     public static final int SEARCH_VERTICAL = 8;
-    public static final int SHIELD = 10;
 
     /** Coarse resource category, used to prefer re-mining the same kind of node on the next trip. */
     enum ResourceType implements StringRepresentable {
@@ -128,10 +135,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 10.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.35)
-                .add(Attributes.FOLLOW_RANGE, 48.0);
+        return UnitAttributes.apply(PathfinderMob.createMobAttributes(), UnitStats.PROBE);
     }
 
     @Override
@@ -168,7 +172,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
     }
 
     public int getShield() {
-        return SHIELD;
+        return STAT.shield();
     }
 
     /** Whether this worker will mine the given block. Overridable so a subtype can narrow the shared tag. */

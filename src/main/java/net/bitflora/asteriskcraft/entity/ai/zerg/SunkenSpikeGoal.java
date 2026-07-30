@@ -2,6 +2,8 @@ package net.bitflora.asteriskcraft.entity.ai.zerg;
 
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -20,20 +22,23 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * The Sunken Colony's auto-fire, structurally the Zerg counterpart of
- * {@link net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal}: once per
- * {@link SunkenColonyEntity#ATTACK_COOLDOWN}, while the target chosen by the colony's target selector
- * is alive, within {@link SunkenColonyEntity#RANGE} and in line of sight, the tentacle whips forward
- * and a {@link SunkenSpikeEntity} erupts from the ground under the target.
+ * {@link net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal}: once per cooldown, while the
+ * target chosen by the colony's target selector is alive, within range and in line of sight (all
+ * from {@link UnitStats#SUNKEN_COLONY}), the tentacle whips forward and a {@link SunkenSpikeEntity}
+ * erupts from the ground under the target.
  *
  * <p>Unlike the cannon, no damage is dealt here — the spike carries it (see
  * {@link net.bitflora.asteriskcraft.combat.SunkenSpikeDamageHandler}), and it lands ~8 ticks later at
  * wherever the spike was planted. A target that keeps moving can walk out from under the strike.
- * Exactly one spike goes out per attack, so a hit is worth exactly
- * {@link SunkenColonyEntity#ATTACK_DAMAGE}.
+ * Exactly one spike goes out per attack, so a hit is worth exactly one
+ * {@link UnitStats#SUNKEN_COLONY}'s worth of attack damage.
  */
 public class SunkenSpikeGoal extends Goal {
     /** How far below the spike's spawn column to keep searching for solid footing before giving up. */
     private static final int GROUND_SEARCH_DEPTH = 4;
+
+    private static final UnitStat STAT = UnitStats.SUNKEN_COLONY;
+    private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 
     private final SunkenColonyEntity colony;
     private int cooldown;
@@ -73,7 +78,7 @@ public class SunkenSpikeGoal extends Goal {
         if (--this.cooldown > 0) {
             return;
         }
-        this.cooldown = SunkenColonyEntity.ATTACK_COOLDOWN;
+        this.cooldown = RANGED.cooldown();
         strikeAt(target);
     }
 
@@ -83,7 +88,7 @@ public class SunkenSpikeGoal extends Goal {
         if (target == null || !target.isAlive()) {
             return null;
         }
-        double reachSq = SunkenColonyEntity.RANGE * SunkenColonyEntity.RANGE;
+        double reachSq = (double) RANGED.range() * RANGED.range();
         if (this.colony.distanceToSqr(target) > reachSq) {
             return null;
         }

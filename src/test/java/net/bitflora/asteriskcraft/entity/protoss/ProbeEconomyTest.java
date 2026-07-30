@@ -10,14 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Guards the resource-economy design constants (R7). The block-to-item yield mapping
  * itself depends on datapack block tags, which are not bound in the unit-test
  * bootstrap, so that mapping is exercised via the in-game/runClient flow instead.
+ *
+ * <p>The Probe's cost itself now lives in {@code net.bitflora.asteriskcraft.stats.UnitStats} — see
+ * {@code stats.UnitStatsTest}.
  */
 class ProbeEconomyTest {
-
-    @Test
-    void probeCostMatchesDesign() {
-        // A Probe costs 50 wood OR 50 cobblestone (see plan).
-        assertEquals(50, NexusBlockEntity.PROBE_COST);
-    }
 
     @Test
     void harvestYieldIsFlatPerTrip() {

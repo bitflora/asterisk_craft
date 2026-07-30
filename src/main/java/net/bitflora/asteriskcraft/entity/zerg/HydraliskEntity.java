@@ -7,6 +7,9 @@ import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.stats.UnitAttributes;
+import net.bitflora.asteriskcraft.stats.UnitStat;
+import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -31,17 +34,13 @@ import net.minecraft.world.level.Level;
  * The Zerg ranged unit — the mirror of {@link DragoonEntity}: a plain hostile mob (not a
  * repurposed Skeleton — see docs/neoforge-api-notes.md) with faction targeting and a
  * {@link SiegeBlockGoal}. Its ranged attack is a custom hitscan (see {@link HitscanAttacks}) fired
- * on a fixed {@link #ATTACK_COOLDOWN} cadence via the plain {@link RangedAttackGoal}.
+ * on a fixed cadence via the plain {@link RangedAttackGoal}.
+ *
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#HYDRALISK} — not here.
  */
 public class HydraliskEntity extends Monster implements RangedAttackMob {
-    public static final int ATTACK_COOLDOWN = 20;
-    /**
-     * Range the {@link RangedAttackGoal} holds at: once within it the unit stops advancing and fires
-     * in place instead of closing to melee. Shorter-ranged than the {@link DragoonEntity}.
-     */
-    public static final float ATTACK_RADIUS = 6.0f;
-    /** Length of the spine volley the client plays on each shot; half the cooldown, so shots read as discrete. */
-    public static final int FIRE_ANIM_TICKS = 10;
+    private static final UnitStat STAT = UnitStats.HYDRALISK;
+    private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
     // just its start) and can't collide with a vanilla LivingEntity event byte. Same shape as
@@ -62,12 +61,7 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 40.0)
-                .add(Attributes.ARMOR, 0.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.ATTACK_DAMAGE, 5.0)
-                .add(Attributes.FOLLOW_RANGE, 32.0);
+        return UnitAttributes.apply(Monster.createMonsterAttributes(), UnitStats.HYDRALISK);
     }
 
     @Override
@@ -76,7 +70,7 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
         // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
         // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.
         this.goalSelector.addGoal(0, new SiegeBlockGoal(this));
-        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, ATTACK_COOLDOWN, ATTACK_RADIUS));
+        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, RANGED.cooldown(), RANGED.range()));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
@@ -89,7 +83,7 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
         HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE), ParticleTypes.ITEM_SLIME, SoundEvents.SKELETON_SHOOT);
         // The single hook for the volley animation: the hitscan is instantaneous, so this is the only
         // moment the client can be told a shot happened.
-        this.entityData.set(FIRE_TICKS, FIRE_ANIM_TICKS);
+        this.entityData.set(FIRE_TICKS, STAT.attackAnimTicks());
     }
 
     /** Ticks remaining in the spine volley animation; 0 when idle. Read by the renderer. */

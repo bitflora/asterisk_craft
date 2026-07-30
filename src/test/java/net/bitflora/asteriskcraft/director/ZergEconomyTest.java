@@ -2,23 +2,22 @@ package net.bitflora.asteriskcraft.director;
 
 import net.bitflora.asteriskcraft.building.FactionCore;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.director.script.ZergUnitCatalog;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Sanity bounds on the Zerg economy tuning constants after they were centralised: worker cost lives
- * in {@link ZergUnitCatalog}, the worker-floor cadence and leash on {@link ZergDirector}, and Hive
- * storage on {@link HiveBlockEntity}. (Unit costs are predicate-based and tag-dependent, so the
- * exact "mirrors Protoss" relationship is verified in-game, not here — see the JUnit-bootstrap note
- * in {@code ProbeEconomyTest}.)
+ * Sanity bounds on the Zerg economy tuning constants after they were centralised: the worker-floor
+ * cadence and leash live on {@link ZergDirector}, Hive storage on {@link HiveBlockEntity}. Worker
+ * cost itself now lives in {@code net.bitflora.asteriskcraft.stats.UnitStats} — see
+ * {@code stats.UnitStatsTest}. (Unit costs are predicate-based and tag-dependent, so the exact
+ * "mirrors Protoss" relationship is verified in-game, not here — see the JUnit-bootstrap note in
+ * {@code ProbeEconomyTest}.)
  */
 class ZergEconomyTest {
 
     @Test
     void economyTuningIsSane() {
-        assertTrue(ZergUnitCatalog.DRONE_COST > 0, "a drone must cost something");
         assertTrue(ZergDirector.WORKER_CHECK_INTERVAL > 0, "worker upkeep must be periodic, not every tick");
         assertTrue(ZergDirector.DRONE_LEASH > 0, "drones need a leash radius to be counted as the army's");
         assertTrue(HiveBlockEntity.INPUT_SLOTS > 0, "the Hive needs storage for mined resources");

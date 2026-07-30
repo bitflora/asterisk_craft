@@ -35,8 +35,9 @@ public class SunkenSpikeEntity extends EvokerFangs {
      * no setter, and vanilla's own convenience constructor can't be delegated to because it hardcodes
      * {@code EntityType.EVOKER_FANGS}. No loss — the colony spawns exactly one spike per attack
      * (staggered delays only exist to animate the Evoker's outward-marching line), and one spike per
-     * attack is also what keeps an attack worth exactly {@link SunkenColonyEntity#ATTACK_DAMAGE}
-     * rather than a multiple of it. With a zero delay the spike bites 8 ticks after it erupts, the
+     * attack is also what keeps an attack worth exactly one
+     * {@link net.bitflora.asteriskcraft.stats.UnitStats#SUNKEN_COLONY}'s attack damage rather than a
+     * multiple of it. With a zero delay the spike bites 8 ticks after it erupts, the
      * same beat as a vanilla fang.
      *
      * @param rotationRadians facing of the spike, in radians — the angle from the colony to its target
