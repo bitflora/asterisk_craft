@@ -50,7 +50,13 @@ public final class ShieldAttachments {
         entity.setData(CURRENT_SHIELD, Math.clamp(value, 0.0f, maxShieldFor(entity)));
     }
 
-    /** Zero for anything that isn't a Protoss unit we've defined a shield pool for. */
+    /**
+     * Zero for anything that isn't a Protoss unit we've defined a shield pool for.
+     *
+     * <p>Called on the client too (the Jade tooltip needs a max to show), so whatever a
+     * {@link Shielded#getShield()} varies with has to be synced — see the Photon Cannon's warp-in
+     * state, which is entity data rather than a plain field for exactly this reason.
+     */
     public static float maxShieldFor(IAttachmentHolder holder) {
         if (!(holder instanceof Entity entity) || FactionAttachments.get(entity) != Faction.PROTOSS) {
             return 0.0f;

@@ -158,6 +158,9 @@ public final class GameBootstrap {
 
         level.setData(GameAttachments.NEXUS_POS, core);
         if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
+            // The starting Nexus is simply standing there when the world begins (R1) — it was never
+            // warped in from a kit, so it doesn't spend its first two minutes half-built and idle.
+            nexus.skipWarpIn();
             seedNexus(nexus);
         }
         spawnStartingProbes(level, core);

@@ -1,14 +1,18 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.building.PhotonCannonTargeting;
+import net.bitflora.asteriskcraft.building.WarpInVulnerability;
+import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -30,7 +34,9 @@ import net.minecraft.world.level.storage.ValueOutput;
  * bookkeeping needed).
  *
  * <p>It never moves — no movement goals, zero movement speed, unpushable, full knockback resistance.
- * It warps in over {@link #WARP_TICKS} (invulnerable and inert until then), then auto-fires an
+ * It warps in over {@link #WARP_TICKS} — inert but <em>not</em> invulnerable: while warping it stands
+ * at half its HP and shields, and finishing the warp scales both pools back up, so damage landed
+ * mid-warp is sustained twice over (see {@link WarpInVulnerability}). After that it auto-fires an
  * instant energy bolt at the nearest enemy-faction unit — or any vanilla monster — in range via
  * {@link CannonFireGoal}. Hostility is resolved purely through the faction attachment.
  */
@@ -38,17 +44,24 @@ public class PhotonCannonEntity extends Mob implements Shielded {
     public static final double RANGE = 14.0;          // StarCraft Photon Cannon range
     public static final float ATTACK_DAMAGE = 10.0f;
     public static final int ATTACK_COOLDOWN = 20;    // one shot per second
-    public static final int WARP_TICKS = 200;        // 10 seconds to warp in (mirrors the Gateway)
+    // Far quicker than a Gateway or Nexus: a cannon is what you throw up when a wave is already coming.
+    public static final int WARP_TICKS = 200;        // 10 seconds to warp in
 
     public static final int MAX_HEALTH = 50;
     public static final int SHIELD = 50;
 
-
-    private int warpTicksRemaining = WARP_TICKS;
+    // Synced, because getShield() varies with it and is read on the client too: the Jade tooltip
+    // computes max shields there, and a plain field (never restored by readAdditionalSaveData
+    // client-side) would tell it every cannon it looks at is forever mid-warp.
+    private static final EntityDataAccessor<Integer> WARP_TICKS_REMAINING =
+            SynchedEntityData.defineId(PhotonCannonEntity.class, EntityDataSerializers.INT);
 
     public PhotonCannonEntity(EntityType<? extends PhotonCannonEntity> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
+        // A fresh cannon starts its warp-in, so it starts at the halved pool. (Loading from disk
+        // overwrites this with the saved health afterwards, warping or not.)
+        this.setHealth(WarpInVulnerability.warpPool(this.getMaxHealth()));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -57,6 +70,12 @@ public class PhotonCannonEntity extends Mob implements Shielded {
                 .add(Attributes.MOVEMENT_SPEED, 0.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.FOLLOW_RANGE, RANGE);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(WARP_TICKS_REMAINING, WARP_TICKS);
     }
 
     @Override
@@ -74,28 +93,46 @@ public class PhotonCannonEntity extends Mob implements Shielded {
     }
 
     public boolean isWarping() {
-        return this.warpTicksRemaining > 0;
+        return this.warpTicksRemaining() > 0;
     }
 
+    private int warpTicksRemaining() {
+        return this.entityData.get(WARP_TICKS_REMAINING);
+    }
+
+    /** Half the finished shield pool while the cannon is still warping in. */
     @Override
     public int getShield() {
-        return SHIELD;
+        return this.isWarping() ? (int) WarpInVulnerability.warpPool(SHIELD) : SHIELD;
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (this.level() instanceof ServerLevel level && this.warpTicksRemaining > 0) {
-            this.warpTicksRemaining--;
+        int warpTicks = this.warpTicksRemaining();
+        if (this.level() instanceof ServerLevel level && warpTicks > 0) {
+            this.entityData.set(WARP_TICKS_REMAINING, warpTicks - 1);
             level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
                     this.getX(), this.getY() + 0.6, this.getZ(), 6, 0.4, 0.6, 0.4, 0.02);
-            if (this.warpTicksRemaining == 0) {
-                level.playSound(null, this.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 1.0f, 1.0f);
+            if (warpTicks == 1) {
+                this.finishWarp(level);
             }
         }
     }
 
-    // --- Immovable turret: can't be pushed, knocked back, or damaged mid-warp ---
+    /**
+     * Scales the halved warp-in pools back up to the finished ones. {@link #isWarping()} is already
+     * false by now, so both setters clamp against the full maxima — and because it is what
+     * <em>survived</em> that gets doubled, whatever damage the cannon took mid-warp is sustained
+     * twice over out of its finished pool.
+     */
+    private void finishWarp(ServerLevel level) {
+        this.setHealth(WarpInVulnerability.onWarpComplete(this.getHealth()));
+        ShieldAttachments.set(this, WarpInVulnerability.onWarpComplete(ShieldAttachments.get(this)));
+        level.playSound(null, this.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 1.0f, 1.0f);
+    }
+
+    // --- Immovable turret: can't be pushed or knocked back ---
 
     @Override
     public boolean isPushable() {
@@ -103,19 +140,14 @@ public class PhotonCannonEntity extends Mob implements Shielded {
     }
 
     @Override
-    public boolean isInvulnerableTo(ServerLevel level, DamageSource source) {
-        return this.isWarping() || super.isInvulnerableTo(level, source);
-    }
-
-    @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
-        output.putInt("WarpTicks", this.warpTicksRemaining);
+        output.putInt("WarpTicks", this.warpTicksRemaining());
     }
 
     @Override
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
-        this.warpTicksRemaining = input.getIntOr("WarpTicks", 0);
+        this.entityData.set(WARP_TICKS_REMAINING, input.getIntOr("WarpTicks", 0));
     }
 }

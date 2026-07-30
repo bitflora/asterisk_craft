@@ -92,7 +92,7 @@ public final class CoreCensus {
             Entry entry = it.next();
             if (level.hasChunkAt(entry.pos())
                     && !(level.getBlockEntity(entry.pos()) instanceof FactionCore core
-                    && core.coreFaction() == entry.faction())) {
+                    && core.buildingFaction() == entry.faction())) {
                 it.remove();
                 continue;
             }

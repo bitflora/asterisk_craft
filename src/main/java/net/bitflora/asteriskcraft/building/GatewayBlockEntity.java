@@ -5,7 +5,6 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,8 +41,14 @@ import java.util.List;
  * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link NexusBlockEntity}
  * reads and writes the same underlying data, so every Protoss production building draws from
  * one shared pool. See {@link ArmyLinkedContainer}.
+ *
+ * <p>A {@link SiegeTarget} but deliberately not a {@link FactionCore}: it holds {@value #MAX_HEALTH}
+ * HP behind {@value #SHIELD} shields in the shared {@link BuildingDefense} and an enemy army can
+ * batter it down, but razing one only costs the player their unit production — the match is decided
+ * by cores alone.
  */
-public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding {
+public class GatewayBlockEntity extends BlockEntity
+        implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding, SiegeTarget {
     public enum UnitType implements StringRepresentable {
         ZEALOT("zealot"), DRAGOON("dragoon"), SCOUT("scout");
 
@@ -72,11 +77,15 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     public static final int SCOUT_IRON_COST = 20;
     public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
-    public static final int WARP_TICKS = 200; // 10 seconds to warp in
+    public static final int WARP_TICKS = 20 * 60; // 1 minute to warp in
+    /** Tougher than a unit but well short of the Nexus: losing a Gateway costs production, not the game. */
+    public static final int MAX_HEALTH = 250;
+    public static final int SHIELD = 250;
 
     private final Deque<UnitType> queue = new ArrayDeque<>();
     private int buildTicksRemaining = BUILD_TICKS;
-    private int warpTicksRemaining = WARP_TICKS;
+    private final BuildingDefense defense = new BuildingDefense(MAX_HEALTH, SHIELD, WARP_TICKS);
+    private final UnderAttackAlert alert = new UnderAttackAlert();
     private Faction faction = Faction.PROTOSS;
 
     private final ContainerData dataAccess = new ContainerData() {
@@ -87,7 +96,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
                 case ProductionMenu.DATA_BUILDING_INDEX -> building ? queue.peek().ordinal() : -1;
                 case ProductionMenu.DATA_BUILD_PROGRESS -> building ? BUILD_TICKS - buildTicksRemaining : 0;
                 case ProductionMenu.DATA_BUILD_TOTAL -> BUILD_TICKS;
-                case ProductionMenu.DATA_WARP -> warpTicksRemaining;
+                case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
                 case ProductionMenu.DATA_QUEUE_BASE -> countQueued(UnitType.ZEALOT);
                 case ProductionMenu.DATA_QUEUE_BASE + 1 -> countQueued(UnitType.DRAGOON);
                 case ProductionMenu.DATA_QUEUE_BASE + 2 -> countQueued(UnitType.SCOUT);
@@ -116,7 +125,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     }
 
     public boolean isWarping() {
-        return this.warpTicksRemaining > 0;
+        return this.defense.isWarping();
     }
 
     private int countQueued(UnitType type) {
@@ -130,18 +139,10 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, GatewayBlockEntity gateway) {
-        if (gateway.warpTicksRemaining > 0) {
-            gateway.warpTicksRemaining--;
-            if (level instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        6, 0.4, 0.6, 0.4, 0.02);
-            }
-            if (gateway.warpTicksRemaining == 0) {
-                level.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
-            }
+        // Ticked before the queue so shields recharge whether or not anything is in production.
+        if (gateway.defense.tickWarpIn(level, pos)) {
             gateway.setChanged();
-            return;
+            return; // still warping in: no production yet
         }
 
         if (gateway.queue.isEmpty()) {
@@ -155,6 +156,25 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
         gateway.buildTicksRemaining = BUILD_TICKS;
         gateway.setChanged();
         gateway.spawnUnit((ServerLevel) level, pos, type);
+    }
+
+    // --- SiegeTarget ---
+
+    @Override
+    public Faction buildingFaction() {
+        return this.faction;
+    }
+
+    @Override
+    public BuildingDefense defense() {
+        return this.defense;
+    }
+
+    @Override
+    public void damageBuilding(int amount, ServerLevel level, BlockPos pos) {
+        this.defense.damage(amount, level, pos);
+        this.setChanged();
+        this.alert.ping(level, "message.asteriskcraft.gateway.under_attack");
     }
 
     // --- ProductionBuilding ---
@@ -279,7 +299,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putInt("BuildTicks", this.buildTicksRemaining);
-        output.putInt("WarpTicks", this.warpTicksRemaining);
+        this.defense.save(output);
         output.store("Faction", Faction.CODEC, this.faction);
         output.store("Queue", UnitType.LIST_CODEC, List.copyOf(this.queue));
     }
@@ -288,7 +308,7 @@ public class GatewayBlockEntity extends BlockEntity implements ArmyLinkedContain
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.buildTicksRemaining = input.getIntOr("BuildTicks", BUILD_TICKS);
-        this.warpTicksRemaining = input.getIntOr("WarpTicks", WARP_TICKS);
+        this.defense.load(input);
         this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.PROTOSS);
         this.queue.clear();
         this.queue.addAll(input.read("Queue", UnitType.LIST_CODEC).orElse(List.of()));

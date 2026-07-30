@@ -1,5 +1,11 @@
 package net.bitflora.asteriskcraft.compat.jade;
 
+import net.bitflora.asteriskcraft.building.GatewayBlock;
+import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
+import net.bitflora.asteriskcraft.building.HiveBlock;
+import net.bitflora.asteriskcraft.building.HiveBlockEntity;
+import net.bitflora.asteriskcraft.building.NexusBlock;
+import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.minecraft.world.entity.LivingEntity;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
@@ -12,15 +18,25 @@ import snownee.jade.api.WailaPlugin;
  * actually installed alongside this mod (see the optional {@code jade} dependency in
  * neoforge.mods.toml) — this class only loads/executes in that case.
  *
- * <p>All shield data ({@link net.bitflora.asteriskcraft.combat.ShieldAttachments}) is already
- * synced to clients, so this needs no {@code IWailaCommonRegistration} server data provider;
- * {@link ProtossShieldProvider} reads it directly client-side.
+ * <p>Unit shield data ({@link net.bitflora.asteriskcraft.combat.ShieldAttachments}) is already synced
+ * to clients, so {@link ProtossShieldProvider} reads it directly client-side. A building's HP and
+ * shields are not: that state lives in the block entity, so {@link BuildingDefenseProvider} ships it
+ * on demand as server data and its {@code Client} half draws the lines.
+ *
+ * <p>Both building registrations are per-type on purpose rather than blanket ones on
+ * {@code BaseEntityBlock}/{@code BlockEntity}: that would attach this mod's providers to every chest
+ * and furnace in the game. <b>A new building type has to be added to both lists here</b> — Jade's
+ * class lookup walks superclasses only, so registering the {@code SiegeTarget} interface would never
+ * match anything.
  */
 @WailaPlugin
 public final class AsteriskCraftJadePlugin implements IWailaPlugin {
     @Override
     public void register(IWailaCommonRegistration registration) {
-        // No server-side data to send: shield current/max are already client-synced attachments.
+        // Buildings only: HP/shield/warp-in state has to come from the server (see the class doc).
+        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, NexusBlockEntity.class);
+        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, GatewayBlockEntity.class);
+        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, HiveBlockEntity.class);
     }
 
     @Override
@@ -29,5 +45,9 @@ public final class AsteriskCraftJadePlugin implements IWailaPlugin {
         // StatusEffectsProvider) since Zealot/Dragoon/PhotonCannon/Probe don't share a common
         // supertype narrower than LivingEntity; ProtossShieldProvider guards non-shielded entities.
         registration.registerEntityComponent(ProtossShieldProvider.INSTANCE, LivingEntity.class);
+
+        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, NexusBlock.class);
+        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, GatewayBlock.class);
+        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, HiveBlock.class);
     }
 }

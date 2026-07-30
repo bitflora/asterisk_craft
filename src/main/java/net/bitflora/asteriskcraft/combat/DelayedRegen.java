@@ -36,7 +36,17 @@ public final class DelayedRegen {
             return;
         }
         if (current < max) {
-            setter.accept(Math.min(max, current + perTick));
+            setter.accept(regen(current, max, perTick));
         }
+    }
+
+    /**
+     * The per-tick top-up on its own, for a pool that isn't an entity attachment — a building's
+     * shield buffer, which is saved block-entity state (see
+     * {@link net.bitflora.asteriskcraft.building.BuildingDefense}). Such a caller owns its own delay
+     * countdown; this keeps the refill rule itself in one place.
+     */
+    public static float regen(float current, float max, float perTick) {
+        return current < max ? Math.min(max, current + perTick) : current;
     }
 }

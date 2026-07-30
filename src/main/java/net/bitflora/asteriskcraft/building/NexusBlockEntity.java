@@ -44,6 +44,10 @@ import java.util.function.Predicate;
  * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link GatewayBlockEntity}
  * reads and writes the same underlying data, so every Protoss production building draws from
  * one shared pool. See {@link ArmyLinkedContainer}.
+ *
+ * <p>Its staying power — {@value #MAX_HEALTH} HP behind {@value #SHIELD} shields, and the
+ * {@value #WARP_TICKS}-tick warp-in an expansion Nexus spends half-built — lives in the shared
+ * {@link BuildingDefense}. The starting Nexus skips that warp entirely ({@link #skipWarpIn}).
  */
 public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer, ProductionBuilding, FactionCore, BeaconBeamOwner {
     public static final int PROBE_COST = 50;
@@ -54,12 +58,15 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     public static final int BUILD_TICKS = 200; // 10 seconds per probe
     public static final int MAX_QUEUE = 5;
     public static final int INPUT_SLOTS = ArmyBank.PROTOSS_SLOTS;
+    /** The sturdiest building in the mod, as the thing you lose the game with should be. */
+    public static final int MAX_HEALTH = 325;
+    public static final int SHIELD = 325;
+    public static final int WARP_TICKS = 20 * 120; // 2 minutes — an expansion Nexus is a long commitment
 
     private int queued = 0;
     private int buildTicksRemaining = BUILD_TICKS;
-    private int coreHealth = FactionCore.CORE_MAX_HEALTH;
-    /** Game time of the next allowed "under attack" alert. Deliberately not saved: the cooldown resets on reload. */
-    private long nextAlertTime = 0L;
+    private final BuildingDefense defense = new BuildingDefense(MAX_HEALTH, SHIELD, WARP_TICKS);
+    private final UnderAttackAlert alert = new UnderAttackAlert();
     /** Whether this Nexus has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
     private boolean enrolled = false;
     /** Tracks whether the Nexus can see the sky (dormant when buried); cancels the queue on going dark. */
@@ -72,7 +79,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
                 case ProductionMenu.DATA_BUILDING_INDEX -> queued > 0 ? 0 : -1;
                 case ProductionMenu.DATA_BUILD_PROGRESS -> queued > 0 ? BUILD_TICKS - buildTicksRemaining : 0;
                 case ProductionMenu.DATA_BUILD_TOTAL -> BUILD_TICKS;
-                case ProductionMenu.DATA_WARP -> 0;
+                case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
                 case ProductionMenu.DATA_QUEUE_BASE, ProductionMenu.DATA_QUEUE_BASE + 1 -> queued;
                 default -> 0;
             };
@@ -95,8 +102,13 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, NexusBlockEntity nexus) {
         if (!nexus.enrolled) {
-            CoreCensus.ensureRegistered(level, nexus.coreFaction(), pos);
+            CoreCensus.ensureRegistered(level, nexus.buildingFaction(), pos);
             nexus.enrolled = true;
+        }
+        // Ticked ahead of the sky/queue gates so shields recharge even while the Nexus is buried.
+        if (nexus.defense.tickWarpIn(level, pos)) {
+            nexus.setChanged();
+            return; // still warping in: no production yet
         }
         if (!nexus.skyGate.update(level, pos, nexus::cancelQueueOnDormant)) {
             return; // dormant: no clear path to the sky, production is frozen
@@ -152,6 +164,10 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
 
     @Override
     public void trainOption(int optionIndex, Player player) {
+        if (this.defense.isWarping()) {
+            overlay(player, Component.translatable("message.asteriskcraft.nexus.warping"));
+            return;
+        }
         if (this.skyGate.lit() == Boolean.FALSE) {
             overlay(player, Component.translatable("message.asteriskcraft.nexus.dormant"));
             return;
@@ -237,33 +253,32 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         }
     }
 
-    // --- FactionCore ---
+    // --- SiegeTarget / FactionCore ---
 
     @Override
-    public Faction coreFaction() {
+    public Faction buildingFaction() {
         return Faction.PROTOSS;
     }
 
     @Override
-    public void damageCore(int amount, ServerLevel level, BlockPos pos) {
-        this.coreHealth = FactionCore.applyDamage(this.coreHealth, amount, level, pos);
-        this.setChanged();
-        notifyUnderAttack(level);
+    public BuildingDefense defense() {
+        return this.defense;
     }
 
-    /** "Nexus under attack" alert, throttled to once per {@link #ALERT_COOLDOWN_TICKS} so repeated hits don't spam it. */
-    private static final int ALERT_COOLDOWN_TICKS = 20 * 30;
+    @Override
+    public void damageBuilding(int amount, ServerLevel level, BlockPos pos) {
+        this.defense.damage(amount, level, pos);
+        this.setChanged();
+        this.alert.ping(level, "message.asteriskcraft.under_attack");
+    }
 
-    private void notifyUnderAttack(ServerLevel level) {
-        long now = level.getGameTime();
-        if (now < this.nextAlertTime) {
-            return;
-        }
-        this.nextAlertTime = now + ALERT_COOLDOWN_TICKS;
-        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            player.sendSystemMessage(Component.translatable("message.asteriskcraft.under_attack"));
-            level.playSound(null, player.blockPosition(), SoundEvents.WARDEN_NEARBY_CLOSEST, SoundSource.HOSTILE, 0.7f, 1.2f);
-        }
+    /**
+     * Stands the Nexus up fully warped in — for the starting one, which the world begins with rather
+     * than warping in from a kit (see {@code GameBootstrap}).
+     */
+    public void skipWarpIn() {
+        this.defense.skipWarpIn();
+        this.setChanged();
     }
 
     @Override
@@ -272,7 +287,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         // Container is the shared Protoss army bank (ArmyLinkedContainer) — the Nexus breaking
         // must not dump/clear resources Gateways still depend on. CoreSpoils knocks a measured
         // share of that pool loose instead.
-        CoreSpoils.spill(this.level, this.coreFaction(), pos, this);
+        CoreSpoils.spill(this.level, this.buildingFaction(), pos, this);
         GameOutcome.onCoreDestroyed(this.level, pos);
     }
 
@@ -294,7 +309,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
 
     @Override
     public NonNullList<ItemStack> armyItems() {
-        return ArmyBank.of(this.level, this.coreFaction());
+        return ArmyBank.of(this.level, this.buildingFaction());
     }
 
     @Override
@@ -312,7 +327,7 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         super.saveAdditional(output);
         output.putInt("Queued", this.queued);
         output.putInt("BuildTicks", this.buildTicksRemaining);
-        output.putInt("CoreHealth", this.coreHealth);
+        this.defense.save(output);
     }
 
     @Override
@@ -320,6 +335,6 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         super.loadAdditional(input);
         this.queued = input.getIntOr("Queued", 0);
         this.buildTicksRemaining = input.getIntOr("BuildTicks", BUILD_TICKS);
-        this.coreHealth = input.getIntOr("CoreHealth", FactionCore.CORE_MAX_HEALTH);
+        this.defense.load(input);
     }
 }

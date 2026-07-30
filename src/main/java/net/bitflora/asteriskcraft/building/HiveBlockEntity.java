@@ -33,7 +33,9 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     public static final int INPUT_SLOTS = ArmyBank.ZERG_SLOTS;
 
     private Faction faction = Faction.ZERG;
-    private int coreHealth = FactionCore.CORE_MAX_HEALTH;
+    // No shield pool and no warp-in: shields are a Protoss thing, and the Hives are pre-placed at
+    // world generation rather than warped in from a kit.
+    private final BuildingDefense defense = new BuildingDefense(FactionCore.CORE_MAX_HEALTH, 0, 0);
     /** Tracks whether the Hive can see the sky (dormant when buried). */
     private final SkyGate skyGate = new SkyGate();
     /** Whether this Hive has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
@@ -53,7 +55,8 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
             CoreCensus.ensureRegistered(level, hive.faction, pos);
             hive.enrolled = true;
         }
-        // The Hive's only per-tick job now is tracking whether it's under open sky (dormant if buried);
+        hive.defense.tick();
+        // The Hive's only other per-tick job is tracking whether it's under open sky (dormant if buried);
         // the director reads isAwake() to decide where to train. Worker/wave production lives there.
         hive.skyGate.update(level, pos, () -> {});
     }
@@ -74,16 +77,21 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
         return List.of(new BeaconBeamOwner.Section(color));
     }
 
-    // --- FactionCore ---
+    // --- SiegeTarget / FactionCore ---
 
     @Override
-    public Faction coreFaction() {
+    public Faction buildingFaction() {
         return this.faction;
     }
 
     @Override
-    public void damageCore(int amount, ServerLevel level, BlockPos pos) {
-        this.coreHealth = FactionCore.applyDamage(this.coreHealth, amount, level, pos);
+    public BuildingDefense defense() {
+        return this.defense;
+    }
+
+    @Override
+    public void damageBuilding(int amount, ServerLevel level, BlockPos pos) {
+        this.defense.damage(amount, level, pos);
         this.setChanged();
     }
 
@@ -118,13 +126,13 @@ public class HiveBlockEntity extends BlockEntity implements ArmyLinkedContainer,
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.store("Faction", Faction.CODEC, this.faction);
-        output.putInt("CoreHealth", this.coreHealth);
+        this.defense.save(output);
     }
 
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.ZERG);
-        this.coreHealth = input.getIntOr("CoreHealth", FactionCore.CORE_MAX_HEALTH);
+        this.defense.load(input);
     }
 }
