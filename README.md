@@ -1,25 +1,27 @@
 
-Installation information
+\*Craft
 =======
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+In all of gaming history, two games stand above the rest: StarCraft, and MineCraft. But nobody has combined their radically different modes of gameplay... until now.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+Welcome to \*Craft, the marriage of the two greatest Craft games. You are the Protoss, freshly landed on a new world with a budding Zerg infestation. Build up your army and destroy their Hives before they destroy your Nexus.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+Protoss Units
+-------------
+Probes: These workers will sustainably harvest wood, stone, and ore for you, gaining you resources without breaking the original blocks.
+Zealots: The classic Protoss melee warrior, for getting up close an personal with the enemy.
+Dragoons: Ranged units who can attack at a distance, and shoot down aerial enemies.
+Scouts: Flying units who rain death down from above.
+Photon Cannon: A defensive structure for protecting your base from incoming Zerg.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+Zerg Units
+----------
+Drones: Like probes, these sustainably harvest resources for the Hive.
+Zerglings: It's a zergling, Lester...smaller type of zerg.
+Hydralisk: Powerful ranged attackers.
+Mutalisk: Flying attackers.
+Sunken Colony: A defensive structure that will impale those who come near.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+Mod Info
+--------
+Built for Minecraft 26.1.2 with Neoforge.
