@@ -14,10 +14,13 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Drives a unit toward the {@link CommandOrder.Kind#MOVE} destination on its command attachment
  * and clears the order on arrival. High priority in the goal selector so a move order overrides
- * autonomous behaviour, like an RTS move command — except it yields for as long as the unit has a
- * live attack target, so a unit marching under a move order still stops to fight hostiles it
- * acquires (via {@code FactionTargetGoal} or {@code RetaliateGoal}) along the way instead of
- * walking past them; it resumes the march once that target is gone.
+ * autonomous behaviour, like an RTS move command — including a fight already in progress:
+ * {@link CommandAttachments#setOrder} clears the unit's current target the instant a move order
+ * lands, so this goal doesn't have to wait out a stale engagement. From there it yields for as
+ * long as the unit has a live attack target, so a unit marching under a move order still stops to
+ * fight hostiles it acquires or is struck by (via {@code FactionTargetGoal} or
+ * {@code RetaliateGoal}) along the way instead of walking past them; it resumes the march once
+ * that target is gone.
  * <p>
  * It does not dig, and it does not fight {@link SiegeBlockGoal} for the {@link Flag#MOVE} flag:
  * SiegeBlockGoal is installed at a higher priority, so when the path stalls at a breakable block it

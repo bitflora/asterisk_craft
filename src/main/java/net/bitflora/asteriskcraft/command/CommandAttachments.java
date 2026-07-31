@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.command;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -36,6 +37,13 @@ public final class CommandAttachments {
     }
 
     public static void setOrder(Entity entity, CommandOrder order) {
+        if (order.kind() == CommandOrder.Kind.MOVE && entity instanceof Mob mob) {
+            // A fresh move order overrides whatever the unit is doing, including a fight already in
+            // progress, so CommandedMoveGoal can take over immediately instead of yielding to a stale
+            // target acquired before the order landed. It can still retaliate if attacked again en
+            // route (see CommandedMoveGoal/RetaliateGoal), which re-yields movement until that fight ends.
+            mob.setTarget(null);
+        }
         entity.setData(ORDER, order);
     }
 
