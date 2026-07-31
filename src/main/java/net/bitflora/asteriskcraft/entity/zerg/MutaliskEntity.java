@@ -41,8 +41,11 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its attack radius is a 3D distance, so a Mutalisk sitting at cruising altitude still has
  * {@code sqrt(9² − 6²) ≈ 6.7} blocks of horizontal reach on a ground target — a genuine ranged
- * engagement, not a near-melee one. Its shot is the same {@link HitscanAttacks} beam the Hydralisk
- * and Dragoon use.
+ * engagement, not a near-melee one. Its shot is a bouncing glave: {@link HitscanAttacks#fireChained}
+ * hits the primary target then chains to up to two more nearby enemies (5 blocks from the enemy
+ * just hit, not from the Mutalisk itself — see {@link net.bitflora.asteriskcraft.combat.BounceChain}),
+ * each hop dealing half the previous one's damage. That makes it the anti-clump unit: full damage
+ * against a lone target is unchanged from a plain hitscan shot, but a massed group takes far more.
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#MUTALISK} — not here.
  */
@@ -50,6 +53,7 @@ public class MutaliskEntity extends Monster implements RangedAttackMob {
     private static final UnitStat STAT = UnitStats.MUTALISK;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
     private static final UnitStat.Flight FLIGHT = STAT.flightOrThrow();
+    private static final UnitStat.Bounce BOUNCE = STAT.bounceOrThrow();
 
     public MutaliskEntity(EntityType<? extends MutaliskEntity> type, Level level) {
         super(type, level);
@@ -91,8 +95,8 @@ public class MutaliskEntity extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
-                ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT);
+        HitscanAttacks.fireChained(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
+                ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT, BOUNCE);
     }
 
     @Override

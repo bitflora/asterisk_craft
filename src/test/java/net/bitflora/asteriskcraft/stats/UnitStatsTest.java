@@ -109,6 +109,22 @@ class UnitStatsTest {
     }
 
     @Test
+    void bouncingUnitsAlwaysHaveARangedAttackToChainFrom() {
+        for (UnitStat stat : UnitStats.all()) {
+            if (stat.bounce().isEmpty()) {
+                continue;
+            }
+            assertTrue(stat.ranged().isPresent(), stat.id() + ": a bouncing attack must first be a ranged one");
+            assertTrue(stat.attackDamage().isPresent(), stat.id() + ": a bounce falls off a base attack damage");
+            UnitStat.Bounce bounce = stat.bounceOrThrow();
+            assertTrue(bounce.maxHits() >= 1, stat.id() + ": a chain must hit at least its primary target");
+            assertTrue(bounce.damageFalloff() > 0 && bounce.damageFalloff() <= 1,
+                    stat.id() + ": falloff must shrink damage, not grow or zero it");
+            assertTrue(bounce.searchRadius() > 0, stat.id() + ": a chain needs a positive search radius");
+        }
+    }
+
+    @Test
     void staticDefenceNeverAcquiresBeyondItsReach() {
         for (UnitStat stat : UnitStats.all()) {
             boolean isStaticDefence = stat == UnitStats.PHOTON_CANNON || stat == UnitStats.SUNKEN_COLONY;

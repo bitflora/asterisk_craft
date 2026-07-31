@@ -81,6 +81,7 @@ public final class UnitStats {
     public static final UnitStat MUTALISK = UnitStat.builder("mutalisk")
             .health(60.0).armor(0.0).speed(0.25)
             .attackDamage(4.5).ranged(9.0f, 30)
+            .bounce(3, 0.5f, 5.0f)
             .flight(0.6, 6, 64.0f)
             .cost(UnitCost.of(ANY, 100))
             .build();

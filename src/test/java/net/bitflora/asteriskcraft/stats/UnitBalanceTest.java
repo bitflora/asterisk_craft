@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.stats;
 
+import net.bitflora.asteriskcraft.combat.BounceChain;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -100,6 +101,29 @@ class UnitBalanceTest {
         @Test
         void mutaliskHitsSofterThanASunkenColony() {
             assertTrue(UnitStats.MUTALISK.attackDamageOrThrow() < UnitStats.SUNKEN_COLONY.attackDamageOrThrow());
+        }
+    }
+
+    @Nested
+    class MutaliskGlave {
+        // The bouncing glave is upside against a clump, not a rebalance of single-target output —
+        // even a full 3-hit chain must still land under one Sunken Colony strike.
+        @Test
+        void fullChainStillHitsSofterThanASunkenColony() {
+            UnitStat.Bounce bounce = UnitStats.MUTALISK.bounceOrThrow();
+            double totalDamage = 0;
+            for (int i = 0; i < bounce.maxHits(); i++) {
+                totalDamage += BounceChain.damageAt(UnitStats.MUTALISK.attackDamageOrThrow(), bounce.damageFalloff(), i);
+            }
+            assertTrue(totalDamage < UnitStats.SUNKEN_COLONY.attackDamageOrThrow());
+        }
+
+        // A bounce can't out-reach the shot that spawned it, or the Mutalisk's own 9-block range
+        // stops meaning anything.
+        @Test
+        void bounceRadiusIsShorterThanTheMutalisksOwnRange() {
+            UnitStat.Bounce bounce = UnitStats.MUTALISK.bounceOrThrow();
+            assertTrue(bounce.searchRadius() < UnitStats.MUTALISK.rangedOrThrow().range());
         }
     }
 

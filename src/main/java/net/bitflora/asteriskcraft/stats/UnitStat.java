@@ -37,6 +37,8 @@ public record UnitStat(
         Optional<Ranged> ranged,
         /** Absent = ground unit. */
         Optional<Flight> flight,
+        /** Absent = a shot hits exactly one target. */
+        Optional<Bounce> bounce,
         /** Length of the client strike animation, in ticks; 0 = none. */
         int attackAnimTicks,
         UnitCost cost) {
@@ -53,12 +55,24 @@ public record UnitStat(
     public record Flight(double flyingSpeed, int hoverHeight, float requiredPathLength) {
     }
 
+    /**
+     * A chaining attack: how many enemies one shot may hit in total, the damage multiplier applied
+     * on each additional hop (compounding — hit n takes {@code base * damageFalloff^n}), and how far
+     * from the enemy just hit the next one may be found.
+     */
+    public record Bounce(int maxHits, float damageFalloff, float searchRadius) {
+    }
+
     public Ranged rangedOrThrow() {
         return this.ranged.orElseThrow(() -> new IllegalStateException(this.id + " has no ranged attack"));
     }
 
     public Flight flightOrThrow() {
         return this.flight.orElseThrow(() -> new IllegalStateException(this.id + " does not fly"));
+    }
+
+    public Bounce bounceOrThrow() {
+        return this.bounce.orElseThrow(() -> new IllegalStateException(this.id + " does not bounce"));
     }
 
     public double attackDamageOrThrow() {
@@ -83,6 +97,7 @@ public record UnitStat(
         private OptionalDouble attackDamage = OptionalDouble.empty();
         private Optional<Ranged> ranged = Optional.empty();
         private Optional<Flight> flight = Optional.empty();
+        private Optional<Bounce> bounce = Optional.empty();
         private int attackAnimTicks;
         private UnitCost cost;                 // required (use UnitCost.NONE for a non-purchasable unit)
 
@@ -140,6 +155,11 @@ public record UnitStat(
             return this;
         }
 
+        public Builder bounce(int maxHits, float damageFalloff, float searchRadius) {
+            this.bounce = Optional.of(new Bounce(maxHits, damageFalloff, searchRadius));
+            return this;
+        }
+
         public Builder attackAnimTicks(int v) {
             this.attackAnimTicks = v;
             return this;
@@ -164,7 +184,7 @@ public record UnitStat(
             }
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
                     this.knockbackResistance, this.followRange, this.shield, this.attackDamage,
-                    this.ranged, this.flight, this.attackAnimTicks, this.cost);
+                    this.ranged, this.flight, this.bounce, this.attackAnimTicks, this.cost);
         }
     }
 }
