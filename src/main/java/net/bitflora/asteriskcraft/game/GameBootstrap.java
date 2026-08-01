@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -122,6 +123,22 @@ public final class GameBootstrap {
      */
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && player.level() instanceof ServerLevel level) {
+            CommandAttachments.selection(player).clear(level);
+        }
+    }
+
+    /**
+     * Clears the dying player's selection glow, same rationale as {@link #onPlayerLogout}: death
+     * replaces the player entity with a fresh instance on respawn, and the new instance gets a
+     * fresh empty {@link net.bitflora.asteriskcraft.command.PlayerSelection} — so without this,
+     * units selected before death keep their vanilla glowing tag with no selection state left to
+     * clear them. Fired from {@link net.minecraft.world.entity.LivingEntity#die} before any
+     * teardown, so {@code player} and {@code player.level()} are still valid here.
+     */
+    @SubscribeEvent
+    public static void onPlayerDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof ServerPlayer player
                 && player.level() instanceof ServerLevel level) {
             CommandAttachments.selection(player).clear(level);

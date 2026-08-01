@@ -28,8 +28,12 @@ public final class CommandInputResolver {
     private static final int MOD_SHIFT = 0x0001;
     private static final int MOD_CONTROL = 0x0002;
 
-    /** Brief green flash confirming a valid MINE order landed on a harvestable block. */
-    private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0x33FF33, 1.2f);
+    /** Brief flash confirming a MOVE order landed. */
+    private static final DustParticleOptions MOVE_TARGET_FLASH = new DustParticleOptions(0x33FF33, 1.2f);
+    /** Brief flash confirming an ATTACK order landed. */
+    private static final DustParticleOptions ATTACK_TARGET_FLASH = new DustParticleOptions(0xFF3333, 1.2f);
+    /** Brief flash confirming a valid MINE order landed on a harvestable block. */
+    private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0x3366FF, 1.2f);
 
     private CommandInputResolver() {
     }
@@ -103,12 +107,21 @@ public final class CommandInputResolver {
             if (unit instanceof ProbeEntity) {
                 return null;
             }
+            BlockPos attackPos = attackTarget.blockPosition();
+            level.sendParticles(ATTACK_TARGET_FLASH,
+                    attackPos.getX() + 0.5, attackPos.getY() + 0.5, attackPos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
             return CommandOrder.attack(attackTarget.getUUID());
         }
         if (packet.kind() == CommandInputPacket.HitKind.ENTITY) {
             // Right-clicked a non-enemy entity: just move to it.
             Entity target = level.getEntity(packet.entityId());
-            return target != null ? CommandOrder.move(target.blockPosition()) : null;
+            if (target == null) {
+                return null;
+            }
+            BlockPos movePos = target.blockPosition();
+            level.sendParticles(MOVE_TARGET_FLASH,
+                    movePos.getX() + 0.5, movePos.getY() + 0.5, movePos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
+            return CommandOrder.move(movePos);
         }
         BlockPos pos = packet.pos();
         if (unit instanceof ProbeEntity && level.getBlockState(pos).is(ProbeEntity.HARVESTABLE)) {
@@ -116,6 +129,8 @@ public final class CommandInputResolver {
                     pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
             return CommandOrder.mine(pos);
         }
+        level.sendParticles(MOVE_TARGET_FLASH,
+                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
         return CommandOrder.move(pos);
     }
 
@@ -139,9 +154,11 @@ public final class CommandInputResolver {
         if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
             return null;
         }
-        if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()
-                && (owner.isEnemy(FactionAttachments.get(target)) || target instanceof Monster)) {
-            return target;
+        if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()) {
+            Faction targetFaction = FactionAttachments.get(target);
+            if (owner.isEnemy(targetFaction) || (target instanceof Monster && targetFaction == Faction.NEUTRAL)) {
+                return target;
+            }
         }
         return null;
     }
