@@ -35,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntPredicate;
 
 /**
  * Places the player's Nexus (seeded with starting resources) the first time someone joins a
@@ -88,9 +89,10 @@ public final class GameBootstrap {
     private static final int HIVE_INFEST_RADIUS = 10;
     private static final Set<Block> INFESTABLE_GROUND = Set.of(
             Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
-    // How far down to scan past a tree's logs/leaves when locating the real ground beneath it —
-    // comfortably taller than any vanilla tree so we always reach the floor.
-    private static final int MAX_TREE_SCAN = 40;
+    // How far down to scan past a tree's logs and undergrowth when locating the real ground beneath
+    // it — comfortably taller than any vanilla tree (a jungle giant on a slope is the worst case) so
+    // we always reach the floor rather than falling back to the top of the scan.
+    private static final int MAX_TREE_SCAN = 64;
 
     private GameBootstrap() {
     }
@@ -256,46 +258,71 @@ public final class GameBootstrap {
 
     /**
      * True if the column above (x, y, z) is open to the sky, distinguishing real outdoor ground
-     * from the floor of a cave or ravine that happens to breach the surface (which WORLD_SURFACE
+     * from the floor of a cave or ravine that happens to breach the surface (which the ground scan
      * would otherwise report as valid, burying the structure underground).
      */
     private static boolean hasOpenSky(ServerLevel level, int x, int y, int z) {
         for (int dy = 2; dy <= SURFACE_CLEARANCE; dy++) {
-            BlockState state = level.getBlockState(new BlockPos(x, y + dy, z));
-            // Tree logs/leaves overhead are fine — they get cleared before the mound is stamped
+            // Trees and undergrowth overhead are fine — they get cleared before the mound is stamped
             // (see clearTrees) — so only a real solid overhang (cave/ravine roof) rejects the spot.
-            if (state.isSolidRender() && !isVegetation(state)) {
+            if (isGround(level.getBlockState(new BlockPos(x, y + dy, z)))) {
                 return false;
             }
         }
         return true;
     }
 
-    /** True if this block is part of a tree (log or leaves), which the Hive placement scans past and clears. */
+    /** True if this block is part of a tree (log or leaves), which the placement scans past and clears. */
     private static boolean isVegetation(BlockState state) {
         return state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES);
     }
 
     /**
-     * Topmost solid ground block in a column, scanning down past tree logs and leaves so a Hive lands
-     * on the ground beneath a tree instead of on its canopy (the WORLD_SURFACE heightmap counts the
-     * canopy as the surface, which is why Hives were ending up in trees).
+     * True if this block is solid natural ground a building can rest on — the positive test the
+     * downward ground scan stops at. Stating what ground <i>is</i> rather than listing the foliage it
+     * is not is what makes a jungle work: the canopy is draped in vines and cocoa, neither of which is
+     * a log or leaves, and a scan that stopped at "the first block that isn't air or a tree" stopped
+     * on a vine ~30 blocks up and left the Hive floating over the trees. Vines, cocoa, glow lichen,
+     * undergrowth, bamboo, snow layers and water are all either non-occluding or not full cubes, so
+     * {@code isSolidRender} rejects the lot of them without naming any. Logs <i>are</i> solid-render,
+     * so the tag exclusion is load-bearing.
      */
-    private static int groundHeight(ServerLevel level, int x, int z) {
-        int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
-        for (int gy = top; gy > top - MAX_TREE_SCAN; gy--) {
-            BlockState state = level.getBlockState(new BlockPos(x, gy, z));
-            if (!state.isAir() && !isVegetation(state)) {
-                return gy;
+    static boolean isGround(BlockState state) {
+        return state.isSolidRender() && !isVegetation(state);
+    }
+
+    /**
+     * First ground Y at or below {@code top}, or {@code top} itself if the scan reaches {@code minY}
+     * without finding one. Pure and probe-driven (no level, no tags) so the scan geometry is
+     * unit-testable, same pattern as {@link net.bitflora.asteriskcraft.building.BuildingTemplates#planSitePrep}.
+     */
+    static int scanToGround(int top, int minY, IntPredicate isGround) {
+        for (int y = top; y >= minY; y--) {
+            if (isGround.test(y)) {
+                return y;
             }
         }
         return top;
     }
 
     /**
-     * Clears tree logs and leaves in the creep disc around a Hive, so the mound is never stamped into
-     * a tree and no canopy is left floating over the finished base. Called from {@link #placeHive}
-     * before the layout is placed.
+     * Topmost solid ground block in a column, scanning down past a tree to the floor beneath it. The
+     * scan starts from MOTION_BLOCKING_NO_LEAVES rather than WORLD_SURFACE because that heightmap has
+     * already discounted the canopy and the vines hanging off it, leaving only the trunk to walk down.
+     */
+    private static int groundHeight(ServerLevel level, int x, int z) {
+        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+        return scanToGround(top, top - MAX_TREE_SCAN,
+                y -> isGround(level.getBlockState(new BlockPos(x, y, z))));
+    }
+
+    /**
+     * Clears everything standing between the ground and the sky in the creep disc around a Hive, so
+     * the mound is never stamped into a tree and no canopy is left floating over the finished base.
+     * Called from {@link #placeHive} before the layout is placed. It clears anything that isn't
+     * {@link #isGround} — logs and leaves, but also the vines and cocoa a jungle drapes over them,
+     * which a logs-and-leaves-only sweep left dangling in mid-air over a cleared base. Genuine solid
+     * overhangs are ground, so they survive; the column's own floor is below the band and untouched.
      */
     private static void clearTrees(ServerLevel level, int cx, int cz, int radius) {
         BlockState air = Blocks.AIR.defaultBlockState();
@@ -306,11 +333,14 @@ public final class GameBootstrap {
                 }
                 int x = cx + dx;
                 int z = cz + dz;
+                // WORLD_SURFACE, not the ground scan's MOTION_BLOCKING_NO_LEAVES: the leaves and
+                // vines this is here to remove are exactly what the latter heightmap looks past.
                 int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
                 int ground = groundHeight(level, x, z);
                 for (int cy = top; cy > ground; cy--) {
                     BlockPos pos = new BlockPos(x, cy, z);
-                    if (isVegetation(level.getBlockState(pos))) {
+                    BlockState state = level.getBlockState(pos);
+                    if (!state.isAir() && !isGround(state)) {
                         level.setBlock(pos, air, Block.UPDATE_ALL);
                     }
                 }
@@ -338,6 +368,11 @@ public final class GameBootstrap {
      * True if the footprint's perimeter is mostly open water — sampled at eight compass points a few
      * blocks out, each at its own surface height. There is no placement-time fluid check elsewhere;
      * the codebase's only fluid pattern is {@code getFluidState().isEmpty()} (see SiegeBlockGoal).
+     *
+     * <p>Each point is sampled at the block <b>above</b> the ground, not the ground itself: the
+     * ground scan passes straight through water down to the bed, so probing the block it lands on
+     * would report dry land in the middle of a lake. Sampling from a raw WORLD_SURFACE height was the
+     * other way to get this wrong — under a forest it probes a leaf block and never sees water at all.
      */
     private static boolean isSurroundedByWater(ServerLevel level, int cx, int cz) {
         int[][] ring = {{3, 0}, {-3, 0}, {0, 3}, {0, -3}, {3, 3}, {3, -3}, {-3, 3}, {-3, -3}};
@@ -345,7 +380,7 @@ public final class GameBootstrap {
         for (int[] o : ring) {
             int x = cx + o[0];
             int z = cz + o[1];
-            int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+            int y = groundHeight(level, x, z) + 1;
             if (!level.getFluidState(new BlockPos(x, y, z)).isEmpty()) {
                 water++;
             }
@@ -377,7 +412,10 @@ public final class GameBootstrap {
      * Spreads Zerg "creep" over the natural ground surface within {@link #HIVE_INFEST_RADIUS} of a
      * Hive: every exposed grass/stone/sand/red-sand/dirt/gravel surface block (air directly above)
      * becomes mycelium. Called from {@link #placeHive} before the resource garden is seeded, so the
-     * garden's ore/log nodes — placed afterward — are not themselves overrun.
+     * garden's ore/log nodes — placed afterward — are not themselves overrun. Goes through
+     * {@link #groundHeight} rather than a raw heightmap so the creep reaches the forest floor; read
+     * off WORLD_SURFACE it targeted a leaf block, which isn't infestable, and a wooded Hive got no
+     * creep at all.
      */
     private static void infestGround(ServerLevel level, int cx, int cz) {
         BlockState mycelium = Blocks.MYCELIUM.defaultBlockState();
@@ -388,7 +426,7 @@ public final class GameBootstrap {
                 }
                 int x = cx + dx;
                 int z = cz + dz;
-                int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+                int y = groundHeight(level, x, z);
                 BlockPos pos = new BlockPos(x, y, z);
                 if (isInfestableGround(level.getBlockState(pos)) && level.getBlockState(pos.above()).isAir()) {
                     level.setBlock(pos, mycelium, Block.UPDATE_ALL);
@@ -404,9 +442,11 @@ public final class GameBootstrap {
         // own template has dirt speckled through its mycelium that the sweep would otherwise eat.
         infestGround(level, x, z);
         // The mound keeps a mycelium footing under it — same material as the creep it sits in, so
-        // unlike the Protoss stonework there is nothing foreign to see.
+        // unlike the Protoss stonework there is nothing foreign to see. This matters because
+        // highestGround raises the mound onto the highest column of its footprint: on a slope the
+        // downhill side would otherwise overhang open air.
         BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
-                AsteriskCraft.HIVE_CORE.get(), null);
+                AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
         if (core == null) {
             return null;
         }
@@ -455,7 +495,11 @@ public final class GameBootstrap {
         return slot;
     }
 
-    /** Exposes a handful of surface harvestable blocks near a Hive so its Drones can keep mining. */
+    /**
+     * Exposes a handful of surface harvestable blocks near a Hive so its Drones can keep mining.
+     * Seeded at {@link #groundHeight} so the nodes land on the floor within reach of a Drone rather
+     * than up in a canopy.
+     */
     private static void seedResourceGarden(ServerLevel level, int cx, int cz) {
         BlockState[] nodes = {
                 Blocks.STONE.defaultBlockState(), Blocks.STONE.defaultBlockState(), Blocks.STONE.defaultBlockState(),
@@ -465,7 +509,7 @@ public final class GameBootstrap {
         for (int i = 0; i < offsets.length; i++) {
             int x = cx + offsets[i][0];
             int z = cz + offsets[i][1];
-            int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+            int y = groundHeight(level, x, z);
             level.setBlock(new BlockPos(x, y, z), nodes[i], Block.UPDATE_ALL);
         }
     }
