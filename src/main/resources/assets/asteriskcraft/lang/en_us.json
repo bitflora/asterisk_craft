@@ -89,6 +89,7 @@
   "subtitles.entity.asteriskcraft.zealot.ambient": "Zealot mutters",
   "subtitles.entity.asteriskcraft.zealot.hurt": "Zealot hurts",
   "subtitles.entity.asteriskcraft.zealot.death": "Zealot dies",
+  "subtitles.entity.asteriskcraft.zealot.attack": "Zealot attacks",
   "subtitles.entity.asteriskcraft.zergling.ambient": "Zergling snarls",
   "subtitles.entity.asteriskcraft.zergling.hurt": "Zergling hurts",
   "subtitles.entity.asteriskcraft.zergling.death": "Zergling dies",
@@ -102,6 +103,7 @@
   "subtitles.entity.asteriskcraft.drone.hurt": "Drone hurts",
   "subtitles.entity.asteriskcraft.drone.death": "Drone dies",
   "subtitles.entity.asteriskcraft.dragoon.ambient": "Dragoon rumbles",
+  "subtitles.entity.asteriskcraft.dragoon.death": "Dragoon dies",
   "subtitles.entity.asteriskcraft.scout.ambient": "Scout reports in",
   "config.jade.plugin_asteriskcraft.protoss_shield": "Protoss Shield",
   "config.jade.plugin_asteriskcraft.building_defense": "Building Health & Shields"

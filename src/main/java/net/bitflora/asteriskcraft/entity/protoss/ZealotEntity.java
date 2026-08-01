@@ -97,7 +97,8 @@ public class ZealotEntity extends Monster implements Shielded {
      */
     @Override
     public boolean doHurtTarget(ServerLevel level, Entity target) {
-        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.PSI_BLADES);
+        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.PSI_BLADES,
+                AsteriskCraft.ZEALOT_ATTACK.get());
     }
 
     /** Ticks remaining in the strike animation; 0 when idle. Read by the renderer. */

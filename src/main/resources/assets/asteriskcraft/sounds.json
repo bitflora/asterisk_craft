@@ -19,6 +19,14 @@
     "subtitle": "subtitles.entity.asteriskcraft.zealot.death",
     "sounds": ["asteriskcraft:mob/zealot/zealot-death"]
   },
+  "entity.zealot.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.zealot.attack",
+    "sounds": [
+      "asteriskcraft:mob/zealot/zealot-attack1",
+      "asteriskcraft:mob/zealot/zealot-attack2"
+    ]
+  },
   "entity.zergling.ambient": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zergling.ambient",
@@ -96,6 +104,11 @@
       "asteriskcraft:mob/dragoon/dragoon-live1",
       "asteriskcraft:mob/dragoon/dragoon-live2"
     ]
+  },
+  "entity.dragoon.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dragoon.death",
+    "sounds": ["asteriskcraft:mob/dragoon/dragoon-death"]
   },
   "entity.scout.ambient": {
     "category": "hostile",

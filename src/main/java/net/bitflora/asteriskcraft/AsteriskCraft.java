@@ -300,6 +300,8 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.zealot.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.hurt")));
     public static final DeferredHolder<SoundEvent, SoundEvent> ZEALOT_DEATH =
             SOUND_EVENTS.register("entity.zealot.death", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ZEALOT_ATTACK =
+            SOUND_EVENTS.register("entity.zealot.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.zealot.attack")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> ZERGLING_AMBIENT =
             SOUND_EVENTS.register("entity.zergling.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.ambient")));
@@ -330,6 +332,8 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_AMBIENT =
             SOUND_EVENTS.register("entity.dragoon.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_DEATH =
+            SOUND_EVENTS.register("entity.dragoon.death", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_AMBIENT =
             SOUND_EVENTS.register("entity.scout.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.ambient")));
 

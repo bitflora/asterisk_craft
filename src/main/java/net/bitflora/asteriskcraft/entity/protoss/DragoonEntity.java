@@ -73,6 +73,11 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
     }
 
     @Override
+    protected SoundEvent getDeathSound() {
+        return AsteriskCraft.DRAGOON_DEATH.get();
+    }
+
+    @Override
     public void performRangedAttack(LivingEntity target, float power) {
         HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
                 AsteriskCraftDamageTypes.PHASE_DISRUPTOR, ParticleTypes.SCULK_CHARGE_POP, SoundEvents.SKELETON_SHOOT);

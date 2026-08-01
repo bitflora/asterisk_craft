@@ -2,6 +2,8 @@ package net.bitflora.asteriskcraft.entity.ai;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
@@ -23,8 +25,8 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  *   <li>the weapon/enchantment branches — this mod's units carry no main-hand item, only a dyed
  *       leather chestplate for team colour, so {@code getWeaponItem()} is always empty;</li>
- *   <li>{@code playAttackSound()} — an empty method on {@code LivingEntity} that neither melee unit
- *       overrides.</li>
+ *   <li>{@code playAttackSound()} — an empty method on {@code LivingEntity}; the optional {@code sound}
+ *       parameter below is this mod's replacement, played explicitly rather than through that hook.</li>
  * </ul>
  *
  * <p>{@code causeExtraKnockback} is kept but is passed 0: it reads {@code ATTACK_KNOCKBACK}, which
@@ -45,6 +47,16 @@ public final class MeleeAttacks {
      */
     public static boolean doHurtTarget(Mob attacker, ServerLevel level, Entity target,
             ResourceKey<DamageType> damageType) {
+        return doHurtTarget(attacker, level, target, damageType, null);
+    }
+
+    /**
+     * As {@link #doHurtTarget(Mob, ServerLevel, Entity, ResourceKey)}, but also plays {@code sound}
+     * (an attack bark, not a hit/impact effect) at the attacker on every swing that lands, mirroring
+     * how {@link HitscanAttacks#fire} plays its shot sound on every shot.
+     */
+    public static boolean doHurtTarget(Mob attacker, ServerLevel level, Entity target,
+            ResourceKey<DamageType> damageType, SoundEvent sound) {
         DamageSource source = level.damageSources().source(damageType, attacker);
         float damage = (float) attacker.getAttributeValue(Attributes.ATTACK_DAMAGE);
         // Captured before the hit: causeExtraKnockback compares against the movement the target had
@@ -55,6 +67,9 @@ public final class MeleeAttacks {
         if (hurt) {
             attacker.causeExtraKnockback(target, 0.0f, oldMovement);
             attacker.setLastHurtMob(target);
+            if (sound != null) {
+                level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, 1.0f);
+            }
         }
         attacker.postPiercingAttack();
         return hurt;
