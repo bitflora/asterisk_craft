@@ -4,9 +4,11 @@ import net.bitflora.asteriskcraft.combat.BounceChain;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.Vec3;
@@ -15,9 +17,16 @@ import java.util.List;
 
 /**
  * Instant, no-projectile ranged damage shared by ranged units (Dragoon, Hydralisk). Ported from
- * {@link CannonFireGoal}'s {@code fireAt}: magic damage source means no knockback and no travel
- * time to dodge, so the attack never misses. Draws a stepped particle beam from attacker to
- * target as hit feedback.
+ * {@link CannonFireGoal}'s {@code fireAt}: there is no travel time to dodge, so the attack never
+ * misses. Draws a stepped particle beam from attacker to target as hit feedback.
+ *
+ * <p>The damage type is the caller's, exactly like the particle and the sound — every unit names its
+ * own from {@link net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes}, so a kill reads as the
+ * weapon that made it. The source is built with the attacker as its cause, which is what sets
+ * {@code getLastHurtByMob()} and so lets {@link RetaliateGoal} fire on ranged hits — the old shared
+ * {@code damageSources().magic()} carried no entity at all, and nothing shot at range ever fought
+ * back. Because the source now has an entity and its type is outside {@code #minecraft:no_knockback},
+ * hits also knock their target away from the shooter.
  */
 public final class HitscanAttacks {
     private static final int BEAM_STEPS = 8;
@@ -25,23 +34,28 @@ public final class HitscanAttacks {
     private HitscanAttacks() {
     }
 
-    public static void fire(Mob attacker, LivingEntity target, double damage, ParticleOptions particle, SoundEvent sound) {
-        fire(attacker, target, damage, particle, sound, 1.0f);
+    public static void fire(Mob attacker, LivingEntity target, double damage, ResourceKey<DamageType> damageType,
+            ParticleOptions particle, SoundEvent sound) {
+        fire(attacker, target, damage, damageType, particle, sound, 1.0f);
     }
 
-    /** As {@link #fire(Mob, LivingEntity, double, ParticleOptions, SoundEvent)} but with an explicit sound pitch. */
-    public static void fire(Mob attacker, LivingEntity target, double damage, ParticleOptions particle, SoundEvent sound, float pitch) {
+    /**
+     * As {@link #fire(Mob, LivingEntity, double, ResourceKey, ParticleOptions, SoundEvent)} but with
+     * an explicit sound pitch.
+     */
+    public static void fire(Mob attacker, LivingEntity target, double damage, ResourceKey<DamageType> damageType,
+            ParticleOptions particle, SoundEvent sound, float pitch) {
         if (!(attacker.level() instanceof ServerLevel level)) {
             return;
         }
-        target.hurtServer(level, level.damageSources().magic(), (float) damage);
+        target.hurtServer(level, level.damageSources().source(damageType, attacker), (float) damage);
         beam(level, attacker.getEyePosition(), target.getEyePosition(), particle);
         level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, pitch);
     }
 
     /**
-     * As {@link #fire(Mob, LivingEntity, double, ParticleOptions, SoundEvent)}, but the shot may
-     * chain past {@code target} onto other nearby enemies per {@code bounce} (the Mutalisk's
+     * As {@link #fire(Mob, LivingEntity, double, ResourceKey, ParticleOptions, SoundEvent)}, but the
+     * shot may chain past {@code target} onto other nearby enemies per {@code bounce} (the Mutalisk's
      * glave). Each hop deals a fraction of {@code damage} per {@link UnitStat.Bounce#damageFalloff()}
      * and is drawn as its own beam segment, so the chain reads as one shot hopping between bodies.
      *
@@ -51,7 +65,7 @@ public final class HitscanAttacks {
      * entities are candidates: buildings are {@code SiegeTarget} block entities, not
      * {@code LivingEntity}, so a glave never chains into a core.
      */
-    public static void fireChained(Mob attacker, LivingEntity target, double damage,
+    public static void fireChained(Mob attacker, LivingEntity target, double damage, ResourceKey<DamageType> damageType,
             ParticleOptions particle, SoundEvent sound, UnitStat.Bounce bounce) {
         if (!(attacker.level() instanceof ServerLevel level)) {
             return;
@@ -67,7 +81,8 @@ public final class HitscanAttacks {
         Vec3 from = attacker.getEyePosition();
         for (int i = 0; i < hits.size(); i++) {
             LivingEntity hit = hits.get(i);
-            hit.hurtServer(level, level.damageSources().magic(), BounceChain.damageAt(damage, bounce.damageFalloff(), i));
+            hit.hurtServer(level, level.damageSources().source(damageType, attacker),
+                    BounceChain.damageAt(damage, bounce.damageFalloff(), i));
             Vec3 to = hit.getEyePosition();
             beam(level, from, to, particle);
             from = to;

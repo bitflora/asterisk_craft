@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.ai.protoss;
 
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.stats.UnitStat;
@@ -81,6 +82,6 @@ public class CannonFireGoal extends Goal {
 
     private void fireAt(LivingEntity target) {
         HitscanAttacks.fire(this.cannon, target, STAT.attackDamageOrThrow(),
-                ParticleTypes.END_ROD, SoundEvents.BEACON_POWER_SELECT, 1.6f);
+                AsteriskCraftDamageTypes.PHOTON_BLAST, ParticleTypes.END_ROD, SoundEvents.BEACON_POWER_SELECT, 1.6f);
     }
 }

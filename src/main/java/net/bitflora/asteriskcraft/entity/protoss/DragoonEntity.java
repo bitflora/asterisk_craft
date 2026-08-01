@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
@@ -73,7 +74,8 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE), ParticleTypes.SCULK_CHARGE_POP, SoundEvents.SKELETON_SHOOT);
+        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
+                AsteriskCraftDamageTypes.PHASE_DISRUPTOR, ParticleTypes.SCULK_CHARGE_POP, SoundEvents.SKELETON_SHOOT);
     }
 
     public int getShield() {

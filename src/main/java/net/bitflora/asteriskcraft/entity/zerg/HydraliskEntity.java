@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
@@ -80,7 +81,8 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE), ParticleTypes.ITEM_SLIME, SoundEvents.SKELETON_SHOOT);
+        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
+                AsteriskCraftDamageTypes.NEEDLE_SPINES, ParticleTypes.ITEM_SLIME, SoundEvents.SKELETON_SHOOT);
         // The single hook for the volley animation: the hitscan is instantaneous, so this is the only
         // moment the client can be told a shot happened.
         this.entityData.set(FIRE_TICKS, STAT.attackAnimTicks());

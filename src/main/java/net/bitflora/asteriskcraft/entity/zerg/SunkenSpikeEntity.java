@@ -12,8 +12,8 @@ import net.minecraft.world.level.Level;
  * it reimplemented: this subclass exists purely so the spike carries its own {@code EntityType},
  * which is what
  * {@link net.bitflora.asteriskcraft.combat.SunkenSpikeDamageHandler SunkenSpikeDamageHandler}
- * matches on to replace vanilla's hardcoded 6 damage with the Sunken Colony's 20 and to spare
- * same-faction bystanders.
+ * matches on to replace vanilla's hardcoded 6 magic damage with the Sunken Colony's 20 of
+ * {@code asteriskcraft:subterranean_spines} and to spare same-faction bystanders.
  *
  * <p>Two vanilla details make the "correct it from outside" approach necessary rather than merely
  * convenient (verified against the decompiled 26.1.2 source, see docs/neoforge-api-notes.md):
@@ -52,7 +52,7 @@ public class SunkenSpikeEntity extends EvokerFangs {
     /**
      * An orphaned spike is withdrawn rather than allowed to bite. Vanilla's ownerless branch deals a
      * flat 6 magic damage from a source with <em>no</em> direct entity, which the damage handler
-     * can't recognise as ours and therefore can't correct or faction-filter — so a colony killed
+     * can't recognise as ours and therefore can't replace or faction-filter — so a colony killed
      * during its spike's warm-up would otherwise land an untyped hit on friend and foe alike.
      */
     @Override

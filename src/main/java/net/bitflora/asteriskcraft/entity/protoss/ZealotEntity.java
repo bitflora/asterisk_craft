@@ -1,9 +1,11 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
+import net.bitflora.asteriskcraft.entity.ai.MeleeAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
@@ -12,9 +14,11 @@ import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -83,6 +87,17 @@ public class ZealotEntity extends Monster implements Shielded {
         if (!this.level().isClientSide()) {
             this.entityData.set(ATTACK_TICKS, STAT.attackAnimTicks());
         }
+    }
+
+    /**
+     * Psi blades rather than the generic {@code minecraft:mob_attack} vanilla would build. Separate
+     * from the animation above on purpose: {@code swing} fires for every strike including the ones
+     * {@link SiegeBlockGoal} lands on a building, while this only runs when there's an entity to hurt.
+     * See {@link MeleeAttacks} for why the whole method is reimplemented instead of wrapped.
+     */
+    @Override
+    public boolean doHurtTarget(ServerLevel level, Entity target) {
+        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.PSI_BLADES);
     }
 
     /** Ticks remaining in the strike animation; 0 when idle. Read by the renderer. */

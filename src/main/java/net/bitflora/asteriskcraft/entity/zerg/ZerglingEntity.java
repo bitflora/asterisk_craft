@@ -1,15 +1,19 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
+import net.bitflora.asteriskcraft.entity.ai.MeleeAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStats;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -52,6 +56,15 @@ public class ZerglingEntity extends Monster {
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
         CommandableGoals.install(this, this.goalSelector, this.targetSelector);
+    }
+
+    /**
+     * Claws rather than the generic {@code minecraft:mob_attack} vanilla would build. See
+     * {@link MeleeAttacks} for why the whole method is reimplemented instead of wrapped.
+     */
+    @Override
+    public boolean doHurtTarget(ServerLevel level, Entity target) {
+        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.ZERGLING_CLAWS);
     }
 
     @Override

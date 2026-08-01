@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
@@ -106,7 +107,7 @@ public class ScoutEntity extends Monster implements Shielded, RangedAttackMob {
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
         HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
-                ParticleTypes.ELECTRIC_SPARK, SoundEvents.SHULKER_SHOOT);
+                AsteriskCraftDamageTypes.ANTI_MATTER_MISSILE, ParticleTypes.ELECTRIC_SPARK, SoundEvents.SHULKER_SHOOT);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
+import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
@@ -96,7 +97,7 @@ public class MutaliskEntity extends Monster implements RangedAttackMob {
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
         HitscanAttacks.fireChained(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
-                ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT, BOUNCE);
+                AsteriskCraftDamageTypes.GLAVE_WURM, ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT, BOUNCE);
     }
 
     @Override

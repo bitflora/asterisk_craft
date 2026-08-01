@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "asteriskcraft:psi_blades",
+    "asteriskcraft:phase_disruptor",
+    "asteriskcraft:anti_matter_missile",
+    "asteriskcraft:photon_blast",
+    "asteriskcraft:zergling_claws",
+    "asteriskcraft:needle_spines",
+    "asteriskcraft:glave_wurm",
+    "asteriskcraft:subterranean_spines"
+  ]
+}
