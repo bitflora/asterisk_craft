@@ -27,6 +27,13 @@ public record CommandInputPacket(int button, int modifiers, HitKind kind, int en
         }
     }
 
+    /**
+     * How far a command click reaches — R5.7's "farthest point in view". Lives here rather than on
+     * the client-side input handler because the server needs it too: a unit has to be able to path
+     * as far as the player can click (see {@code entity/ai/CommandableGoals}).
+     */
+    public static final double REACH = 64.0;
+
     public static final Type<CommandInputPacket> TYPE = new Type<>(AsteriskCraft.id("command_input"));
 
     private static final StreamCodec<ByteBuf, HitKind> HIT_KIND_CODEC =

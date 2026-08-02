@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.Shielded;
+import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
@@ -140,6 +141,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
 
     @Override
     protected void registerGoals() {
+        CommandableGoals.configureNavigation(this);
         this.goalSelector.addGoal(0, new FloatGoal(this));
         // A move order interrupts the economy (RTS move); a carried load is still delivered
         // before a fresh mine because DeliverGoal outranks HarvestGoal.

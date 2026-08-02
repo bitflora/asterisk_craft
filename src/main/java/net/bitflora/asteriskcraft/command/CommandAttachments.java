@@ -43,6 +43,11 @@ public final class CommandAttachments {
             // target acquired before the order landed. It can still retaliate if attacked again en
             // route (see CommandedMoveGoal/RetaliateGoal), which re-yields movement until that fight ends.
             mob.setTarget(null);
+            // Drop the path too, so re-issuing an order visibly restarts a unit that is already
+            // marching. CommandedMoveGoal re-paths the moment navigation reports done, and a running
+            // goal is never re-start()ed by GoalSelector, so without this a stalled unit told to move
+            // again would keep grinding away on the path that was already failing it.
+            mob.getNavigation().stop();
         }
         entity.setData(ORDER, order);
     }

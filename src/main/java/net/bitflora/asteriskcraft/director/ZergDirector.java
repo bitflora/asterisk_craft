@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
+import net.bitflora.asteriskcraft.command.MoveFormation;
 import net.bitflora.asteriskcraft.director.script.BuildScript;
 import net.bitflora.asteriskcraft.director.script.BuildScriptManager;
 import net.bitflora.asteriskcraft.director.script.DirectorWorld;
@@ -177,11 +178,20 @@ public final class ZergDirector {
 
         @Override
         public void orderMove(List<UUID> unitIds, BlockPos dest) {
+            List<Mob> wave = new ArrayList<>(unitIds.size());
             for (UUID id : unitIds) {
                 if (this.level.getEntity(id) instanceof Mob mob && mob.isAlive()) {
-                    CommandAttachments.setOrder(mob, CommandOrder.move(dest));
+                    wave.add(mob);
                 }
             }
+            if (wave.isEmpty()) {
+                return;
+            }
+            // Spread the wave the same way a player's group move order is spread. This matters more
+            // here than anywhere: a wave is aimed at the Nexus, so without it the whole attack piles
+            // into one column and everything behind the front rank churns instead of fighting.
+            MoveFormation.allocate(this.level, dest, wave)
+                    .forEach((mob, slot) -> CommandAttachments.setOrder(mob, CommandOrder.move(slot)));
         }
 
         @Override

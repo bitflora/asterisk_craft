@@ -30,8 +30,8 @@ import org.lwjgl.glfw.GLFW;
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
 public final class CommandInputHandler {
-    /** How far a command click reaches — R5.7's "farthest point in view". */
-    private static final double COMMAND_REACH = 64.0;
+    /** How far a command click reaches — shared with the server, which sizes pathing to match. */
+    private static final double COMMAND_REACH = CommandInputPacket.REACH;
 
     private CommandInputHandler() {
     }

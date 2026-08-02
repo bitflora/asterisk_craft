@@ -15,13 +15,17 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Server-side interpretation of a {@link CommandInputPacket}. Left-click mutates the player's
  * {@link PlayerSelection}; right-click stamps a {@link CommandOrder} onto every selected unit.
- * The Probe MINE-vs-MOVE split (R5 addendum) lives in {@link #orderFor}: a Probe told to
+ * The Probe MINE-vs-MOVE split (R5 addendum) lives in {@link #issueMove}: a Probe told to
  * right-click a harvestable block gets MINE, everything else gets MOVE.
+ * <p>
+ * Move orders are spread through {@link MoveFormation} rather than stamping one shared destination
+ * on the whole selection — see that class for why a squad sent to a single block used to jam.
  */
 public final class CommandInputResolver {
     /** GLFW modifier bits (see {@code net.minecraft.client.gui.screens.Screen}). */
@@ -33,7 +37,7 @@ public final class CommandInputResolver {
     /** Brief flash confirming an ATTACK order landed. */
     private static final DustParticleOptions ATTACK_TARGET_FLASH = new DustParticleOptions(0xFF3333, 1.2f);
     /** Brief flash confirming a valid MINE order landed on a harvestable block. */
-    private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0x3366FF, 1.2f);
+    private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0xFFFF33, 1.2f);
 
     private CommandInputResolver() {
     }
@@ -81,14 +85,9 @@ public final class CommandInputResolver {
             return;
         }
         LivingEntity attackTarget = enemyTargetAt(packet, level, owner);
-        boolean issued = false;
-        for (Mob unit : units) {
-            CommandOrder order = orderFor(unit, packet, level, attackTarget);
-            if (order != null) {
-                CommandAttachments.setOrder(unit, order);
-                issued = true;
-            }
-        }
+        boolean issued = attackTarget != null
+                ? issueAttack(units, attackTarget, level)
+                : issueMove(units, packet, level);
         if (issued) {
             level.playSound(null, player.blockPosition(), SoundEvents.NOTE_BLOCK_PLING.value(),
                     SoundSource.PLAYERS, 0.5f, 1.6f);
@@ -96,42 +95,71 @@ public final class CommandInputResolver {
         }
     }
 
-    /**
-     * The order a single unit should take from this right-click, or {@code null} if it should
-     * ignore the click (e.g. a Probe told to attack).
-     */
-    private static CommandOrder orderFor(Mob unit, CommandInputPacket packet, ServerLevel level,
-                                         LivingEntity attackTarget) {
-        if (attackTarget != null) {
+    /** Focus-fire: everything that can shoot converges on one target, so there is nothing to spread. */
+    private static boolean issueAttack(List<Mob> units, LivingEntity attackTarget, ServerLevel level) {
+        boolean issued = false;
+        for (Mob unit : units) {
             // Probes have no attack; they sit the attack order out rather than march into it.
             if (unit instanceof ProbeEntity) {
-                return null;
+                continue;
             }
-            BlockPos attackPos = attackTarget.blockPosition();
-            level.sendParticles(ATTACK_TARGET_FLASH,
-                    attackPos.getX() + 0.5, attackPos.getY() + 0.5, attackPos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
-            return CommandOrder.attack(attackTarget.getUUID());
+            CommandAttachments.setOrder(unit, CommandOrder.attack(attackTarget.getUUID()));
+            issued = true;
         }
-        if (packet.kind() == CommandInputPacket.HitKind.ENTITY) {
-            // Right-clicked a non-enemy entity: just move to it.
-            Entity target = level.getEntity(packet.entityId());
-            if (target == null) {
-                return null;
+        if (issued) {
+            flash(level, attackTarget.blockPosition(), ATTACK_TARGET_FLASH);
+        }
+        return issued;
+    }
+
+    /**
+     * Move (and the Probe's MINE special case). Every unit that ends up marching gets its own
+     * {@link MoveFormation} slot around the clicked point rather than the point itself — including
+     * on the "right-clicked a friendly unit" path, which shares the destination just as readily.
+     */
+    private static boolean issueMove(List<Mob> units, CommandInputPacket packet, ServerLevel level) {
+        BlockPos centre = moveCentre(packet, level);
+        if (centre == null) {
+            return false;
+        }
+        boolean atBlock = packet.kind() != CommandInputPacket.HitKind.ENTITY;
+        boolean harvestable = atBlock && level.getBlockState(packet.pos()).is(ProbeEntity.HARVESTABLE);
+        List<Mob> movers = new ArrayList<>(units.size());
+        boolean mining = false;
+        for (Mob unit : units) {
+            if (harvestable && unit instanceof ProbeEntity) {
+                // The block itself is the order — a mining Probe is not spread into the formation.
+                CommandAttachments.setOrder(unit, CommandOrder.mine(packet.pos()));
+                mining = true;
+            } else {
+                movers.add(unit);
             }
-            BlockPos movePos = target.blockPosition();
-            level.sendParticles(MOVE_TARGET_FLASH,
-                    movePos.getX() + 0.5, movePos.getY() + 0.5, movePos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
-            return CommandOrder.move(movePos);
         }
-        BlockPos pos = packet.pos();
-        if (unit instanceof ProbeEntity && level.getBlockState(pos).is(ProbeEntity.HARVESTABLE)) {
-            level.sendParticles(MINE_TARGET_FLASH,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
-            return CommandOrder.mine(pos);
+        if (mining) {
+            flash(level, packet.pos(), MINE_TARGET_FLASH);
         }
-        level.sendParticles(MOVE_TARGET_FLASH,
+        if (!movers.isEmpty()) {
+            MoveFormation.allocate(level, centre, movers)
+                    .forEach((unit, slot) -> CommandAttachments.setOrder(unit, CommandOrder.move(slot)));
+            // One burst at the point that was clicked, not one per unit: the player asked for a
+            // single destination and a 24-unit selection should not fire 24 particle packets.
+            flash(level, centre, MOVE_TARGET_FLASH);
+        }
+        return mining || !movers.isEmpty();
+    }
+
+    /** The point a move order is centred on: a right-clicked entity's block, else the clicked block. */
+    private static BlockPos moveCentre(CommandInputPacket packet, ServerLevel level) {
+        if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
+            return packet.pos();
+        }
+        Entity target = level.getEntity(packet.entityId());
+        return target == null ? null : target.blockPosition();
+    }
+
+    private static void flash(ServerLevel level, BlockPos pos, DustParticleOptions particle) {
+        level.sendParticles(particle,
                 pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 12, 0.25, 0.25, 0.25, 0.0);
-        return CommandOrder.move(pos);
     }
 
     private static Mob friendlyUnitAt(CommandInputPacket packet, ServerLevel level, Faction owner) {

@@ -158,16 +158,18 @@ public class AsteriskCraft {
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
                     // Deliberately narrower than the rendered model: the pauldrons and their horns
-                    // reach ~1.25 blocks across, but the pathfinder sizes nodes by ceil(width), so
-                    // 0.8 still occupies one node and the Zealot keeps fitting through one-block
-                    // gaps. Matching the true width (like the Dragoon's 1.1) would make the mod's
-                    // main melee unit two nodes wide and quietly change how it navigates. The
-                    // shoulders overhanging the hitbox is the better trade.
+                    // reach ~1.25 blocks across, but the pathfinder sizes a node's footprint by
+                    // floor(width + 1), so 0.8 still occupies one node and the Zealot keeps fitting
+                    // through one-block gaps. Matching the true width (like the Dragoon's 1.1) would
+                    // make the mod's main melee unit two nodes wide and quietly change how it
+                    // navigates. The shoulders overhanging the hitbox is the better trade.
                     //
                     // Height does reach the top of the visible model: horn tips sit at model y=-9.4
-                    // against feet at y=24, i.e. 1.98 blocks at the renderer's 0.95 scale. Going from
-                    // 1.95 to 2.0 costs nothing, since the pathfinder rounds height up to 2 either way.
-                    .sized(0.8f, 2.0f)
+                    // against feet at y=24, i.e. 1.98 blocks at the renderer's 0.95 scale. It must
+                    // stay *under* 2.0 though: the same floor(height + 1) rule means 1.99 needs two
+                    // blocks of vertical clearance to path but a flat 2.0 needs three, which silently
+                    // shuts the unit out of doorways and 2-high tunnels the Zerg units walk through.
+                    .sized(0.8f, 1.99f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("zealot"))));
 
@@ -177,7 +179,17 @@ public class AsteriskCraft {
                     // box). Height reaches the top of the visible model — the body pod rides high on
                     // tall vertical legs, so the rendered walker stands ~1.98 blocks (see
                     // client/DragoonModel: feet at model y=24, cockpit dome at ~-3.5, x1.15 render scale).
-                    .sized(1.1f, 2.0f)
+                    //
+                    // 1.99 rather than a flat 2.0 for the clearance reason spelled out on the Zealot:
+                    // the pathfinder's floor(height + 1) would demand three blocks of head-room at 2.0.
+                    //
+                    // The width is the one deliberate exception in the mod. floor(1.1 + 1) = 2 makes
+                    // the Dragoon the only mobile ground unit two nodes wide, so it needs a clear
+                    // 2x2 footprint per node and cannot squeeze through a one-block gap. That is
+                    // accepted for the walker's silhouette; the crowding it used to cause on group
+                    // move orders is handled in the command layer instead (see command/MoveFormation
+                    // and entity/ai/CommandedMoveGoal), not by shrinking the box.
+                    .sized(1.1f, 1.99f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dragoon"))));
 
