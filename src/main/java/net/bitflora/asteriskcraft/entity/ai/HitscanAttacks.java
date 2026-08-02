@@ -73,7 +73,7 @@ public final class HitscanAttacks {
         double reach = bounce.searchRadius() * bounce.maxHits();
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class,
                 target.getBoundingBox().inflate(reach),
-                e -> e.isAlive() && e != target && FactionAttachments.areEnemies(attacker, e));
+                e -> e.isAlive() && e != target && FactionAttachments.isHostile(attacker, e));
 
         List<LivingEntity> hits = BounceChain.resolve(target, candidates, bounce.maxHits(),
                 (double) bounce.searchRadius() * bounce.searchRadius(), LivingEntity::distanceToSqr);

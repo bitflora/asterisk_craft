@@ -61,7 +61,9 @@ public final class SunkenSpikeDamageHandler {
 
         LivingEntity target = event.getEntity();
         LivingEntity owner = spike.getOwner();
-        if (owner == null || !FactionAttachments.areEnemies(owner, target)) {
+        // isHostile, not areEnemies: the colony acquires wild monsters through FactionTargetGoal like
+        // every other unit, so the damage guard has to agree or it would impale a zombie for nothing.
+        if (owner == null || !FactionAttachments.isHostile(owner, target)) {
             return;
         }
         if (!(target.level() instanceof ServerLevel level)) {

@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.FactionAttachments;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,15 +18,14 @@ public final class PhotonCannonTargeting {
     }
 
     /**
-     * A candidate is fair game if it's alive and either belongs to an enemy faction of the
-     * cannon, or is a vanilla hostile monster (zombies, creepers, etc.) — those default to
-     * {@link Faction#NEUTRAL} but the cannon should still defend the base against them. The
-     * monster fallback is gated on the target actually being {@code NEUTRAL} (not just a Java
-     * {@code Monster} subclass), since faction-tagged combat units (Zealot, Zergling, Dragoon,
-     * Hydralisk) are themselves {@code Monster} subclasses and must never be caught by it.
+     * A candidate is fair game if it's alive and hostile to the cannon. Hostility itself is the
+     * shared rule in {@link FactionAttachments#isHostile(Faction, Faction, boolean)} — including the
+     * wild-monster carve-out, which started here but is what <em>every</em> combat unit needs, so it
+     * lives with the faction code now rather than being the cannon's private policy. This method
+     * remains as the cannon's "alive and targetable" wrapper.
      */
     public static boolean isTargetable(Faction cannon, Faction target, boolean alive, boolean isMonster) {
-        return alive && (cannon.isEnemy(target) || (target == Faction.NEUTRAL && isMonster));
+        return alive && FactionAttachments.isHostile(cannon, target, isMonster);
     }
 
     /** Returns the candidate with the smallest distance (empty if the list is empty). */

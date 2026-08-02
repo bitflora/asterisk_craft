@@ -9,7 +9,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import java.util.EnumSet;
 
 /**
- * Retaliation: a unit struck by an enemy-faction attacker switches its target to that attacker,
+ * Retaliation: a unit struck by a hostile attacker switches its target to that attacker,
  * taking priority over every other target-selector goal (autonomous {@link FactionTargetGoal}
  * acquisition and a player's {@link CommandedAttackGoal} order alike) — a unit under fire fights
  * back first. Install at the lowest (most urgent) target-selector priority number on any combat
@@ -28,7 +28,7 @@ public class RetaliateGoal extends Goal {
     public boolean canUse() {
         LivingEntity attacker = this.mob.getLastHurtByMob();
         return attacker != null && attacker.isAlive()
-                && FactionAttachments.areEnemies(this.mob, attacker)
+                && FactionAttachments.isHostile(this.mob, attacker)
                 && withinFollowRange(attacker);
     }
 
