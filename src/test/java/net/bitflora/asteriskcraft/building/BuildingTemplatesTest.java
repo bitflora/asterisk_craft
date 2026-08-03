@@ -51,6 +51,30 @@ class BuildingTemplatesTest {
         assertSingleCore("hive", "asteriskcraft:hive_core");
     }
 
+    // --- declared footprints (the client's placement outline) vs. the templates themselves ---
+    // A client can't load a template — they live under data/ and only a server's
+    // StructureTemplateManager reads them — so each kit declares its building's box up front. These
+    // pin the declaration to the .nbt, so re-exporting a resized building fails the build here
+    // instead of silently drawing the player an outline of the wrong volume.
+
+    @Test
+    void nexusFootprintMatchesTemplate() {
+        assertFootprint("nexus", "asteriskcraft:nexus_core", BuildingTemplates.NEXUS_FOOTPRINT);
+    }
+
+    @Test
+    void gatewayFootprintMatchesTemplate() {
+        assertFootprint("gateway", "asteriskcraft:gateway_core", BuildingTemplates.GATEWAY_FOOTPRINT);
+    }
+
+    private static void assertFootprint(String template, String coreBlockId, BuildingTemplates.Footprint footprint) {
+        CompoundTag tag = load(template);
+        assertEquals(readPos(tag.getListOrEmpty("size")), new BlockPos(footprint.size()),
+                "declared size of " + template + " no longer matches " + template + ".nbt");
+        assertEquals(findBlocks(tag, coreBlockId).getFirst(), footprint.coreOffset(),
+                "declared core offset of " + template + " no longer matches " + template + ".nbt");
+    }
+
     private static void assertSingleCore(String template, String coreBlockId) {
         CompoundTag tag = load(template);
         BlockPos size = readPos(tag.getListOrEmpty("size"));

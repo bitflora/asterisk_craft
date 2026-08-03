@@ -168,12 +168,14 @@ public final class GameBootstrap {
 
         // No support fill under the Nexus: its end-stone-brick platform is the base, and a quartz
         // apron poking out from under it read as a mistake.
-        BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.NEXUS,
+        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, BuildingTemplates.NEXUS,
                 AsteriskCraft.NEXUS_CORE.get(), null);
-        if (core == null) {
+        if (placed == null) {
             AsteriskCraft.LOGGER.error("AsteriskCraft: the Nexus template holds no core block");
             return;
         }
+        // No warp scaffold: the starting Nexus is standing finished when the world begins (R1).
+        BlockPos core = placed.core();
 
         level.setData(GameAttachments.NEXUS_POS, core);
         if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
@@ -445,11 +447,13 @@ public final class GameBootstrap {
         // unlike the Protoss stonework there is nothing foreign to see. This matters because
         // highestGround raises the mound onto the highest column of its footprint: on a slope the
         // downhill side would otherwise overhang open air.
-        BlockPos core = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
+        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
                 AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
-        if (core == null) {
+        if (placed == null) {
             return null;
         }
+        // No warp scaffold either: a Hive is pre-placed, with no warp phase to fill in over.
+        BlockPos core = placed.core();
         if (level.getBlockEntity(core) instanceof HiveBlockEntity hive) {
             hive.setFaction(Faction.ZERG);
             for (int i = 0; i < INITIAL_DRONES_PER_HIVE; i++) {

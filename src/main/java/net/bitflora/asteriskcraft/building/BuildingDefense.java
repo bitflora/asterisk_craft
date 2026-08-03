@@ -28,7 +28,9 @@ import net.minecraft.world.level.storage.ValueOutput;
  *
  * <p>While warping in, both pools are halved and the whole hit-splitting rule still applies as
  * normal; finishing the warp scales what survived back up ({@link WarpInVulnerability}), so a
- * building caught mid-warp comes out of it having sustained twice the damage.
+ * building caught mid-warp comes out of it having sustained twice the damage. A kit-warped building
+ * also stands as glass for that whole phase and fills itself in over it ({@link WarpScaffold}), which
+ * is the one thing that can lengthen the countdown rather than only run it down.
  *
  * <p>The damage split is exposed as a pure {@link #resolve} so it is unit-testable without a world.
  */
@@ -40,11 +42,14 @@ public final class BuildingDefense {
 
     private final int maxHealth;
     private final int maxShield;
+    private final int warpDuration;
 
     private int health;
     private float shield;
     private int warpTicksRemaining;
     private int shieldRegenDelay;
+    /** The glass layout that fills in over the warp. Empty for a building that was never warped in. */
+    private final WarpScaffold scaffold = new WarpScaffold();
 
     /**
      * @param maxHealth    siege HP once fully warped in
@@ -55,6 +60,7 @@ public final class BuildingDefense {
     public BuildingDefense(int maxHealth, int maxShield, int warpDuration) {
         this.maxHealth = maxHealth;
         this.maxShield = maxShield;
+        this.warpDuration = warpDuration;
         this.warpTicksRemaining = warpDuration;
         this.health = Math.round(effectiveMax(maxHealth));
         this.shield = effectiveMax(maxShield);
@@ -112,19 +118,72 @@ public final class BuildingDefense {
     }
 
     /**
-     * {@link #tick()} plus the warp-in presentation the Protoss buildings share: soul-fire flames
-     * while the structure is still materialising, a beacon chime the moment it stands up. Returns
-     * true while it is still warping — i.e. "this building isn't open for business yet".
+     * Starts this building's warp-in from the top: the full countdown, both pools back down to their
+     * mid-warp halves, and the just-stamped layout frozen into the glass scaffold that materialises
+     * over it. The exact inverse of {@link #skipWarpIn}, and the only way a scaffold is ever raised —
+     * glass with no countdown running it down would stand there forever.
+     *
+     * <p>Load-bearing, not belt-and-braces: a building stamped from a structure template comes back
+     * carrying the block-entity NBT the structure block captured in the <em>design</em> world, where
+     * it was standing finished (see docs/neoforge-api-notes.md). So a freshly warped-in building
+     * arrives with a spent countdown and has to be told to warp, rather than being trusted to start
+     * out that way.
+     */
+    public void beginWarpIn(ServerLevel level, BuildingTemplates.Placed placed) {
+        if (this.restartWarpIn()) {
+            this.scaffold.raise(level, placed);
+        }
+    }
+
+    /**
+     * The state half of {@link #beginWarpIn} — countdown and pools, no world — split out so the reset
+     * is testable without a live level. False for a building with no warp phase at all (a Hive), which
+     * is also what keeps a scaffold from being raised with no countdown to run it down.
+     */
+    boolean restartWarpIn() {
+        if (this.warpDuration <= 0) {
+            return false;
+        }
+        this.warpTicksRemaining = this.warpDuration;
+        this.health = Math.round(effectiveMax(this.maxHealth));
+        this.shield = effectiveMax(this.maxShield);
+        return true;
+    }
+
+    /**
+     * Clears the unfinished glass away when this building is destroyed — see
+     * {@link WarpScaffold#collapse}. A no-op for anything not caught mid-warp.
+     */
+    public void collapseScaffold(Level level) {
+        if (level instanceof ServerLevel serverLevel) {
+            this.scaffold.collapse(serverLevel);
+        }
+    }
+
+    /**
+     * {@link #tick()} plus the warp-in presentation the Protoss buildings share: the layout filling
+     * in pane by pane out of its glass scaffold, soul-fire flames while it does, and a beacon chime
+     * the moment it stands up. Returns true while it is still warping — i.e. "this building isn't
+     * open for business yet".
+     *
+     * <p>The scaffold is ticked before the countdown so panes smashed since the last sweep have
+     * already lengthened the warp they are being paced against.
      */
     public boolean tickWarpIn(Level level, BlockPos pos) {
+        ServerLevel serverLevel = level instanceof ServerLevel server ? server : null;
+        if (serverLevel != null && this.isWarping()) {
+            this.warpTicksRemaining += this.scaffold.tick(serverLevel, this.warpTicksRemaining);
+        }
         boolean completed = this.tick();
-        if (level instanceof ServerLevel serverLevel) {
-            if (this.isWarping()) {
-                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.4, 0.6, 0.4, 0.02);
-            } else if (completed) {
-                serverLevel.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
-            }
+        if (serverLevel == null) {
+            return this.isWarping();
+        }
+        if (completed) {
+            this.scaffold.finish(serverLevel); // nothing may still be glass once the building is open
+            serverLevel.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
+        } else if (this.isWarping()) {
+            serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.4, 0.6, 0.4, 0.02);
         }
         return this.isWarping();
     }
@@ -189,6 +248,7 @@ public final class BuildingDefense {
         output.putFloat("Shield", this.shield);
         output.putInt("ShieldDelay", this.shieldRegenDelay);
         output.putInt("WarpTicks", this.warpTicksRemaining);
+        this.scaffold.save(output);
     }
 
     /**
@@ -202,5 +262,6 @@ public final class BuildingDefense {
         this.health = Math.min(this.maxHealth(), input.getIntOr("CoreHealth", this.maxHealth()));
         this.shield = Math.min(this.maxShield(), input.getFloatOr("Shield", this.maxShield()));
         this.shieldRegenDelay = input.getIntOr("ShieldDelay", 0);
+        this.scaffold.load(input);
     }
 }

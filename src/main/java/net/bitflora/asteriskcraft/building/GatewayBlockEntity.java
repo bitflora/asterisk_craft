@@ -270,6 +270,9 @@ public class GatewayBlockEntity extends BlockEntity
         // Deliberately skip super: vanilla would drop+clear this Container's contents, but that
         // Container is the shared Protoss army bank (ArmyLinkedContainer) — one Gateway breaking
         // must not dump/clear resources the Nexus and other Gateways still depend on.
+        if (this.level != null) {
+            this.defense.collapseScaffold(this.level);
+        }
     }
 
     // --- ArmyLinkedContainer ---

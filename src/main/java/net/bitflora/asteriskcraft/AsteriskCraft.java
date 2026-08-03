@@ -109,13 +109,15 @@ public class AsteriskCraft {
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
-            props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE));
+            props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE,
+                    BuildingTemplates.GATEWAY_FOOTPRINT));
 
     // Bought from the Nexus's own production menu (paid from the shared army bank) rather than
     // crafted, unlike the other kits — see NexusBlockEntity#trainOption. An expansion Nexus, so
     // it's deliberately not offered as a cheap personal-inventory crafting-table recipe.
     public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
-            props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE));
+            props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE,
+                    BuildingTemplates.NEXUS_FOOTPRINT));
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.

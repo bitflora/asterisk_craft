@@ -281,6 +281,9 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
         // Container is the shared Protoss army bank (ArmyLinkedContainer) — the Nexus breaking
         // must not dump/clear resources Gateways still depend on. CoreSpoils knocks a measured
         // share of that pool loose instead.
+        if (this.level != null) {
+            this.defense.collapseScaffold(this.level);
+        }
         CoreSpoils.spill(this.level, this.buildingFaction(), pos, this);
         GameOutcome.onCoreDestroyed(this.level, pos);
     }

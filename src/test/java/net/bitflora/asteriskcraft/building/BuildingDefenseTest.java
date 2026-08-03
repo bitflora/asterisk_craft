@@ -29,6 +29,34 @@ class BuildingDefenseTest {
                 "the building you lose the game with must be the sturdier one");
     }
 
+    /**
+     * A kit-stamped building has to be <em>told</em> to warp in. It arrives carrying the block-entity
+     * NBT the structure block captured in the design world, where it was standing finished — a spent
+     * countdown and full pools — so placement resets both rather than trusting what it was handed.
+     */
+    @Test
+    void aBuildingToldToWarpStartsItsCountdownOverAtHalfStrength() {
+        BuildingDefense defense = new BuildingDefense(GatewayBlockEntity.MAX_HEALTH,
+                GatewayBlockEntity.SHIELD, GatewayBlockEntity.WARP_TICKS);
+        defense.skipWarpIn(); // the state a stamped template effectively leaves behind
+        assertFalse(defense.isWarping());
+
+        assertTrue(defense.restartWarpIn());
+        assertTrue(defense.isWarping());
+        assertEquals(GatewayBlockEntity.WARP_TICKS, defense.warpTicksRemaining());
+        assertEquals(125, defense.health(), "a warping building stands at half its HP");
+        assertEquals(125.0f, defense.shield(), "and half its shields");
+    }
+
+    @Test
+    void aBuildingWithNoWarpPhaseCannotBeToldToWarp() {
+        // A Hive. Refusing here is what stops a scaffold being raised with no countdown to fill it in.
+        BuildingDefense defense = new BuildingDefense(FactionCore.CORE_MAX_HEALTH, 0, 0);
+        assertFalse(defense.restartWarpIn());
+        assertFalse(defense.isWarping());
+        assertEquals(FactionCore.CORE_MAX_HEALTH, defense.health());
+    }
+
     @Test
     void shieldsSoakDamageBeforeHp() {
         BuildingDefense.Hit hit = BuildingDefense.resolve(250, 250.0f, 20);

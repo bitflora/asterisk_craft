@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,6 +39,30 @@ public final class BuildingTemplates {
     public static final Identifier NEXUS = AsteriskCraft.id("nexus");
     public static final Identifier GATEWAY = AsteriskCraft.id("gateway");
     public static final Identifier HIVE = AsteriskCraft.id("hive");
+
+    /**
+     * A template's bounding box and where its core sits inside it, declared up front so the
+     * <em>client</em> can outline the volume a kit needs free before anything is stamped. Templates
+     * live under {@code data/} and only ever load through a server's {@code StructureTemplateManager}
+     * (see docs/neoforge-api-notes.md), so a client holding a kit has nothing to ask.
+     *
+     * <p>The {@code .nbt} stays the source of truth — the server reads both numbers out of the loaded
+     * template and never consults these — and {@code BuildingTemplatesTest} fails the build if a
+     * re-exported building drifts from what is declared here.
+     */
+    public record Footprint(Vec3i size, BlockPos coreOffset) {
+        /** Template-local (0,0,0) in world space, for a core warped in over {@code origin}. */
+        public BlockPos minCorner(BlockPos origin) {
+            return BuildingTemplates.minCorner(origin, this.coreOffset);
+        }
+    }
+
+    public static final Footprint NEXUS_FOOTPRINT = new Footprint(new Vec3i(9, 4, 9), new BlockPos(4, 3, 4));
+    public static final Footprint GATEWAY_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
+
+    /** Where a stamped template landed: its core block, its min corner, and its size. */
+    public record Placed(BlockPos core, BlockPos min, Vec3i size) {
+    }
 
     /**
      * Head-room cleared above the platform even for a short template, so a building is never warped
@@ -82,13 +107,18 @@ public final class BuildingTemplates {
         if (coreOffset == null) {
             return false;
         }
-        Vec3i size = structure.getSize();
-        BlockPos min = minCorner(origin, coreOffset);
+        return isAreaClear(level, minCorner(origin, coreOffset), structure.getSize());
+    }
+
+    /**
+     * The same "is there room here" rule over an already-known box, so the client can outline it
+     * (see {@code client/KitPlacementPreview}) with exactly the test the server will apply.
+     */
+    public static boolean isAreaClear(BlockGetter level, BlockPos min, Vec3i size) {
         for (int dx = 0; dx < size.getX(); dx++) {
             for (int dy = 0; dy < size.getY(); dy++) {
                 for (int dz = 0; dz < size.getZ(); dz++) {
-                    BlockState current = level.getBlockState(min.offset(dx, dy, dz));
-                    if (!current.isAir() && !current.canBeReplaced()) {
+                    if (!canBuildIn(level.getBlockState(min.offset(dx, dy, dz)))) {
                         return false;
                     }
                 }
@@ -97,16 +127,20 @@ public final class BuildingTemplates {
         return true;
     }
 
+    private static boolean canBuildIn(BlockState state) {
+        return state.isAir() || state.canBeReplaced();
+    }
+
     /**
-     * Preps the site and stamps the template over {@code origin}, returning the world position of
-     * its {@code coreBlock} — or null if the template is missing or holds no core, which leaves the
-     * caller free to bail out instead of guessing where the core landed.
+     * Preps the site and stamps the template over {@code origin}, returning where it landed — or
+     * null if the template is missing or holds no core, which leaves the caller free to bail out
+     * instead of guessing where the core landed.
      *
      * <p>{@code support} fills any gap under the footprint; pass null to leave the ground as it
      * lies. The Protoss buildings pass null so their own stonework isn't sat on a plinth of some
      * other material, at the cost of a platform edge that can overhang where the terrain falls away.
      */
-    public static @Nullable BlockPos place(ServerLevel level, BlockPos origin, Identifier template,
+    public static @Nullable Placed place(ServerLevel level, BlockPos origin, Identifier template,
             Block coreBlock, @Nullable BlockState support) {
         StructureTemplate structure = load(level, template);
         if (structure == null) {
@@ -123,7 +157,7 @@ public final class BuildingTemplates {
         // running it afterwards would erase the building it just supported.
         prepareSite(level, min, size.getX(), size.getZ(), Math.max(size.getY(), MIN_HEADROOM), support);
         structure.placeInWorld(level, min, min, settings(), level.getRandom(), Block.UPDATE_ALL);
-        return min.offset(coreOffset.getX(), coreOffset.getY(), coreOffset.getZ());
+        return new Placed(min.offset(coreOffset.getX(), coreOffset.getY(), coreOffset.getZ()), min, size);
     }
 
     private static @Nullable StructureTemplate load(ServerLevel level, Identifier template) {
