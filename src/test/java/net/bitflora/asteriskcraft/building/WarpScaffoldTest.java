@@ -1,19 +1,24 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The two pure rules behind the warp-in scaffold: how fast panes materialise, and in what order.
- * Raising and filling a scaffold itself edits the world, so it is verified with {@code runClient}.
+ * The pure rules behind the warp-in scaffold: how fast panes materialise, in what order, and what a
+ * smashed one costs. Raising and filling a scaffold itself edits the world, so the fill and the
+ * damage landing on completion are verified with {@code runClient}.
  */
 class WarpScaffoldTest {
     private static final BlockState STONE = Blocks.STONE.defaultBlockState();
@@ -48,34 +53,58 @@ class WarpScaffoldTest {
     }
 
     @Test
-    void layoutFillsBottomUp() {
-        List<WarpScaffold.Pane> panes = sorted(
-                new BlockPos(0, 2, 0), new BlockPos(0, 0, 0), new BlockPos(0, 1, 0));
-        assertEquals(List.of(0, 1, 2), panes.stream().map(pane -> pane.pos().getY()).toList());
+    void theLayoutFillsInAScrambledOrder() {
+        List<WarpScaffold.Pane> panes = layout(40);
+        List<WarpScaffold.Pane> scrambled = new ArrayList<>(panes);
+        WarpScaffold.scramble(scrambled, RandomSource.create(1234L));
+        assertNotEquals(panes, scrambled, "panes must not go in the order the layout was walked in");
     }
 
     @Test
-    void aLayerFillsOutwardFromTheCoreColumn() {
-        List<WarpScaffold.Pane> panes = sorted(
-                new BlockPos(4, 0, 0), new BlockPos(1, 0, 0), new BlockPos(2, 0, 0));
-        assertEquals(List.of(1, 2, 4), panes.stream().map(pane -> pane.pos().getX()).toList());
+    void scramblingLosesNoPanes() {
+        // Every square of the layout has to turn up exactly once: the scrambled list is the whole
+        // record of what is still glass, so a pane dropped here would stay glass forever.
+        List<WarpScaffold.Pane> panes = layout(40);
+        List<WarpScaffold.Pane> scrambled = new ArrayList<>(panes);
+        WarpScaffold.scramble(scrambled, RandomSource.create(1234L));
+        assertEquals(new HashSet<>(panes), new HashSet<>(scrambled));
+        assertEquals(panes.size(), scrambled.size());
     }
 
     @Test
-    void tiedPanesHaveOneFixedOrder() {
-        // The order is saved as a list and has to survive a reload, so equidistant panes can't be
-        // left to sort however the input happened to arrive.
-        BlockPos north = new BlockPos(0, 0, -1);
-        BlockPos east = new BlockPos(1, 0, 0);
-        assertEquals(sorted(north, east), sorted(east, north));
+    void aSmashedPaneIsMarkedRatherThanDropped() {
+        // It keeps its place in the fill order — its real block is due when it was always due — and
+        // the mark is only there so the same square isn't charged for on every sweep.
+        WarpScaffold.Pane pane = new WarpScaffold.Pane(new BlockPos(1, 0, 0), STONE);
+        assertFalse(pane.smashed());
+        WarpScaffold.Pane smashed = pane.smash();
+        assertTrue(smashed.smashed());
+        assertEquals(pane.pos(), smashed.pos(), "a smashed pane still owns its square");
+        assertEquals(pane.finished(), smashed.finished(), "and still knows what it becomes");
     }
 
-    private static List<WarpScaffold.Pane> sorted(BlockPos... positions) {
+    /**
+     * What smashing the scaffold is worth, against the buildings it can be raised on. Both numbers are
+     * design decisions rather than derived, so they're pinned here: the delay is what an attacker
+     * buys, and the damage is what the building pays for it once it stands up.
+     */
+    @Test
+    void smashingCostsMatchDesign() {
+        assertEquals(20 * 10, WarpScaffold.BREAK_PENALTY_TICKS, "a smashed pane costs the warp 10 seconds");
+        assertEquals(20, WarpScaffold.SMASHED_PANE_DAMAGE);
+
+        // A Gateway's 40-odd panes against its 250 HP behind 250 shields: smashing about 25 of them
+        // is enough to collapse it the moment it comes online.
+        int gatewayPool = GatewayBlockEntity.MAX_HEALTH + GatewayBlockEntity.SHIELD;
+        assertEquals(25, gatewayPool / WarpScaffold.SMASHED_PANE_DAMAGE);
+    }
+
+    /** A layout of {@code count} panes, in the order the template's box is walked. */
+    private static List<WarpScaffold.Pane> layout(int count) {
         List<WarpScaffold.Pane> panes = new ArrayList<>();
-        for (BlockPos pos : positions) {
-            panes.add(new WarpScaffold.Pane(pos, STONE));
+        for (int i = 0; i < count; i++) {
+            panes.add(new WarpScaffold.Pane(CORE.offset(i % 5, i / 25, (i / 5) % 5), STONE));
         }
-        panes.sort(WarpScaffold.fillOrder(CORE));
         return panes;
     }
 }

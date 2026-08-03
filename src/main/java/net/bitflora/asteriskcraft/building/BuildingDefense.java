@@ -30,7 +30,9 @@ import net.minecraft.world.level.storage.ValueOutput;
  * normal; finishing the warp scales what survived back up ({@link WarpInVulnerability}), so a
  * building caught mid-warp comes out of it having sustained twice the damage. A kit-warped building
  * also stands as glass for that whole phase and fills itself in over it ({@link WarpScaffold}), which
- * is the one thing that can lengthen the countdown rather than only run it down.
+ * is the one thing that can lengthen the countdown rather than only run it down — and whose smashed
+ * panes are charged as siege damage the instant the building stands up, on the finished pools rather
+ * than the halved ones.
  *
  * <p>The damage split is exposed as a pure {@link #resolve} so it is unit-testable without a world.
  */
@@ -181,6 +183,12 @@ public final class BuildingDefense {
         if (completed) {
             this.scaffold.finish(serverLevel); // nothing may still be glass once the building is open
             serverLevel.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
+            // Every pane an attacker smashed comes due now, against the pools the building actually
+            // finished with — a warp harried the whole way through can collapse as it comes online.
+            int owed = this.scaffold.collectDamageOwed();
+            if (owed > 0) {
+                this.damage(owed, serverLevel, pos);
+            }
         } else if (this.isWarping()) {
             serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
                     pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.4, 0.6, 0.4, 0.02);

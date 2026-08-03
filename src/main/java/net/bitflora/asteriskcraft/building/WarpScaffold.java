@@ -8,6 +8,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -15,8 +17,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -24,12 +24,18 @@ import java.util.List;
  * the core is held as warp glass, and the real stonework materialises pane by pane over the warp
  * countdown, so a building visibly builds itself rather than blinking into existence finished.
  *
- * <p>The panes are paced against the time left rather than against a fixed schedule — the next one
- * lands after {@link #paneInterval} ticks, recomputed each time — which is what keeps the fill in
- * step with a countdown that can grow: <b>smashing a pane costs the warp {@value #BREAK_PENALTY_TICKS}
- * ticks</b> (ten seconds). A smashed pane is materialised on the spot rather than re-glazed, so the
- * building is never left with a hole in it and the same square can't be farmed for penalty after
- * penalty; the total an attacker can wring out of a warp is bounded by its pane count.
+ * <p>Panes go in a scrambled order, so the layout speckles into place from all over rather than
+ * rising in tidy layers, and they are paced against the time left rather than against a fixed
+ * schedule — the next one lands after {@link #paneInterval} ticks, recomputed each time — which is
+ * what keeps the fill in step with a countdown that can grow.
+ *
+ * <p>Smashing a pane costs the warp twice. It adds {@value #BREAK_PENALTY_TICKS} ticks (ten seconds)
+ * to the countdown, and it books {@value #SMASHED_PANE_DAMAGE} points of siege damage that land the
+ * moment the building stands up — deliberately not while it is warping, where the halved pools would
+ * double them (see {@link WarpInVulnerability}). A smashed pane is left as the hole the attacker made
+ * and keeps its slot in the fill order, so its real block arrives exactly when it would have anyway;
+ * marking it is what stops the same square being charged for on every sweep, and bounds what an
+ * attacker can wring out of a warp by its pane count.
  *
  * <p>Only kit-warped buildings raise a scaffold. A pre-placed one (a Hive, the starting Nexus) has no
  * warp phase to fill in, and its {@link BuildingDefense} simply carries the empty scaffold every
@@ -42,6 +48,9 @@ public final class WarpScaffold {
     /** What one smashed pane adds to the warp countdown. */
     public static final int BREAK_PENALTY_TICKS = 200; // 10 seconds
 
+    /** What one smashed pane costs the finished building in siege damage, collected on completion. */
+    public static final int SMASHED_PANE_DAMAGE = 20;
+
     /** How often the standing panes are swept for smashed ones. */
     private static final int SCAN_INTERVAL_TICKS = 5;
 
@@ -52,18 +61,33 @@ public final class WarpScaffold {
      */
     private static final int SWAP_FLAGS = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
 
-    /** One block of the layout: where it goes and what it becomes. */
-    public record Pane(BlockPos pos, BlockState finished) {
+    /**
+     * One block of the layout: where it goes, what it becomes, and whether an attacker has already
+     * knocked it out. A smashed pane stays in the list — its slot in the fill order is what says when
+     * its real block arrives — and the flag is only there so it isn't charged for twice.
+     */
+    public record Pane(BlockPos pos, BlockState finished, boolean smashed) {
         public static final Codec<Pane> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 BlockPos.CODEC.fieldOf("pos").forGetter(Pane::pos),
-                BlockState.CODEC.fieldOf("state").forGetter(Pane::finished)
+                BlockState.CODEC.fieldOf("state").forGetter(Pane::finished),
+                Codec.BOOL.optionalFieldOf("smashed", false).forGetter(Pane::smashed)
         ).apply(instance, Pane::new));
 
         public static final Codec<List<Pane>> LIST_CODEC = CODEC.listOf();
+
+        public Pane(BlockPos pos, BlockState finished) {
+            this(pos, finished, false);
+        }
+
+        public Pane smash() {
+            return new Pane(this.pos, this.finished, true);
+        }
     }
 
-    /** Still-glass panes, in the order they materialise; emptied as the warp runs. */
+    /** Panes not yet materialised, in the order they will be; emptied as the warp runs. */
     private final List<Pane> pending = new ArrayList<>();
+    /** Running count of panes smashed this warp, owed as siege damage once the building stands up. */
+    private int smashedPanes;
     private int ticksToNextPane;
     private int ticksToNextScan;
 
@@ -74,6 +98,7 @@ public final class WarpScaffold {
      */
     public void raise(ServerLevel level, BuildingTemplates.Placed placed) {
         this.pending.clear();
+        this.smashedPanes = 0;
         this.ticksToNextPane = 0;
         this.ticksToNextScan = 0;
         Vec3i size = placed.size();
@@ -89,29 +114,19 @@ public final class WarpScaffold {
                 }
             }
         }
-        this.pending.sort(fillOrder(placed.core()));
+        scramble(this.pending, level.getRandom());
         for (Pane pane : this.pending) {
             level.setBlock(pane.pos(), PANE.defaultBlockState(), SWAP_FLAGS);
         }
     }
 
     /**
-     * The order a layout fills in: bottom layer first, and within a layer from the core's own column
-     * outwards, so the building grows up out of the ground instead of appearing in scattered patches.
+     * Shuffles the layout into the order it fills in, so a building speckles into place from all over
+     * rather than rising in tidy layers. Rolled once, at raise time: the order is saved as a list and
+     * has to come back off disk unchanged, so it can't be re-derived per tick.
      */
-    static Comparator<Pane> fillOrder(BlockPos core) {
-        return Comparator.<Pane>comparingInt(pane -> pane.pos().getY())
-                .thenComparingLong(pane -> horizontalDistanceSq(pane.pos(), core))
-                // Ties broken on the coordinates themselves so the order is fully determined —
-                // it is saved as a list and has to survive a reload unchanged.
-                .thenComparingInt(pane -> pane.pos().getX())
-                .thenComparingInt(pane -> pane.pos().getZ());
-    }
-
-    private static long horizontalDistanceSq(BlockPos pos, BlockPos core) {
-        long dx = pos.getX() - core.getX();
-        long dz = pos.getZ() - core.getZ();
-        return dx * dx + dz * dz;
+    static void scramble(List<Pane> panes, RandomSource random) {
+        Util.shuffle(panes, random);
     }
 
     /**
@@ -171,23 +186,35 @@ public final class WarpScaffold {
     }
 
     /**
-     * Materialises every pane that is no longer glass (mined, blown up, or battered by an attacker)
-     * and charges the warp for each. Filling the hole rather than re-glazing it is what bounds the
-     * damage: a square already paid for leaves the pending list and can't be charged twice.
+     * Books every pane that is no longer glass (mined, blown up, or battered by an attacker) and
+     * returns what they add to the countdown. The hole is left standing — the pane keeps its slot, so
+     * its real block turns up exactly when it would have anyway — and marking it is what keeps the
+     * same square from being charged for on every sweep.
      */
     private int collectSmashed(ServerLevel level) {
         int penalty = 0;
-        for (Iterator<Pane> panes = this.pending.iterator(); panes.hasNext(); ) {
-            Pane pane = panes.next();
-            if (level.getBlockState(pane.pos()).is(PANE)) {
+        for (int i = 0; i < this.pending.size(); i++) {
+            Pane pane = this.pending.get(i);
+            if (pane.smashed() || level.getBlockState(pane.pos()).is(PANE)) {
                 continue;
             }
-            panes.remove();
-            materialize(level, pane);
+            this.pending.set(i, pane.smash());
+            this.smashedPanes++;
             penalty += BREAK_PENALTY_TICKS;
             level.playSound(null, pane.pos(), SoundEvents.BEACON_DEACTIVATE, SoundSource.BLOCKS, 0.6f, 1.6f);
         }
         return penalty;
+    }
+
+    /**
+     * The siege damage owed for panes smashed during the warp, clearing the tally as it hands it over.
+     * Collected when the building stands up rather than as the panes break, so the hits land on its
+     * finished pools instead of being doubled by the mid-warp halving ({@link WarpInVulnerability}).
+     */
+    public int collectDamageOwed() {
+        int owed = this.smashedPanes * SMASHED_PANE_DAMAGE;
+        this.smashedPanes = 0;
+        return owed;
     }
 
     private static void materialize(ServerLevel level, Pane pane) {
@@ -199,12 +226,16 @@ public final class WarpScaffold {
     public void save(ValueOutput output) {
         output.store("Scaffold", Pane.LIST_CODEC, List.copyOf(this.pending));
         output.putInt("ScaffoldNextPane", this.ticksToNextPane);
+        output.putInt("ScaffoldSmashed", this.smashedPanes);
     }
 
     public void load(ValueInput input) {
         this.pending.clear();
         this.pending.addAll(input.read("Scaffold", Pane.LIST_CODEC).orElse(List.of()));
         this.ticksToNextPane = input.getIntOr("ScaffoldNextPane", 0);
+        // The tally outlives the panes it came from: a pane smashed early is still owed for when the
+        // building stands up, long after it materialised and left the list.
+        this.smashedPanes = input.getIntOr("ScaffoldSmashed", 0);
         this.ticksToNextScan = 0;
     }
 }
