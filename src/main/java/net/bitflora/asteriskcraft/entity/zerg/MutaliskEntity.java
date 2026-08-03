@@ -8,6 +8,7 @@ import net.bitflora.asteriskcraft.entity.ai.HoverFlyingNavigation;
 import net.bitflora.asteriskcraft.entity.ai.HoverGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.entity.ai.StuckWanderGoal;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -82,6 +83,9 @@ public class MutaliskEntity extends Monster implements RangedAttackMob {
     @Override
     protected void registerGoals() {
         // No FloatGoal: it flies, and the navigation is allowed to float across water anyway.
+        // Priority -1, above even the digger: it exists to take a pinned unit off whichever goal has
+        // it pinned, which it can only do from a lower priority number. See StuckWanderGoal.
+        this.goalSelector.addGoal(-1, new StuckWanderGoal(this, RANGED.range()));
         // Priority 0, as on the ground units: the siege goal must be able to preempt movement.
         this.goalSelector.addGoal(0, new SiegeBlockGoal(this, RANGED.range()));
         this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, RANGED.cooldown(), RANGED.range()));

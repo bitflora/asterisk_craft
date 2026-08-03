@@ -78,16 +78,17 @@ public final class CoreCensus {
     }
 
     /**
-     * How many cores of {@code faction} are still standing, ignoring {@code excluding} (the one
-     * being destroyed, which may not have been unregistered yet).
+     * Where every still-standing core of {@code faction} is. This is what lets code pick <i>a</i>
+     * core rather than assume there is only one — the Zerg director rolls its next wave's target
+     * out of this list, so an expansion Nexus is attacked like any other.
      *
      * <p>Also prunes entries whose block is gone — but only where the chunk is already loaded, so
      * a Nexus sitting in an unloaded chunk still counts instead of being quietly forgotten. That
      * covers cores removed by routes that skip the block entity's side effects (e.g. /setblock).
      */
-    public static int count(ServerLevel level, Faction faction, BlockPos excluding) {
+    public static List<BlockPos> standing(ServerLevel level, Faction faction) {
         List<Entry> cores = level.getData(CORES.get());
-        int standing = 0;
+        List<BlockPos> found = new ArrayList<>();
         for (Iterator<Entry> it = cores.iterator(); it.hasNext(); ) {
             Entry entry = it.next();
             if (level.hasChunkAt(entry.pos())
@@ -96,7 +97,22 @@ public final class CoreCensus {
                 it.remove();
                 continue;
             }
-            if (entry.faction() == faction && !entry.pos().equals(excluding)) {
+            if (entry.faction() == faction) {
+                found.add(entry.pos());
+            }
+        }
+        return found;
+    }
+
+    /**
+     * How many cores of {@code faction} are still standing, ignoring {@code excluding} (the one
+     * being destroyed, which may not have been unregistered yet). Shares {@link #standing}'s
+     * pruning so the census is cleaned by exactly one code path.
+     */
+    public static int count(ServerLevel level, Faction faction, BlockPos excluding) {
+        int standing = 0;
+        for (BlockPos pos : standing(level, faction)) {
+            if (!pos.equals(excluding)) {
                 standing++;
             }
         }

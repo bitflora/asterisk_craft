@@ -95,10 +95,10 @@ public final class ScriptInterpreter {
         PendingUnit target = batch.remaining().get(idx);
         List<UUID> spawned = new ArrayList<>(batch.spawned());
 
-        DirectorWorld.SpawnResult result = world.canAffordAndSpawn(target.unit(), spawned);
+        DirectorWorld.SpawnResult result = world.canAffordAndSpawn(target.unit(), batch.site().orElse(null), spawned);
         switch (result) {
             case SPAWNED -> {
-                Batch next = new Batch(isWave, replace(batch.remaining(), idx, target.minusOne()), spawned);
+                Batch next = new Batch(isWave, replace(batch.remaining(), idx, target.minusOne()), spawned, batch.site());
                 if (next.isComplete()) {
                     return finishBatch(next, isWave, state, world);
                 }
@@ -109,7 +109,7 @@ public final class ScriptInterpreter {
             }
             default -> { // UNKNOWN — drop this requirement rather than waiting forever
                 Batch next = new Batch(isWave, replace(batch.remaining(), idx, new PendingUnit(target.unit(), 0)),
-                        batch.spawned());
+                        batch.spawned(), batch.site());
                 if (next.isComplete()) {
                     return finishBatch(next, isWave, state, world);
                 }
@@ -118,6 +118,12 @@ public final class ScriptInterpreter {
         }
     }
 
+    /**
+     * Rolls a batch's quantities and its staging site, both once, at the moment the command starts.
+     * The site is rolled for a {@code Defence} exactly as for a {@code Wave}: a batch is one group
+     * of units produced in one place, and which of the two it is only decides whether it marches
+     * afterwards.
+     */
     private static Batch rollBatch(UnitList units, boolean isWave, DirectorWorld world) {
         List<PendingUnit> pending = new ArrayList<>();
         for (UnitReq req : units.reqs()) {
@@ -126,12 +132,14 @@ public final class ScriptInterpreter {
                 pending.add(new PendingUnit(req.unitName(), qty));
             }
         }
-        return new Batch(isWave, pending, List.of());
+        return new Batch(isWave, pending, List.of(), world.pickStagingSite());
     }
 
     private static StepResult finishBatch(Batch batch, boolean isWave, InterpreterState state, DirectorWorld world) {
         if (isWave) {
-            world.orderMove(batch.spawned(), world.nexus());
+            // Target picked here, at launch, rather than when the batch started: a core razed during
+            // the minute or so of training is never marched on.
+            world.orderMove(batch.spawned(), world.pickAttackTarget());
         }
         // Defence: units keep their guard order; nothing more to do.
         return advanced(state.withPc(state.pc() + 1).clearTransient());

@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.director;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.HiveBlockEntity;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
@@ -149,31 +150,64 @@ public final class ZergDirector {
         return CostPayment.payAny(bank, def.cost());
     }
 
-    /** The interpreter's live-world adapter: spawns/pays at the Hives and issues orders for one tick. */
+    /**
+     * The interpreter's live-world adapter: spawns/pays at the Hives and issues orders for one tick.
+     * {@code nexus} is the bootstrap Nexus, kept only as {@link #pickAttackTarget}'s fallback.
+     */
     private record DirectorWorldImpl(ServerLevel level, List<HiveBlockEntity> hives, BlockPos nexus)
             implements DirectorWorld {
 
         @Override
-        public SpawnResult canAffordAndSpawn(String unitName, List<UUID> out) {
+        public Optional<BlockPos> pickStagingSite() {
+            HiveBlockEntity hive = randomAwakeHive(this.level, this.hives);
+            return hive == null ? Optional.empty() : Optional.of(hive.getBlockPos());
+        }
+
+        @Override
+        public SpawnResult canAffordAndSpawn(String unitName, BlockPos site, List<UUID> out) {
             Optional<UnitDef> def = ZergUnitCatalog.resolve(unitName);
             if (def.isEmpty()) {
                 return SpawnResult.UNKNOWN;
             }
             List<HiveBlockEntity> awake = awakeHives(this.hives);
-            if (awake.isEmpty() || !payAny(awake.get(0), def.get())) {
+            if (awake.isEmpty()) {
                 return SpawnResult.UNAFFORDABLE;
             }
-            HiveBlockEntity spawnHive = awake.get(this.level.getRandom().nextInt(awake.size()));
+            // The batch's Hive if it is still standing and awake, else any — a razed or shaded Hive
+            // must not stall the batch. Paying at the Hive we spawn from is bookkeeping only: every
+            // Hive is a view onto the one ArmyBank, so which one pays makes no difference.
+            HiveBlockEntity spawnHive = findAwake(awake, site);
+            if (spawnHive == null) {
+                spawnHive = awake.get(this.level.getRandom().nextInt(awake.size()));
+            }
+            if (!payAny(spawnHive, def.get())) {
+                return SpawnResult.UNAFFORDABLE;
+            }
             BlockPos hivePos = spawnHive.getBlockPos();
             Mob unit = UnitSpawns.spawn(this.level, hivePos, def.get().type(), Faction.ZERG, def.get().dyeArmor());
             if (unit == null) {
                 AsteriskCraft.LOGGER.warn("Zerg director paid for {} but failed to spawn it", unitName);
                 return SpawnResult.UNAFFORDABLE;
             }
-            // Hold near the Hive until the batch completes; a wave later overrides this with a move order.
+            // Hold near the Hive until the batch completes; a wave later overrides this with a move
+            // order. Because the whole batch shares one Hive, this is also what masses it in one
+            // place, so a wave leaves as a group instead of trickling in from three directions.
             CommandAttachments.setOrder(unit, CommandOrder.guard(hivePos));
             out.add(unit.getUUID());
             return SpawnResult.SPAWNED;
+        }
+
+        /** The awake Hive at {@code pos}, or null if it is gone, shaded, or {@code pos} is null. */
+        private static HiveBlockEntity findAwake(List<HiveBlockEntity> awake, BlockPos pos) {
+            if (pos == null) {
+                return null;
+            }
+            for (HiveBlockEntity hive : awake) {
+                if (hive.getBlockPos().equals(pos)) {
+                    return hive;
+                }
+            }
+            return null;
         }
 
         @Override
@@ -194,9 +228,20 @@ public final class ZergDirector {
                     .forEach((mob, slot) -> CommandAttachments.setOrder(mob, CommandOrder.move(slot)));
         }
 
+        /**
+         * A random standing enemy core. Read from {@link CoreCensus} rather than
+         * {@code GameAttachments.NEXUS_POS}, which is one position written once at bootstrap and so
+         * cannot see an expansion Nexus warped in from a kit. The bootstrap position stays as the
+         * fallback for a world whose census is empty (saved before it existed, or its Nexus chunk
+         * never loaded), so behaviour there is exactly what it was.
+         */
         @Override
-        public BlockPos nexus() {
-            return this.nexus;
+        public BlockPos pickAttackTarget() {
+            List<BlockPos> cores = CoreCensus.standing(this.level, Faction.PROTOSS);
+            if (cores.isEmpty()) {
+                return this.nexus;
+            }
+            return cores.get(this.level.getRandom().nextInt(cores.size()));
         }
 
         @Override

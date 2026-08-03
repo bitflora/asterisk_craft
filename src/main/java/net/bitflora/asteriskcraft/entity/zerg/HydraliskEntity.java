@@ -8,6 +8,7 @@ import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
+import net.bitflora.asteriskcraft.entity.ai.StuckWanderGoal;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -67,6 +68,9 @@ public class HydraliskEntity extends Monster implements RangedAttackMob {
 
     @Override
     protected void registerGoals() {
+        // Priority -1, above even the digger: it exists to take a pinned unit off whichever goal has
+        // it pinned, which it can only do from a lower priority number. See StuckWanderGoal.
+        this.goalSelector.addGoal(-1, new StuckWanderGoal(this, RANGED.range()));
         this.goalSelector.addGoal(0, new FloatGoal(this));
         // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
         // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.

@@ -2,8 +2,10 @@ package net.bitflora.asteriskcraft.director.script;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -24,17 +26,32 @@ public interface DirectorWorld {
     }
 
     /**
+     * The building a whole batch is trained at and staged from, rolled once when the batch starts;
+     * empty if the army has no building able to produce right now. Rolling it per batch rather than
+     * per unit is what makes a wave arrive as one group from one place instead of trickling out of
+     * every building at once.
+     */
+    Optional<BlockPos> pickStagingSite();
+
+    /**
      * Attempts to pay for and spawn one unit of {@code unitName}, held near its producing building
      * with a guard order until the batch completes. On {@link SpawnResult#SPAWNED} the new unit's
      * UUID is appended to {@code out}.
+     *
+     * <p>{@code site} is the batch's staging site from {@link #pickStagingSite}, or null if none was
+     * available then. Implementations produce there when it can still produce, and fall back to any
+     * building that can otherwise — a batch must not stall because its chosen building was razed.
      */
-    SpawnResult canAffordAndSpawn(String unitName, List<UUID> out);
+    SpawnResult canAffordAndSpawn(String unitName, @Nullable BlockPos site, List<UUID> out);
 
     /** Orders the given (possibly since-deceased) units to attack-move to {@code dest} together. */
     void orderMove(List<UUID> unitIds, BlockPos dest);
 
-    /** The enemy base the waves march on (the player's Nexus). */
-    BlockPos nexus();
+    /**
+     * The enemy core a finished wave marches on. Re-picked at each wave's launch, so successive
+     * waves spread across the enemy's bases instead of all walking into the same defended one.
+     */
+    BlockPos pickAttackTarget();
 
     /** The world random, used to roll ranged quantities when a training command starts. */
     RandomSource random();

@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.director.script;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 
 import java.util.List;
@@ -57,8 +58,14 @@ public record InterpreterState(int pc, int waitTicks, int workerTarget, int trai
      * A {@code Defence}/{@code Wave} being trained: what's left to spawn (quantities already rolled)
      * and the UUIDs of units spawned so far, held near a Hive until the batch completes. On
      * completion a {@code Wave} orders all {@code spawned} units to attack together.
+     *
+     * <p>{@code site} is the one building the whole batch is trained at, rolled once when the batch
+     * starts (see {@link DirectorWorld#pickStagingSite}). It rides along in the persisted state so a
+     * save/reload mid-training resumes at the same Hive rather than scattering the rest of the
+     * batch; it is {@link Optional#empty()} on a batch rolled while no building could produce, and
+     * on batches saved before staging sites existed.
      */
-    public record Batch(boolean isWave, List<PendingUnit> remaining, List<UUID> spawned) {
+    public record Batch(boolean isWave, List<PendingUnit> remaining, List<UUID> spawned, Optional<BlockPos> site) {
         public Batch {
             remaining = List.copyOf(remaining);
             spawned = List.copyOf(spawned);
@@ -67,7 +74,8 @@ public record InterpreterState(int pc, int waitTicks, int workerTarget, int trai
         public static final Codec<Batch> CODEC = RecordCodecBuilder.create(inst -> inst.group(
                 Codec.BOOL.fieldOf("is_wave").forGetter(Batch::isWave),
                 PendingUnit.CODEC.listOf().fieldOf("remaining").forGetter(Batch::remaining),
-                UUIDUtil.CODEC.listOf().fieldOf("spawned").forGetter(Batch::spawned)
+                UUIDUtil.CODEC.listOf().fieldOf("spawned").forGetter(Batch::spawned),
+                BlockPos.CODEC.optionalFieldOf("site").forGetter(Batch::site)
         ).apply(inst, Batch::new));
 
         public boolean isComplete() {
