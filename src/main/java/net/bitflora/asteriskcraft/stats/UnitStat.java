@@ -28,6 +28,19 @@ public record UnitStat(
         double armor,
         double movementSpeed,
         double knockbackResistance,
+        /**
+         * How high a rise this unit walks up without jumping. The vanilla default of 0.6 is under a
+         * full block, so an ordinary mob has to <em>jump</em> every 1-block step, and
+         * {@code MoveControl.tick} only fires that jump once the mob is within
+         * {@code sqrt(max(1, width))} of the waypoint — a margin a wide unit stopping half its width
+         * short of the ledge can fail to reach. Raising this past 1.0 lets a big unit simply step up.
+         *
+         * <p>Keep it <b>under 2.0</b>: {@code WalkNodeEvaluator.getNeighbors} derives its climb
+         * allowance as {@code floor(max(1, maxUpStep))}, so 2.0 would let the pathfinder plan routes
+         * up sheer 2-block walls. Everything in [1.0, 2.0) changes how a unit executes a path without
+         * changing which paths exist. Pinned by {@code entity.UnitFootprintTest}.
+         */
+        double stepHeight,
         double followRange,
         /** Protoss shield pool; 0 = none. The Protoss-only gate stays in {@code combat.ShieldAttachments}. */
         int shield,
@@ -41,6 +54,13 @@ public record UnitStat(
         Optional<Bounce> bounce,
         /** Length of the client strike animation, in ticks; 0 = none. */
         int attackAnimTicks,
+        /**
+         * How long this unit takes to produce, in ticks. Read by every producer — the Gateway and
+         * Nexus queues and the Zerg director's training cadence — so the number means one thing
+         * whichever race is building it. 0 for a unit that is never trained (a {@link UnitCost#NONE}
+         * cost); the builder enforces that pairing.
+         */
+        int buildTicks,
         UnitCost cost) {
 
     /** A ranged attacker's envelope: how far it holds at, and how often it fires. */
@@ -92,6 +112,7 @@ public record UnitStat(
         private double armor;                  // 0.0 == the vanilla ARMOR default
         private Double movementSpeed;          // required — the vanilla default is 0.7, never what we want
         private double knockbackResistance;    // 0.0 == the vanilla default
+        private double stepHeight = 0.6;       // the vanilla default, and right for a normal-sized unit
         private double followRange = 32.0;     // Mob's base pins FOLLOW_RANGE at 16, so this is always load-bearing
         private int shield;
         private OptionalDouble attackDamage = OptionalDouble.empty();
@@ -99,6 +120,7 @@ public record UnitStat(
         private Optional<Flight> flight = Optional.empty();
         private Optional<Bounce> bounce = Optional.empty();
         private int attackAnimTicks;
+        private int buildTicks;                // required iff the cost is purchasable
         private UnitCost cost;                 // required (use UnitCost.NONE for a non-purchasable unit)
 
         private Builder(String id) {
@@ -122,6 +144,11 @@ public record UnitStat(
 
         public Builder knockbackResistance(double v) {
             this.knockbackResistance = v;
+            return this;
+        }
+
+        public Builder stepHeight(double v) {
+            this.stepHeight = v;
             return this;
         }
 
@@ -165,6 +192,11 @@ public record UnitStat(
             return this;
         }
 
+        public Builder buildTicks(int v) {
+            this.buildTicks = v;
+            return this;
+        }
+
         public Builder cost(UnitCost v) {
             this.cost = v;
             return this;
@@ -182,9 +214,21 @@ public record UnitStat(
             if (this.cost == null) {
                 throw new IllegalStateException(this.id + ": cost was never set (use UnitCost.NONE if not purchasable)");
             }
+            if (this.cost.isPurchasable() != (this.buildTicks > 0)) {
+                throw new IllegalStateException(this.id
+                        + ": buildTicks must be positive for a purchasable unit and zero for one that is"
+                        + " never trained — a producer would otherwise pop it out on the same tick it"
+                        + " was ordered");
+            }
+            if (this.stepHeight >= 2.0) {
+                throw new IllegalStateException(this.id
+                        + ": stepHeight must stay under 2.0 — at 2.0 the pathfinder starts planning"
+                        + " routes up sheer two-block walls (see UnitStat#stepHeight)");
+            }
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
-                    this.knockbackResistance, this.followRange, this.shield, this.attackDamage,
-                    this.ranged, this.flight, this.bounce, this.attackAnimTicks, this.cost);
+                    this.knockbackResistance, this.stepHeight, this.followRange, this.shield,
+                    this.attackDamage, this.ranged, this.flight, this.bounce, this.attackAnimTicks,
+                    this.buildTicks, this.cost);
         }
     }
 }

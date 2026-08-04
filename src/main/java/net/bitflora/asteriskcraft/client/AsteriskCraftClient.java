@@ -19,6 +19,7 @@ import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskRenderer;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyRenderer;
+import net.bitflora.asteriskcraft.client.zerg.UltraliskRenderer;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingRenderer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -39,6 +40,8 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation DRAGOON_LAYER = new ModelLayerLocation(AsteriskCraft.id("dragoon"), "main");
     public static final ModelLayerLocation SCOUT_LAYER = new ModelLayerLocation(AsteriskCraft.id("scout"), "main");
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
+    /** Same geometry as the Zergling, baked separately so the Ultralisk can fork its model later. */
+    public static final ModelLayerLocation ULTRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("ultralisk"), "main");
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
     public static final ModelLayerLocation MUTALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("mutalisk"), "main");
     public static final ModelLayerLocation DRONE_LAYER = new ModelLayerLocation(AsteriskCraft.id("drone"), "main");
@@ -52,6 +55,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(DRAGOON_LAYER, DragoonModel::createBodyLayer);
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
+        event.registerLayerDefinition(ULTRALISK_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
         event.registerLayerDefinition(MUTALISK_LAYER, MutaliskModel::createBodyLayer);
         event.registerLayerDefinition(DRONE_LAYER, DroneModel::createBodyLayer);
@@ -67,6 +71,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.SCOUT.get(), ScoutRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.ULTRALISK.get(), UltraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.MUTALISK.get(), MutaliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.PHOTON_CANNON.get(), PhotonCannonRenderer::new);

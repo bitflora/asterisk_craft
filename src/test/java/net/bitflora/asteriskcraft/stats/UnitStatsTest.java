@@ -22,7 +22,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(10, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(11, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -133,6 +133,17 @@ class UnitStatsTest {
             }
             assertEquals(stat.followRange(), (double) stat.rangedOrThrow().range(), 0.0001,
                     stat.id() + ": a rooted attacker must never target something it can't reach");
+        }
+    }
+
+    @Test
+    void buildTimeExistsExactlyForTheUnitsThatAreTrained() {
+        // Every producer reads buildTicks now — the Gateway and Nexus queues and the Zerg director's
+        // training cadence — so a purchasable unit missing one would pop out on the tick it was
+        // ordered, and a pre-placed unit carrying one would state a time nothing ever counts down.
+        for (UnitStat stat : UnitStats.all()) {
+            assertEquals(stat.cost().isPurchasable(), stat.buildTicks() > 0,
+                    stat.id() + ": build time presence should match whether the unit is trained");
         }
     }
 

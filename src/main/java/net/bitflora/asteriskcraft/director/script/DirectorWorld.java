@@ -44,6 +44,14 @@ public interface DirectorWorld {
      */
     SpawnResult canAffordAndSpawn(String unitName, @Nullable BlockPos site, List<UUID> out);
 
+    /**
+     * How long {@code unitName} takes to produce, in ticks — the gap the interpreter waits after
+     * spawning one before starting the next. Comes from the unit's {@code UnitStat.buildTicks()};
+     * an unknown name falls back to {@link ScriptInterpreter#TRAIN_INTERVAL}, though a batch only
+     * reaches this having already resolved the name.
+     */
+    int buildTicks(String unitName);
+
     /** Orders the given (possibly since-deceased) units to attack-move to {@code dest} together. */
     void orderMove(List<UUID> unitIds, BlockPos dest);
 

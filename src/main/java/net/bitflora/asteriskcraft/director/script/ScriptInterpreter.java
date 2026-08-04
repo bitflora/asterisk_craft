@@ -22,7 +22,10 @@ import java.util.UUID;
 public final class ScriptInterpreter {
     /** Max instantaneous commands executed in a single tick (guards all-instantaneous Repeat loops). */
     public static final int MAX_STEPS_PER_TICK = 64;
-    /** Ticks between individual unit spawns while a training batch gathers (a visible cadence). */
+    /**
+     * Fallback gap between unit spawns while a training batch gathers. Each unit normally waits its
+     * own {@link DirectorWorld#buildTicks} instead; this is only what an unnamed unit would get.
+     */
     public static final int TRAIN_INTERVAL = 20;
 
     private ScriptInterpreter() {
@@ -102,7 +105,7 @@ public final class ScriptInterpreter {
                 if (next.isComplete()) {
                     return finishBatch(next, isWave, state, world);
                 }
-                return blocked(state.withBatch(next).withTrainCooldown(TRAIN_INTERVAL));
+                return blocked(state.withBatch(next).withTrainCooldown(world.buildTicks(target.unit())));
             }
             case UNAFFORDABLE -> {
                 return blocked(state.withTrainCooldown(0)); // retry next tick

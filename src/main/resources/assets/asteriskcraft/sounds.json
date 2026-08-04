@@ -47,6 +47,28 @@
     "subtitle": "subtitles.entity.asteriskcraft.zergling.death",
     "sounds": ["asteriskcraft:mob/zergling/zergling-death"]
   },
+  "entity.ultralisk.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ultralisk.ambient",
+    "sounds": [
+      "asteriskcraft:mob/ultralisk/ultralisk-live1",
+      "asteriskcraft:mob/ultralisk/ultralisk-live2"
+    ]
+  },
+  "entity.ultralisk.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ultralisk.death",
+    "sounds": ["asteriskcraft:mob/ultralisk/ultralisk-death"]
+  },
+  "entity.ultralisk.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ultralisk.attack",
+    "sounds": [
+      "asteriskcraft:mob/ultralisk/ultralisk-attack1",
+      "asteriskcraft:mob/ultralisk/ultralisk-attack2",
+      "asteriskcraft:mob/ultralisk/ultralisk-attack3"
+    ]
+  },
   "entity.hydralisk.ambient": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.hydralisk.ambient",

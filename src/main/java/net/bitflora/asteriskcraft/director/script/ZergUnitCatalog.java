@@ -22,10 +22,11 @@ import java.util.Optional;
 public final class ZergUnitCatalog {
 
     /**
-     * A producible unit: its entity type, its cost (from {@code UnitStats}), whether it is a worker
-     * (Drone), and whether it gets team-colour armour on spawn (workers don't).
+     * A producible unit: its entity type, its cost and build time (both from {@code UnitStats}),
+     * whether it is a worker (Drone), and whether it gets team-colour armour on spawn (workers don't).
      */
-    public record UnitDef(EntityType<? extends Mob> type, UnitCost cost, boolean isWorker, boolean dyeArmor) {
+    public record UnitDef(EntityType<? extends Mob> type, UnitCost cost, int buildTicks,
+                          boolean isWorker, boolean dyeArmor) {
     }
 
     /** Lazily built after entity-type registration completes; keys are lower-cased. */
@@ -54,14 +55,21 @@ public final class ZergUnitCatalog {
     }
 
     private static Map<String, UnitDef> build() {
-        UnitDef drone = new UnitDef(AsteriskCraft.DRONE.get(), UnitStats.DRONE.cost(), true, false);
-        UnitDef zergling = new UnitDef(AsteriskCraft.ZERGLING.get(), UnitStats.ZERGLING.cost(), false, false);
-        UnitDef hydralisk = new UnitDef(AsteriskCraft.HYDRALISK.get(), UnitStats.HYDRALISK.cost(), false, false);
-        UnitDef mutalisk = new UnitDef(AsteriskCraft.MUTALISK.get(), UnitStats.MUTALISK.cost(), false, false);
+        UnitDef drone = new UnitDef(AsteriskCraft.DRONE.get(),
+                UnitStats.DRONE.cost(), UnitStats.DRONE.buildTicks(), true, false);
+        UnitDef zergling = new UnitDef(AsteriskCraft.ZERGLING.get(),
+                UnitStats.ZERGLING.cost(), UnitStats.ZERGLING.buildTicks(), false, false);
+        UnitDef hydralisk = new UnitDef(AsteriskCraft.HYDRALISK.get(),
+                UnitStats.HYDRALISK.cost(), UnitStats.HYDRALISK.buildTicks(), false, false);
+        UnitDef mutalisk = new UnitDef(AsteriskCraft.MUTALISK.get(),
+                UnitStats.MUTALISK.cost(), UnitStats.MUTALISK.buildTicks(), false, false);
+        UnitDef ultralisk = new UnitDef(AsteriskCraft.ULTRALISK.get(),
+                UnitStats.ULTRALISK.cost(), UnitStats.ULTRALISK.buildTicks(), false, false);
         return Map.of(
                 UnitStats.DRONE.id(), drone,
                 UnitStats.ZERGLING.id(), zergling,
                 UnitStats.HYDRALISK.id(), hydralisk,
-                UnitStats.MUTALISK.id(), mutalisk);
+                UnitStats.MUTALISK.id(), mutalisk,
+                UnitStats.ULTRALISK.id(), ultralisk);
     }
 }

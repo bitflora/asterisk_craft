@@ -34,6 +34,7 @@ public final class UnitAttributes {
                 .add(Attributes.ARMOR, stat.armor())
                 .add(Attributes.MOVEMENT_SPEED, stat.movementSpeed())
                 .add(Attributes.KNOCKBACK_RESISTANCE, stat.knockbackResistance())
+                .add(Attributes.STEP_HEIGHT, stat.stepHeight())
                 .add(Attributes.FOLLOW_RANGE, stat.followRange());
         stat.attackDamage().ifPresent(damage -> base.add(Attributes.ATTACK_DAMAGE, damage));
         stat.flight().ifPresent(flight -> base.add(Attributes.FLYING_SPEED, flight.flyingSpeed()));

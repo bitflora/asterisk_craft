@@ -69,7 +69,6 @@ public class GatewayBlockEntity extends BlockEntity
         }
     }
 
-    public static final int BUILD_TICKS = 200; // 10 seconds per unit
     public static final int MAX_QUEUE = 5;
     public static final int WARP_TICKS = 20 * 60; // 1 minute to warp in
     /** Tougher than a unit but well short of the Nexus: losing a Gateway costs production, not the game. */
@@ -77,7 +76,8 @@ public class GatewayBlockEntity extends BlockEntity
     public static final int SHIELD = 250;
 
     private final Deque<UnitType> queue = new ArrayDeque<>();
-    private int buildTicksRemaining = BUILD_TICKS;
+    /** Counts down the head of the queue; 0 whenever nothing is in production. See {@link UnitStat#buildTicks()}. */
+    private int buildTicksRemaining = 0;
     private final BuildingDefense defense = new BuildingDefense(MAX_HEALTH, SHIELD, WARP_TICKS);
     private final UnderAttackAlert alert = new UnderAttackAlert();
     private Faction faction = Faction.PROTOSS;
@@ -88,8 +88,9 @@ public class GatewayBlockEntity extends BlockEntity
             boolean building = !isWarping() && !queue.isEmpty();
             return switch (index) {
                 case ProductionMenu.DATA_BUILDING_INDEX -> building ? queue.peek().ordinal() : -1;
-                case ProductionMenu.DATA_BUILD_PROGRESS -> building ? BUILD_TICKS - buildTicksRemaining : 0;
-                case ProductionMenu.DATA_BUILD_TOTAL -> BUILD_TICKS;
+                case ProductionMenu.DATA_BUILD_PROGRESS ->
+                        building ? statFor(queue.peek()).buildTicks() - buildTicksRemaining : 0;
+                case ProductionMenu.DATA_BUILD_TOTAL -> building ? statFor(queue.peek()).buildTicks() : 0;
                 case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
                 case ProductionMenu.DATA_QUEUE_BASE -> countQueued(UnitType.ZEALOT);
                 case ProductionMenu.DATA_QUEUE_BASE + 1 -> countQueued(UnitType.DRAGOON);
@@ -147,7 +148,9 @@ public class GatewayBlockEntity extends BlockEntity
             return;
         }
         UnitType type = gateway.queue.poll();
-        gateway.buildTicksRemaining = BUILD_TICKS;
+        // The next unit's own build time, not this one's: the queue is mixed, and a Dragoon behind a
+        // Zealot must take a Dragoon's time.
+        gateway.buildTicksRemaining = gateway.queue.isEmpty() ? 0 : statFor(gateway.queue.peek()).buildTicks();
         gateway.setChanged();
         gateway.spawnUnit((ServerLevel) level, pos, type);
     }
@@ -216,7 +219,11 @@ public class GatewayBlockEntity extends BlockEntity
                     CostText.costOnly(statFor(type).cost(), 0)));
             return;
         }
+        boolean wasIdle = this.queue.isEmpty();
         this.queue.add(type);
+        if (wasIdle) {
+            this.buildTicksRemaining = statFor(type).buildTicks();
+        }
         this.setChanged();
         if (this.level != null) {
             this.level.playSound(null, this.worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.6f, 1.4f);
@@ -304,10 +311,13 @@ public class GatewayBlockEntity extends BlockEntity
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        this.buildTicksRemaining = input.getIntOr("BuildTicks", BUILD_TICKS);
         this.defense.load(input);
         this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.PROTOSS);
         this.queue.clear();
         this.queue.addAll(input.read("Queue", UnitType.LIST_CODEC).orElse(List.of()));
+        // Read after the queue: the fallback for a save with no BuildTicks is now the head unit's own
+        // build time, which there is no way to know before the queue is in hand.
+        this.buildTicksRemaining = input.getIntOr("BuildTicks",
+                this.queue.isEmpty() ? 0 : statFor(this.queue.peek()).buildTicks());
     }
 }

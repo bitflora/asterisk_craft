@@ -139,4 +139,45 @@ class UnitBalanceTest {
             assertTrue(zerglingCost < mutaliskCost);
         }
     }
+
+    @Nested
+    class Ultralisk {
+        // The Zerg heavy: the swarm's answer to a massed defence, and priced and paced so it stays
+        // the rare centrepiece of a wave rather than something the director can spam.
+        @Test
+        void isTheCostliestAndSlowestZergUnitToTrain() {
+            for (UnitStat other : UnitStats.ZERG_ROSTER) {
+                if (other == UnitStats.ULTRALISK || !other.cost().isPurchasable()) {
+                    continue;
+                }
+                assertTrue(UnitStats.ULTRALISK.cost().amountOf(Resource.ANY) > other.cost().amountOf(Resource.ANY),
+                        other.id() + " should cost less than an Ultralisk");
+                assertTrue(UnitStats.ULTRALISK.buildTicks() > other.buildTicks(),
+                        other.id() + " should train faster than an Ultralisk");
+            }
+        }
+
+        @Test
+        void outlastsEveryOtherZergUnitIncludingTheStaticDefence() {
+            for (UnitStat other : UnitStats.ZERG_ROSTER) {
+                if (other == UnitStats.ULTRALISK) {
+                    continue;
+                }
+                assertTrue(UnitStats.ULTRALISK.maxHealth() > other.maxHealth(),
+                        other.id() + " should have less health than an Ultralisk");
+            }
+        }
+
+        @Test
+        void isTheOnlyArmouredZergUnit() {
+            // Its armour is what makes the Zergling swarm's chip damage a poor answer to it, and it
+            // is the one thing separating it from a big Zergling.
+            assertTrue(UnitStats.ULTRALISK.armor() > 0);
+            for (UnitStat other : UnitStats.ZERG_ROSTER) {
+                if (other != UnitStats.ULTRALISK) {
+                    assertTrue(other.armor() == 0.0, other.id() + ": Zerg armour is the Ultralisk's alone");
+                }
+            }
+        }
+    }
 }

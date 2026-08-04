@@ -33,6 +33,7 @@ import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
+import net.bitflora.asteriskcraft.entity.zerg.UltraliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
@@ -217,6 +218,20 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("zergling"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<UltraliskEntity>> ULTRALISK =
+            ENTITY_TYPES.register("ultralisk", () -> EntityType.Builder.of(UltraliskEntity::new, MobCategory.MONSTER)
+                    // A scaled-up Zergling, but NOT scaled up here — the renderer grows the silhouette
+                    // much further than this box (see UltraliskRenderer), because a node's footprint
+                    // is floor(dim + 1), so a height matching the model would need four blocks of
+                    // clearance and lock the unit out of every doorway and tunnel; 1.99 is the most
+                    // that still fits a 2-high opening. The model overhangs it, as the Zealot's does.
+                    // The width does double, which makes this the second unit — after the Dragoon —
+                    // that is two pathfinding nodes across and so needs a clear 2x2 per node. That
+                    // costs it 1-block gaps; the crowding it causes is handled in the command layer.
+                    .sized(1.2f, 1.99f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("ultralisk"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<HydraliskEntity>> HYDRALISK =
             ENTITY_TYPES.register("hydralisk", () -> EntityType.Builder.of(HydraliskEntity::new, MobCategory.MONSTER)
                     // The model is built to fit this, not the other way round: at the renderer's 1.0
@@ -289,6 +304,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> ZERGLING_SPAWN_EGG_ENEMY = ITEMS.registerItem("zergling_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, ZERGLING, Faction.ZERG));
 
+    public static final DeferredItem<FactionSpawnEggItem> ULTRALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("ultralisk_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, ULTRALISK, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> ULTRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("ultralisk_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, ULTRALISK, Faction.ZERG));
+
     public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("hydralisk_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("hydralisk_spawn_egg_enemy",
@@ -323,6 +343,15 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.zergling.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.hurt")));
     public static final DeferredHolder<SoundEvent, SoundEvent> ZERGLING_DEATH =
             SOUND_EVENTS.register("entity.zergling.death", () -> SoundEvent.createVariableRangeEvent(id("entity.zergling.death")));
+
+    // No hurt event: the source clips include no hurt bark, so the Ultralisk keeps the vanilla one
+    // rather than borrowing another unit's voice — the same situation as the Dragoon.
+    public static final DeferredHolder<SoundEvent, SoundEvent> ULTRALISK_AMBIENT =
+            SOUND_EVENTS.register("entity.ultralisk.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.ultralisk.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ULTRALISK_DEATH =
+            SOUND_EVENTS.register("entity.ultralisk.death", () -> SoundEvent.createVariableRangeEvent(id("entity.ultralisk.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ULTRALISK_ATTACK =
+            SOUND_EVENTS.register("entity.ultralisk.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.ultralisk.attack")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_AMBIENT =
             SOUND_EVENTS.register("entity.hydralisk.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.ambient")));
@@ -377,6 +406,8 @@ public class AsteriskCraft {
                 output.accept(DRONE_SPAWN_EGG_ENEMY.get());
                 output.accept(ZERGLING_SPAWN_EGG_ALLY.get());
                 output.accept(ZERGLING_SPAWN_EGG_ENEMY.get());
+                output.accept(ULTRALISK_SPAWN_EGG_ALLY.get());
+                output.accept(ULTRALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(HYDRALISK_SPAWN_EGG_ALLY.get());
                 output.accept(HYDRALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(MUTALISK_SPAWN_EGG_ALLY.get());
@@ -434,6 +465,7 @@ public class AsteriskCraft {
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
+        event.put(ULTRALISK.get(), UltraliskEntity.createAttributes().build());
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
         event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());

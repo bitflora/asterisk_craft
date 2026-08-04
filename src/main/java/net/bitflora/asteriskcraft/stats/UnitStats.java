@@ -24,26 +24,31 @@ public final class UnitStats {
 
     public static final UnitStat PROBE = UnitStat.builder("probe")
             .health(10.0).shield(10).speed(0.35).followRange(48.0)
-            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50))))
+            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(200)
             .build();
 
     public static final UnitStat ZEALOT = UnitStat.builder("zealot")
             .health(50.0).shield(30).armor(0.5).speed(0.25)
             .attackDamage(4.0).attackAnimTicks(10)
-            .cost(UnitCost.all(line(WOOD, 50), line(STONE, 50)))
+            .cost(UnitCost.all(line(WOOD, 50), line(STONE, 50))).buildTicks(200)
             .build();
 
     public static final UnitStat DRAGOON = UnitStat.builder("dragoon")
             .health(50.0).shield(40).armor(0.5).speed(0.25)
+            // The mod's other two-node-wide unit, and it has the same problem the Ultralisk does:
+            // stopping 0.55 short of a ledge while MoveControl only fires a jump within sqrt(width)
+            // of the waypoint. The stalling that CommandedMoveGoal's detour rules and MoveFormation's
+            // spacing were both written against is partly this. A walker steps up a block anyway.
+            .stepHeight(1.1)
             .attackDamage(10.0).ranged(8.0f, 40)
-            .cost(UnitCost.all(line(WOOD, 100), line(STONE, 50)))
+            .cost(UnitCost.all(line(WOOD, 100), line(STONE, 50))).buildTicks(200)
             .build();
 
     public static final UnitStat SCOUT = UnitStat.builder("scout")
             .health(75.0).shield(50).armor(0.5).speed(0.25)
             .attackDamage(11.0).ranged(9.0f, 30)
             .flight(0.6, 6, 64.0f)
-            .cost(UnitCost.all(line(STONE, 150), line(IRON, 20)))
+            .cost(UnitCost.all(line(STONE, 150), line(IRON, 20))).buildTicks(200)
             .build();
 
     /** Kit-bought at the Nexus for {@code NexusBlockEntity.BUILDING_COST}, not trained directly — hence NONE. */
@@ -51,7 +56,7 @@ public final class UnitStats {
             .health(50.0).shield(50).rooted()
             .attackDamage(10.0).ranged(14.0f, 20)
             .followRange(14.0) // == range: never acquire what it can't shoot
-            .cost(UnitCost.NONE)
+            .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 
     // --- Zerg ---
@@ -63,19 +68,19 @@ public final class UnitStats {
      */
     public static final UnitStat DRONE = UnitStat.builder("drone")
             .health(10.0).shield(10).speed(0.35).followRange(48.0)
-            .cost(UnitCost.of(ANY, 50))
+            .cost(UnitCost.of(ANY, 50)).buildTicks(20)
             .build();
 
     public static final UnitStat ZERGLING = UnitStat.builder("zergling")
             .health(17.5).armor(0.0).speed(0.30)
             .attackDamage(2.5)
-            .cost(UnitCost.of(ANY, 25))
+            .cost(UnitCost.of(ANY, 25)).buildTicks(20)
             .build();
 
     public static final UnitStat HYDRALISK = UnitStat.builder("hydralisk")
             .health(40.0).armor(0.0).speed(0.25)
             .attackDamage(5.0).ranged(6.0f, 20).attackAnimTicks(10)
-            .cost(UnitCost.of(ANY, 100))
+            .cost(UnitCost.of(ANY, 100)).buildTicks(20)
             .build();
 
     public static final UnitStat MUTALISK = UnitStat.builder("mutalisk")
@@ -83,7 +88,26 @@ public final class UnitStats {
             .attackDamage(4.5).ranged(9.0f, 30)
             .bounce(3, 0.5f, 5.0f)
             .flight(0.6, 6, 64.0f)
-            .cost(UnitCost.of(ANY, 100))
+            .cost(UnitCost.of(ANY, 100)).buildTicks(20)
+            .build();
+
+    /**
+     * The Zerg heavy: the only unit on either side that a Zealot ball can't simply out-trade, and the
+     * reason to keep Dragoons or a Cannon around. Its minute-long build time is what keeps it rare —
+     * a wave carrying one takes a minute longer to assemble than the same wave without.
+     *
+     * <p>It reuses the Zergling's geometry, scaled up — broad and long far more than tall, and more
+     * than its hitbox is: see its registration in {@code AsteriskCraft} for why the height stays
+     * under 2.0, and {@code client.zerg.UltraliskRenderer} for the silhouette that sits over it.
+     */
+    public static final UnitStat ULTRALISK = UnitStat.builder("ultralisk")
+            .health(200.0).armor(1.0).speed(0.28)
+            // Steps over a full block instead of jumping it. Two pathfinding nodes wide, it stops
+            // 0.6 short of a ledge, and MoveControl only fires a jump inside sqrt(width) of the
+            // waypoint — so on broken ground it would stall against every rise. See UnitStat.
+            .stepHeight(1.1)
+            .attackDamage(10.0).attackAnimTicks(12)
+            .cost(UnitCost.of(ANY, 200)).buildTicks(20 * 60)
             .build();
 
     /** Pre-placed by {@code GameBootstrap}, not trained — hence NONE. */
@@ -91,7 +115,7 @@ public final class UnitStats {
             .health(150.0).armor(0.0).rooted()
             .attackDamage(20.0).ranged(11.0f, 32).attackAnimTicks(12)
             .followRange(11.0) // == range: a rooted attacker can't close the gap
-            .cost(UnitCost.NONE)
+            .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
@@ -100,7 +124,7 @@ public final class UnitStats {
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, SUNKEN_COLONY);
+            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, SUNKEN_COLONY);
 
     private UnitStats() {
     }

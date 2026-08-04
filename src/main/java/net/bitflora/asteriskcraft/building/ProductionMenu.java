@@ -173,7 +173,9 @@ public class ProductionMenu extends AbstractContainerMenu {
     }
 
     public int buildTotal() {
-        return this.data.get(DATA_BUILD_TOTAL);
+        // Clamped because the screen divides by this and an idle building legitimately reports 0 —
+        // build times are per-unit now, so there is no constant to fall back on. See UnitStat#buildTicks.
+        return Math.max(1, this.data.get(DATA_BUILD_TOTAL));
     }
 
     public int warpTicks() {

@@ -54,7 +54,8 @@ public class NexusBlockEntity extends BlockEntity implements ArmyLinkedContainer
     public static final int BUILDING_COST = 150;
     /** Cobblestone-only cost for a second/expansion Nexus — deliberately pricier and not wood-alternative. */
     public static final int NEXUS_KIT_COST = 400;
-    public static final int BUILD_TICKS = 200; // 10 seconds per probe
+    /** A Nexus only ever builds Probes, so its one build time comes straight off the balance table. */
+    public static final int BUILD_TICKS = UnitStats.PROBE.buildTicks();
     public static final int MAX_QUEUE = 5;
     public static final int INPUT_SLOTS = ArmyBank.PROTOSS_SLOTS;
     /** The sturdiest building in the mod, as the thing you lose the game with should be. */

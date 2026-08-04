@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -29,6 +31,8 @@ class ScriptInterpreterTest {
     /** A scriptable stand-in for the world: controls affordability and records spawns/orders. */
     private static final class FakeWorld implements DirectorWorld {
         final Set<String> known = new HashSet<>(Set.of("zergling", "hydralisk"));
+        /** Per-unit build times; anything absent trains at {@link ScriptInterpreter#TRAIN_INTERVAL}. */
+        final Map<String, Integer> buildTimes = new HashMap<>();
         boolean affordable = true;
         int spawnCounter = 0;
         final List<String> spawnedNames = new ArrayList<>();
@@ -61,6 +65,12 @@ class ScriptInterpreterTest {
             spawnedNames.add(key);
             spawnSites.add(site);
             return SpawnResult.SPAWNED;
+        }
+
+        @Override
+        public int buildTicks(String unitName) {
+            return this.buildTimes.getOrDefault(unitName.toLowerCase(Locale.ROOT),
+                    ScriptInterpreter.TRAIN_INTERVAL);
         }
 
         @Override
@@ -281,7 +291,7 @@ class ScriptInterpreterTest {
     @Test
     void unknownUnitIsDroppedNotWaitedOn() {
         FakeWorld world = new FakeWorld();
-        BuildScript script = script("Wave: 1 Ultralisk"); // not in the fake catalog
+        BuildScript script = script("Wave: 1 Guardian"); // a name no catalog resolves
 
         InterpreterState state = InterpreterState.INITIAL;
         for (int i = 0; i < 5 && state.pc() < 1; i++) {
@@ -289,6 +299,28 @@ class ScriptInterpreterTest {
         }
         assertEquals(0, world.spawnCounter, "nothing spawned for an unknown unit");
         assertEquals(1, state.pc(), "the command drops the unknown unit and advances instead of hanging");
+    }
+
+    @Test
+    void eachUnitHoldsTheBatchForItsOwnBuildTime() {
+        // Training cadence is per-unit, not one flat interval: a heavy like the Ultralisk must hold
+        // the batch for its full build time, and a cheap unit behind it must not inherit that wait.
+        FakeWorld world = new FakeWorld();
+        world.known.add("ultralisk");
+        world.buildTimes.put("ultralisk", 100);
+        BuildScript script = script("Defence: 1 Ultralisk, 1 Zergling");
+
+        InterpreterState state = InterpreterState.INITIAL;
+        int ticksToSecondSpawn = 0;
+        for (int i = 1; i <= 300 && world.spawnCounter < 2; i++) {
+            state = ScriptInterpreter.tick(script, state, world);
+            ticksToSecondSpawn = i;
+        }
+
+        assertEquals(2, world.spawnCounter, "both units trained");
+        assertEquals(List.of("ultralisk", "zergling"), world.spawnedNames, "requirements train in order");
+        // Tick 1 spawns the Ultralisk and sets a 100-tick cooldown; the Zergling lands on tick 102.
+        assertEquals(102, ticksToSecondSpawn, "the Zergling waits out the Ultralisk's build time, not its own");
     }
 
     @Test

@@ -197,6 +197,13 @@ public final class ZergDirector {
             return SpawnResult.SPAWNED;
         }
 
+        @Override
+        public int buildTicks(String unitName) {
+            return ZergUnitCatalog.resolve(unitName)
+                    .map(UnitDef::buildTicks)
+                    .orElse(ScriptInterpreter.TRAIN_INTERVAL);
+        }
+
         /** The awake Hive at {@code pos}, or null if it is gone, shaded, or {@code pos} is null. */
         private static HiveBlockEntity findAwake(List<HiveBlockEntity> awake, BlockPos pos) {
             if (pos == null) {
