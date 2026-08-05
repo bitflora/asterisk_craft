@@ -35,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
 
 /**
@@ -93,6 +94,10 @@ public final class GameBootstrap {
     // it — comfortably taller than any vanilla tree (a jungle giant on a slope is the worst case) so
     // we always reach the floor rather than falling back to the top of the scan.
     private static final int MAX_TREE_SCAN = 64;
+    // How far up a submerged column may be followed to the water's surface when averaging a
+    // footprint's height — deeper than any vanilla lake or river, but bounded so an ocean trench
+    // can't run the climb away.
+    private static final int MAX_WATER_RISE = 32;
 
     private GameBootstrap() {
     }
@@ -163,7 +168,7 @@ public final class GameBootstrap {
         // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
         // which used to leave the Nexus perched high up in a tree) and clear the trees over the footprint.
         clearTrees(level, x, z, footprint + NEXUS_CLEAR_MARGIN);
-        int y = highestGround(level, x, z, footprint);
+        int y = platformHeight(level, x, z, footprint);
         BlockPos origin = new BlockPos(x, y, z);
 
         // No support fill under the Nexus: its end-stone-brick platform is the base, and a quartz
@@ -224,7 +229,7 @@ public final class GameBootstrap {
                 int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
                 int x = nexusX + Math.round(Mth.cos(angle) * distance);
                 int z = nexusZ + Math.round(Mth.sin(angle) * distance);
-                int y = highestGround(level, x, z, footprint);
+                int y = platformHeight(level, x, z, footprint);
                 BlockPos candidate = new BlockPos(x, y, z);
                 fallback = candidate;
 
@@ -262,12 +267,18 @@ public final class GameBootstrap {
      * True if the column above (x, y, z) is open to the sky, distinguishing real outdoor ground
      * from the floor of a cave or ravine that happens to breach the surface (which the ground scan
      * would otherwise report as valid, burying the structure underground).
+     *
+     * <p>The probe starts from the higher of the platform and this column's own ground, because
+     * {@link #averageGround} can seat the platform <i>below</i> the center column — on a rise, a
+     * probe from the platform up would start inside the dirt the building is about to be cut into
+     * and reject a perfectly open spot as a cave.
      */
     private static boolean hasOpenSky(ServerLevel level, int x, int y, int z) {
+        int from = Math.max(y, groundHeight(level, x, z));
         for (int dy = 2; dy <= SURFACE_CLEARANCE; dy++) {
             // Trees and undergrowth overhead are fine — they get cleared before the mound is stamped
             // (see clearTrees) — so only a real solid overhang (cave/ravine roof) rejects the spot.
-            if (isGround(level.getBlockState(new BlockPos(x, y + dy, z)))) {
+            if (isGround(level.getBlockState(new BlockPos(x, from + dy, z)))) {
                 return false;
             }
         }
@@ -391,18 +402,68 @@ public final class GameBootstrap {
     }
 
     /**
-     * Highest solid surface (top-block Y) across a building's footprint, so it rests on top of the
-     * highest ground and never sinks below its own neighbours in a dip or a super-flat step (which
-     * reads as a hole). On flat terrain this equals the center column's {@code WORLD_SURFACE - 1}.
+     * Mean surface height across a building's footprint, rounded to nearest, so the building settles
+     * into the terrain instead of standing on stilts on its tallest column. Site prep squares up
+     * whatever the average leaves behind in both directions: the head-room clear cuts back the uphill
+     * ground that now rises above the platform, and the support fill (for the buildings that ask for
+     * one) closes the gap under the downhill columns. On flat terrain this is unchanged from the old
+     * highest-column rule.
+     *
+     * <p>This is the Y of the ground itself — the block the building stands <i>on</i>, not the one it
+     * occupies; see {@link #platformHeight} for the layer above it that actually gets stamped.
+     *
+     * <p>Pure and probe-driven (no level) so the geometry is unit-testable, same pattern as
+     * {@link #scanToGround} and
+     * {@link net.bitflora.asteriskcraft.building.BuildingTemplates#planSitePrep}. The probe is called
+     * with footprint-relative offsets and walks the full square, matching the square the template is
+     * actually stamped over rather than the disc {@link #clearTrees} sweeps.
      */
-    private static int highestGround(ServerLevel level, int cx, int cz, int radius) {
-        int max = Integer.MIN_VALUE;
+    static int averageGround(int radius, IntBinaryOperator columnHeight) {
+        long sum = 0;
+        int count = 0;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
-                max = Math.max(max, groundHeight(level, cx + dx, cz + dz));
+                sum += columnHeight.applyAsInt(dx, dz);
+                count++;
             }
         }
-        return max;
+        return (int) Math.round((double) sum / count);
+    }
+
+    /**
+     * The origin Y to stamp a building at: one above {@link #averageGround}, because
+     * {@link net.bitflora.asteriskcraft.building.BuildingTemplates#place} lays the template's bottom
+     * layer <i>at</i> the origin's height. Passing the average itself sank every building a block, its
+     * platform replacing the surface it was meant to be resting on.
+     */
+    private static int platformHeight(ServerLevel level, int cx, int cz, int radius) {
+        return averageGround(radius, (dx, dz) -> surfaceHeight(level, cx + dx, cz + dz)) + 1;
+    }
+
+    /**
+     * Walks up from {@code ground} for as long as the block above is fluid, stopping after
+     * {@code limit} steps, and returns the last Y — i.e. the top of the water covering a submerged
+     * column, or {@code ground} untouched on dry land. Pure and probe-driven for the same reason
+     * {@link #scanToGround} is.
+     */
+    static int riseThroughFluid(int ground, int limit, IntPredicate isFluid) {
+        int y = ground;
+        while (y - ground < limit && isFluid.test(y + 1)) {
+            y++;
+        }
+        return y;
+    }
+
+    /**
+     * The height a column contributes to {@link #averageGround}: its ground, but a submerged one
+     * reported at the water's surface rather than its bed. {@link #groundHeight} deliberately scans
+     * straight through water down to the bed (which is what {@link #isSurroundedByWater} needs), and
+     * averaging that raw value in would drag a base built along a shoreline down under the waterline.
+     */
+    private static int surfaceHeight(ServerLevel level, int x, int z) {
+        int ground = groundHeight(level, x, z);
+        return riseThroughFluid(ground, MAX_WATER_RISE,
+                y -> !level.getFluidState(new BlockPos(x, y, z)).isEmpty());
     }
 
     /** True if this surface block is natural ground the Hive's creep should overrun with mycelium. */
@@ -445,8 +506,8 @@ public final class GameBootstrap {
         infestGround(level, x, z);
         // The mound keeps a mycelium footing under it — same material as the creep it sits in, so
         // unlike the Protoss stonework there is nothing foreign to see. This matters because
-        // highestGround raises the mound onto the highest column of its footprint: on a slope the
-        // downhill side would otherwise overhang open air.
+        // averageGround settles the mound at its footprint's mean height: the downhill half of a
+        // slope still falls away beneath it and would otherwise overhang open air.
         BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
                 AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
         if (placed == null) {
