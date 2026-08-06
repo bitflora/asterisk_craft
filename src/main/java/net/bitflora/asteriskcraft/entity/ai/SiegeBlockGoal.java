@@ -83,7 +83,10 @@ public class SiegeBlockGoal extends Goal {
             return false;
         }
         this.cooldown = SCAN_COOLDOWN;
-        this.buildingPos = findEnemyBuilding();
+        // A building is an enemy like any other, so a fresh move order outranks battering one for the
+        // length of its focus window (see CommandAttachments#isMoveFocused) — a unit ordered out of an
+        // enemy base has to be able to leave it. Digging is exempt: that branch serves the march.
+        this.buildingPos = CommandAttachments.isMoveFocused(this.mob) ? null : findEnemyBuilding();
         if (this.buildingPos != null) {
             this.mode = Mode.BUILDING;
             return true;
@@ -100,7 +103,10 @@ public class SiegeBlockGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         return switch (this.mode) {
-            case BUILDING -> this.buildingPos != null && isEnemyBuilding(this.buildingPos);
+            // An assault already under way is dropped by a move order too, not just prevented by one:
+            // canUse() alone would leave a unit mid-siege hammering away until the building fell.
+            case BUILDING -> this.buildingPos != null && isEnemyBuilding(this.buildingPos)
+                    && !CommandAttachments.isMoveFocused(this.mob);
             case DIG -> this.digPos != null && isBreakable(this.mob.level().getBlockState(this.digPos), this.digPos);
         };
     }

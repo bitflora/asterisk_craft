@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.ai;
 
+import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -15,6 +16,11 @@ import java.util.EnumSet;
  * back first. Install at the lowest (most urgent) target-selector priority number on any combat
  * unit. Stays active for as long as the attacker remains alive, hostile, and in follow range, so
  * it naturally covers a running fight rather than just the first hit.
+ *
+ * <p>The one thing that outranks it is a fresh move order ({@link CommandAttachments#isMoveFocused}):
+ * a retreat is ordered precisely when a unit is being shot at, so a unit that turned to fight back
+ * every time it was hit could never be pulled out of a losing fight. Once that window lapses,
+ * retaliation resumes mid-march as normal.
  */
 public class RetaliateGoal extends Goal {
     private final Mob mob;
@@ -28,6 +34,7 @@ public class RetaliateGoal extends Goal {
     public boolean canUse() {
         LivingEntity attacker = this.mob.getLastHurtByMob();
         return attacker != null && attacker.isAlive()
+                && !CommandAttachments.isMoveFocused(this.mob)
                 && FactionAttachments.isHostile(this.mob, attacker)
                 && withinFollowRange(attacker);
     }

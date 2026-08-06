@@ -17,10 +17,16 @@ import org.jetbrains.annotations.Nullable;
  * and clears the order on arrival. High priority in the goal selector so a move order overrides
  * autonomous behaviour, like an RTS move command — including a fight already in progress:
  * {@link CommandAttachments#setOrder} clears the unit's current target the instant a move order
- * lands, so this goal doesn't have to wait out a stale engagement. From there it yields for as
- * long as the unit has a live attack target, so a unit marching under a move order still stops to
- * fight hostiles it acquires or is struck by (via {@code FactionTargetGoal} or
- * {@code RetaliateGoal}) along the way instead of walking past them; it resumes the march once
+ * lands, so this goal doesn't have to wait out a stale engagement.
+ * <p>
+ * For the first {@link CommandAttachments#MOVE_FOCUS_TICKS} of an order the march simply wins:
+ * {@code FactionTargetGoal} and {@code RetaliateGoal} both stand down (they check
+ * {@link CommandAttachments#isMoveFocused}), and this goal drops any target something else manages
+ * to set. That window is what makes a move order out of a fight mean anything — clearing the target
+ * alone doesn't, since the unit re-acquires the enemy beside it on the next tick and never takes a
+ * step, which is what made ordering a retreat look like it did nothing. Once the window lapses the
+ * unit fights again: it yields for as long as it has a live attack target, stopping for hostiles it
+ * acquires or is struck by along the way instead of walking past them, and resumes the march once
  * that target is gone.
  * <p>
  * It does not dig, and it does not fight {@link SiegeBlockGoal} for the {@link Flag#MOVE} flag:
@@ -106,19 +112,23 @@ public class CommandedMoveGoal extends Goal {
     @Override
     public boolean canUse() {
         BlockPos target = target();
-        return target != null && !arrived(target) && !hasLiveTarget();
+        return target != null && !arrived(target) && !shouldYieldToFight();
     }
 
     @Override
     public boolean canContinueToUse() {
         BlockPos target = target();
-        return target != null && !arrived(target) && !hasLiveTarget();
+        return target != null && !arrived(target) && !shouldYieldToFight();
     }
 
-    /** Whether the unit is currently engaged with a live attack target it should fight instead of marching past. */
-    private boolean hasLiveTarget() {
+    /**
+     * Whether the unit should break off the march to fight a live attack target instead of walking
+     * past it — true whenever it has one, except during the focus window a fresh order opens (see
+     * the class doc).
+     */
+    private boolean shouldYieldToFight() {
         LivingEntity target = this.mob.getTarget();
-        return target != null && target.isAlive();
+        return target != null && target.isAlive() && !CommandAttachments.isMoveFocused(this.mob);
     }
 
     @Override
@@ -157,6 +167,12 @@ public class CommandedMoveGoal extends Goal {
         if (!Objects.equals(target, this.lastTarget)) {
             // A new order landed mid-march — see the class doc on why start() cannot be relied on.
             adoptTarget(target);
+        }
+        if (CommandAttachments.isMoveFocused(this.mob) && this.mob.getTarget() != null) {
+            // Belt and braces over the targeting goals standing down: whatever set a target during the
+            // focus window — a goal this class doesn't know about, vanilla hurt handling — the order
+            // still wins, and the attack goals all go quiet the moment there is no target to swing at.
+            this.mob.setTarget(null);
         }
         this.mob.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
         if (arrived(target)) {

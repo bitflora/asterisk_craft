@@ -46,6 +46,7 @@ Expanded from the top-level R5 to pin down the exact control scheme (see shape A
 | R5.11 | Command inputs only fire while the Command Crystal is held, so normal mining/placing/attacking is untouched | Must-have |
 | R5.12 | Right-click a harvestable block with a Probe selected → the Probe mines that block | Must-have |
 | R5.13 | A group move order gives each unit its own destination in a ring around the clicked point, so a squad arrives spread instead of piling into one block | Must-have |
+| R5.14 | A move order overrides combat for its first 5 seconds — the unit stops fighting, stops retaliating and stops battering a building, and walks — so a squad can be pulled out of a fight; after that it fights en route as before | Must-have |
 
 **Hitbox sizes are pathfinding-load-bearing.** A unit's `.sized(width, height)` is not just a silhouette: the pathfinder derives a node's footprint from it as `floor(w + 1)` x `floor(h + 1)`, so 2.0 tall needs three blocks of clearance where 1.99 needs two, and 1.0+ wide takes two nodes and can no longer fit a one-block gap. Widening a model for looks can therefore break navigation invisibly — `entity/UnitFootprintTest` guards the bounds, and docs/neoforge-api-notes.md has the derivation. The Dragoon's 1.1 width is the one deliberate exception; the crowding it caused is handled by R5.13 rather than by shrinking it.
 
