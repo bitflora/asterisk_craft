@@ -217,3 +217,13 @@ This version has a **render-state extraction** GUI pipeline — screens don't dr
 - **The submitted geometry is drawn later in the frame, so the lambda must not close over the live `PoseStack`.** `SubmitNodeCollection` stores the submit and replays it during the feature pass; the `PoseStack.Pose` handed to the callback is the snapshot taken at submit time. Emit vertices against that `pose` (`buffer.addVertex(pose, x, y, z)`) — calling `poseStack.last()` from inside the callback reads whatever the stack happens to hold when it runs. This is also why `ShapeRenderer.renderShape` (which takes a whole `PoseStack`) can't be used from inside one.
 - **The pose stack for a level submit is identity, and world coordinates are camera-relative** — vanilla's own `renderBlockOutline` subtracts `levelRenderState.cameraRenderState.pos` from the block position rather than translating the stack. `CameraRenderState` is plain public fields, reachable from either event via `getLevelRenderState().cameraRenderState`.
 - **The lines pipeline (`RenderTypes.lines()`, in `net.minecraft.client.renderer.rendertype`) needs a per-vertex normal *and* a per-vertex width**, both on every vertex: `addVertex(pose, x, y, z).setColor(argb).setNormal(pose, nx, ny, nz).setLineWidth(w)`. The normal is the segment's own direction, normalized (read straight off `ShapeRenderer.renderShape`, which is the whole of vanilla's box-outline drawing). Omitting either doesn't error — the line just comes out wrong or invisible.
+
+## Concrete API facts (hostile-mob classification — verified while making units fight Slimes)
+
+- **`Monster` is not "the hostile mobs" — `Enemy` is.** Verified against this version's source: `Monster extends PathfinderMob implements Enemy`, and `Enemy` (`net.minecraft.world.entity.monster.Enemy`) is an empty marker interface. Several hostiles are *not* `Monster` subclasses because they don't use `PathfinderMob` navigation or aren't in the `monster` hierarchy at all:
+  - `Slime extends Mob implements Enemy` (and `MagmaCube extends Slime`) — jump-driven `MoveControl`, so no `PathfinderMob`.
+  - `Ghast extends Mob implements Enemy`, `Phantom extends Mob implements Enemy` — flyers.
+  - `Shulker extends AbstractGolem implements Enemy`, `Hoglin extends Animal implements Enemy, HoglinBase`, `EnderDragon extends Mob implements Enemy`.
+  
+  So `entity instanceof Monster` as a "is this thing hostile?" test silently drops all of the above. Use `instanceof Enemy`. This is what `FactionAttachments.isHostile` keys off, and the one place the check lives.
+- **`Hoglin` is under `net.minecraft.world.entity.monster.hoglin`**, not `entity.animal.hoglin`, despite extending `Animal`.

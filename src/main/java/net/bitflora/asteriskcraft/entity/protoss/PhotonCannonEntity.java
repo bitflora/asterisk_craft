@@ -21,7 +21,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -84,14 +84,15 @@ public class PhotonCannonEntity extends Mob implements Shielded {
     protected void registerGoals() {
         // Fires the bolt; there are deliberately no movement goals — the cannon is a fixed turret.
         this.goalSelector.addGoal(1, new CannonFireGoal(this));
-        // Targets the nearest enemy-faction unit OR any living vanilla monster in range, reusing the
-        // pure PhotonCannonTargeting rule so the "also defend against wild monsters" logic and its
+        // Targets the nearest enemy-faction unit OR any living vanilla hostile in range, reusing the
+        // pure PhotonCannonTargeting rule so the "also defend against wild hostiles" logic and its
         // unit test stay in one place. Follow range is the cannon's attack range, so it never
-        // acquires anything it couldn't shoot.
+        // acquires anything it couldn't shoot. The class test is Enemy, not Monster — see
+        // FactionAttachments.isHostile for why (slimes, ghasts and phantoms aren't Monsters).
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
                 (target, level) -> PhotonCannonTargeting.isTargetable(
                         FactionAttachments.get(this), FactionAttachments.get(target),
-                        target.isAlive(), target instanceof Monster)));
+                        target.isAlive(), target instanceof Enemy)));
     }
 
     public boolean isWarping() {
