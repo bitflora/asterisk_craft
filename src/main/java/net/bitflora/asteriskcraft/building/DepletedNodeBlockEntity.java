@@ -23,6 +23,11 @@ public class DepletedNodeBlockEntity extends BlockEntity {
         super(AsteriskCraft.DEPLETED_NODE_BLOCK_ENTITY.get(), pos, state);
     }
 
+    /** The block this node will regrow into — what tells a worker whether its resource is coming back. */
+    public BlockState getOriginalState() {
+        return this.originalState;
+    }
+
     public void setOriginalState(BlockState state) {
         this.originalState = state;
         this.ticksRemaining = REGEN_TICKS;

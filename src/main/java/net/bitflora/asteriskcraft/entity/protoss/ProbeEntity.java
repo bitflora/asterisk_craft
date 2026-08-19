@@ -56,9 +56,11 @@ import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The Protoss worker. Finds a harvestable block near its home Nexus, preferring the same
- * resource type it last mined, mines it non-destructively (the block is swapped for a
- * regenerating depleted node), then delivers the yield straight into the Nexus.
+ * The Protoss worker. Finds a harvestable block near its home Nexus, mines it non-destructively
+ * (the block is swapped for a regenerating depleted node), then delivers the yield straight into
+ * the Nexus. It works one resource and one only: the type it was assigned — by an explicit MINE
+ * order, or by whatever it first picked on its own — is the only kind it will mine, and once every
+ * node of that type is depleted it waits at one for the regen instead of taking up another.
  *
  * <p>Its combat stats (health, speed, shield) live in
  * {@link net.bitflora.asteriskcraft.stats.UnitStats#PROBE} — not here. The harvest-loop constants
@@ -73,7 +75,7 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
     public static final int SEARCH_RADIUS = 24;
     public static final int SEARCH_VERTICAL = 8;
 
-    /** Coarse resource category, used to prefer re-mining the same kind of node on the next trip. */
+    /** Coarse resource category; a worker is assigned exactly one of these and mines nothing else. */
     enum ResourceType implements StringRepresentable {
         WOOD("wood"), IRON("iron"), STONE("stone"), COAL("coal"), COPPER("copper"),
         GOLD("gold"), REDSTONE("redstone"), LAPIS("lapis"), DIAMOND("diamond"), EMERALD("emerald");
@@ -124,11 +126,26 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
 
     private BlockPos homePos = BlockPos.ZERO;
     private ItemStack carried = ItemStack.EMPTY;
+    /**
+     * The one resource this worker mines. Set by an explicit MINE order and, for a worker never told
+     * otherwise, by whatever it first picked on its own. It is a filter, not a preference: with
+     * nothing of it standing the worker waits for a node to regenerate rather than switching to a
+     * resource it was not put on. Dropped only when that resource has left the base entirely (see
+     * {@link HarvestGoal#findNearestHarvestable()}), so an assignment can never strand a worker.
+     */
     @Nullable
-    private ResourceType lastResourceType;
+    private ResourceType assignedType;
     /** Where this probe last mined; the search ranks candidates by proximity to it to keep the probe on one vein. */
     @Nullable
     private BlockPos lastMinedPos;
+    /**
+     * The depleted node {@link AwaitRegenGoal} stands over while the assigned resource regrows, or
+     * {@code null} whenever the worker has something to mine. Written by {@link HarvestGoal}'s
+     * search, which already sweeps the whole home box, so waiting costs no second scan of the world.
+     * Deliberately not saved: the next search re-derives it within a couple of seconds of a reload.
+     */
+    @Nullable
+    private BlockPos pendingNodePos;
 
     public ProbeEntity(EntityType<? extends ProbeEntity> type, Level level) {
         super(type, level);
@@ -148,6 +165,10 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         this.goalSelector.addGoal(1, new CommandedMoveGoal(this, 1.1));
         this.goalSelector.addGoal(2, new DeliverGoal(this));
         this.goalSelector.addGoal(3, new HarvestGoal(this));
+        // Below HarvestGoal, so the moment a node of the assigned resource regrows the worker is
+        // pulled straight back to work; above the stroll, so waiting holds it at its own vein
+        // rather than letting it wander off looking idle.
+        this.goalSelector.addGoal(4, new AwaitRegenGoal(this));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
@@ -250,8 +271,8 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         if (!this.carried.isEmpty()) {
             output.store("Carried", ItemStack.CODEC, this.carried);
         }
-        if (this.lastResourceType != null) {
-            output.store("LastResourceType", ResourceType.CODEC, this.lastResourceType);
+        if (this.assignedType != null) {
+            output.store("AssignedResource", ResourceType.CODEC, this.assignedType);
         }
         if (this.lastMinedPos != null) {
             output.store("LastMinedPos", BlockPos.CODEC, this.lastMinedPos);
@@ -263,8 +284,28 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         super.readAdditionalSaveData(input);
         this.homePos = input.read("HomePos", BlockPos.CODEC).orElse(BlockPos.ZERO);
         this.carried = input.read("Carried", ItemStack.CODEC).orElse(ItemStack.EMPTY);
-        this.lastResourceType = input.read("LastResourceType", ResourceType.CODEC).orElse(null);
+        this.assignedType = input.read("AssignedResource", ResourceType.CODEC).orElse(null);
         this.lastMinedPos = input.read("LastMinedPos", BlockPos.CODEC).orElse(null);
+    }
+
+    /**
+     * The assignment rule: a worker that has never been put on a resource mines anything, an assigned
+     * one only its own kind. The single place the "only mine what you were assigned" call is made.
+     */
+    static boolean mines(@Nullable ResourceType assigned, ResourceType candidate) {
+        return assigned == null || assigned == candidate;
+    }
+
+    /**
+     * Whether {@code pos} holds a depleted node that will regrow into {@code type} — i.e. a node a
+     * worker assigned to that resource is worth waiting at. The blockstate is passed in and tested
+     * first because the caller sweeps tens of thousands of positions, and a block-entity lookup at
+     * each of them costs far more than this decision is worth.
+     */
+    static boolean regeneratesInto(Level level, BlockPos pos, BlockState state, ResourceType type) {
+        return state.is(AsteriskCraft.DEPLETED_NODE.get())
+                && level.getBlockEntity(pos) instanceof DepletedNodeBlockEntity node
+                && ResourceType.of(node.getOriginalState()) == type;
     }
 
     /** What a harvested block yields: a flat {@link #YIELD_PER_TRIP} of the matching item. */
@@ -320,7 +361,11 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             CommandOrder order = CommandAttachments.getOrder(this.probe);
             if (order.kind() == CommandOrder.Kind.MINE && order.pos().isPresent()) {
                 BlockPos commanded = order.pos().get();
-                if (this.probe.canHarvest(this.probe.level().getBlockState(commanded))) {
+                BlockState commandedState = this.probe.level().getBlockState(commanded);
+                if (this.probe.canHarvest(commandedState)) {
+                    // The order is the assignment: from here the worker mines this resource and no
+                    // other, including after this particular node is spent.
+                    this.probe.assignedType = ResourceType.of(commandedState);
                     this.target = commanded.immutable();
                     this.commandedTarget = true;
                     return true;
@@ -402,7 +447,8 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             Level level = this.probe.level();
             BlockState state = level.getBlockState(pos);
             this.probe.carried = yieldFor(state);
-            this.probe.lastResourceType = ResourceType.of(state);
+            // A worker never given an order is put on a resource by its own first pick.
+            this.probe.assignedType = ResourceType.of(state);
             this.probe.lastMinedPos = pos.immutable();
             level.levelEvent(2001, pos, Block.getId(state));
             level.setBlock(pos, AsteriskCraft.DEPLETED_NODE.get().defaultBlockState(), Block.UPDATE_ALL);
@@ -444,18 +490,44 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
         }
 
         /**
-         * Picks a node the probe can actually walk to. Candidates are ranked (same-type-as-last
-         * first so a probe keeps working one vein, then nearest to the block it last mined — not to
-         * the probe's current spot, which after a delivery is always back at home), and the top few
-         * are verified with a real pathfind — the first that yields a reachable path wins.
-         * Recently-abandoned nodes are skipped until their cooldown lapses. Returns {@code null} if
-         * nothing reachable is in range.
+         * Picks a node the probe can actually walk to, of its assigned resource and of nothing else.
+         * Candidates are ranked nearest to the block it last mined — not to the probe's current spot,
+         * which after a delivery is always back at home — and the top few are verified with a real
+         * pathfind; the first that yields a reachable path wins. Recently-abandoned nodes are skipped
+         * until their cooldown lapses.
+         *
+         * <p>Returns {@code null} when nothing of the assigned resource is standing, which parks the
+         * worker on {@link AwaitRegenGoal} rather than letting it drift onto a different resource.
+         * The one exception is a resource that has left the base altogether — none of it standing and
+         * none of it regenerating — where keeping the assignment would leave the worker waiting on
+         * something that is never coming back, so it is dropped and the search re-run unfiltered.
          */
         @Nullable
         private BlockPos findNearestHarvestable() {
+            Scan scan = scan(this.probe.assignedType);
+            BlockPos pick = firstPathable(scan.candidates());
+            // Only a worker with nothing to mine waits, so the node is handed over only then.
+            this.probe.pendingNodePos = pick == null ? scan.pendingNode() : null;
+            if (pick != null || this.probe.assignedType == null) {
+                return pick;
+            }
+            if (scan.sawAssignedResource()) {
+                return null; // depleted (or briefly unreachable) — wait it out, do not switch resource
+            }
+            this.probe.assignedType = null;
+            return firstPathable(scan(null).candidates());
+        }
+
+        /**
+         * One sweep of the box around home, collecting everything the harvest decision needs: the
+         * rankable candidates of {@code assigned} (of any resource when it is {@code null}), the
+         * nearest node of it that is regenerating, and whether the box holds any of that resource at
+         * all — standing or depleted, reachable or not. All three come off the same sweep, because
+         * the sweep is the expensive part.
+         */
+        private Scan scan(@Nullable ResourceType assigned) {
             Level level = this.probe.level();
             BlockPos home = this.probe.homePos;
-            ResourceType preferred = this.probe.lastResourceType;
             // Rank by proximity to the last-mined block so the probe returns to its vein; a probe that
             // has never mined falls back to its current position.
             BlockPos ref = this.probe.lastMinedPos != null
@@ -464,13 +536,28 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             this.unreachable.entrySet().removeIf(e -> e.getValue() <= now);
 
             List<Candidate> candidates = new ArrayList<>();
+            BlockPos pendingNode = null;
+            double pendingDistSqr = Double.MAX_VALUE;
+            boolean sawAssignedResource = false;
             for (BlockPos pos : BlockPos.betweenClosed(
                     home.offset(-SEARCH_RADIUS, -SEARCH_VERTICAL, -SEARCH_RADIUS),
                     home.offset(SEARCH_RADIUS, SEARCH_VERTICAL, SEARCH_RADIUS))) {
                 BlockState state = level.getBlockState(pos);
                 if (!this.probe.canHarvest(state)) {
+                    if (assigned != null && regeneratesInto(level, pos, state, assigned)) {
+                        sawAssignedResource = true;
+                        double distSqr = pos.distSqr(ref);
+                        if (distSqr < pendingDistSqr) {
+                            pendingDistSqr = distSqr;
+                            pendingNode = pos.immutable();
+                        }
+                    }
                     continue;
                 }
+                if (!mines(assigned, ResourceType.of(state))) {
+                    continue;
+                }
+                sawAssignedResource = true;
                 // Cheap pre-filter: some passable neighbor to stand at. A real pathfind (below)
                 // then confirms the probe can actually get there.
                 if (!isReachable(level, pos)) {
@@ -480,23 +567,28 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
                 if (this.unreachable.containsKey(immutable)) {
                     continue;
                 }
-                double dist = pos.distSqr(ref);
-                boolean sameType = preferred != null && ResourceType.of(state) == preferred;
-                candidates.add(new Candidate(immutable, dist, sameType));
+                candidates.add(new Candidate(immutable, pos.distSqr(ref)));
             }
-            candidates.sort(Comparator.comparing((Candidate c) -> c.sameType).reversed()
-                    .thenComparingDouble(c -> c.distSqr));
+            candidates.sort(Comparator.comparingDouble(Candidate::distSqr));
+            return new Scan(candidates, pendingNode, sawAssignedResource);
+        }
 
+        /**
+         * The nearest candidate a real pathfind reaches, blacklisting the ones it rejects on the way
+         * so later searches do not keep re-checking them. Capped at {@link #MAX_PATH_CHECKS} A* runs.
+         */
+        @Nullable
+        private BlockPos firstPathable(List<Candidate> candidates) {
+            long now = this.probe.level().getGameTime();
             int checks = 0;
             for (Candidate candidate : candidates) {
                 if (checks++ >= MAX_PATH_CHECKS) {
                     break;
                 }
-                if (canPathTo(candidate.pos)) {
-                    return candidate.pos;
+                if (canPathTo(candidate.pos())) {
+                    return candidate.pos();
                 }
-                // No path this search: blacklist so subsequent searches don't keep re-checking it.
-                this.unreachable.put(candidate.pos, now + UNREACHABLE_COOLDOWN);
+                this.unreachable.put(candidate.pos(), now + UNREACHABLE_COOLDOWN);
             }
             return null;
         }
@@ -516,8 +608,83 @@ public class ProbeEntity extends PathfinderMob implements Shielded {
             return false;
         }
 
-        /** A ranked harvest candidate: same-type nodes sort ahead of others, then nearest first. */
-        private record Candidate(BlockPos pos, double distSqr, boolean sameType) {
+        /** A ranked harvest candidate: nearest to the last-mined block first. */
+        private record Candidate(BlockPos pos, double distSqr) {
+        }
+
+        /** Everything one sweep of the home box turned up — see {@link #scan(ResourceType)}. */
+        private record Scan(List<Candidate> candidates, @Nullable BlockPos pendingNode,
+                            boolean sawAssignedResource) {
+        }
+    }
+
+    /**
+     * What a worker does when every node of its assigned resource is depleted: walk to the nearest
+     * one and hold there until it regrows, instead of drifting onto a resource it was not put on.
+     * Ranked below {@link HarvestGoal}, whose search is also what hands this goal the node to wait
+     * at, so the moment that node is a real block again the harvest reclaims the worker.
+     */
+    static class AwaitRegenGoal extends Goal {
+        private static final double WAIT_RANGE_SQR = 9.0; // close enough to read as holding the spot
+
+        private final ProbeEntity probe;
+        @Nullable
+        private BlockPos node;
+
+        AwaitRegenGoal(ProbeEntity probe) {
+            this.probe = probe;
+            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() {
+            BlockPos pending = this.probe.pendingNodePos;
+            if (pending == null || !stillWorthWaitingFor(pending)) {
+                return false;
+            }
+            this.node = pending;
+            return true;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.node != null && stillWorthWaitingFor(this.node);
+        }
+
+        /** Whether the worker is free, still assigned, and that node is still regrowing its resource. */
+        private boolean stillWorthWaitingFor(BlockPos pos) {
+            ResourceType assigned = this.probe.assignedType;
+            return !this.probe.isCarrying()
+                    && assigned != null
+                    && regeneratesInto(this.probe.level(), pos, this.probe.level().getBlockState(pos), assigned);
+        }
+
+        @Override
+        public void stop() {
+            this.node = null;
+            this.probe.getNavigation().stop();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            if (this.node == null) {
+                return;
+            }
+            BlockPos pos = this.node;
+            this.probe.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (pos.distToCenterSqr(this.probe.position()) > WAIT_RANGE_SQR) {
+                if (this.probe.getNavigation().isDone()) {
+                    this.probe.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.0);
+                }
+            } else {
+                // Arrived: stand over the node rather than shuffling around it.
+                this.probe.getNavigation().stop();
+            }
         }
     }
 
