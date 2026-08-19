@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
+import net.bitflora.asteriskcraft.entity.Flyer;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
@@ -51,7 +52,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#MUTALISK} — not here.
  */
-public class MutaliskEntity extends Monster implements RangedAttackMob {
+public class MutaliskEntity extends Monster implements Flyer, RangedAttackMob {
     private static final UnitStat STAT = UnitStats.MUTALISK;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
     private static final UnitStat.Flight FLIGHT = STAT.flightOrThrow();

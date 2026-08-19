@@ -46,7 +46,10 @@ public final class UnitStats {
 
     public static final UnitStat SCOUT = UnitStat.builder("scout")
             .health(75.0).shield(50).armor(0.5).speed(0.25)
-            .attackDamage(11.0).ranged(9.0f, 30)
+            // Anti-air is what a Scout is for: 21 to a Mutalisk against 11 to anything on the
+            // ground, so a pair of Scouts out-trades the flock they intercept while staying an
+            // indifferent answer to a ground army the Zealots should be handling.
+            .attackDamage(4.0).antiAirBonus(10.0).ranged(9.0f, 30)
             .flight(0.6, 6, 64.0f)
             .cost(UnitCost.all(line(STONE, 150), line(IRON, 20))).buildTicks(200)
             .build();

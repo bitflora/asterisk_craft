@@ -31,6 +31,46 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class GameBootstrapTest {
 
+    /**
+     * The stone ring around a Hive must have no gap a Drone's seam could fall through: every
+     * ring column needs a ring neighbour on each side going round, which is what a rounded-distance
+     * test buys over a strict {@code dist == radius} one.
+     */
+    @Test
+    void stoneRingIsContinuous() {
+        int radius = 8;
+        int count = 0;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (!GameBootstrap.isOnStoneRing(dx, dz)) {
+                    continue;
+                }
+                count++;
+                boolean hasNeighbour = false;
+                for (int nx = -1; nx <= 1 && !hasNeighbour; nx++) {
+                    for (int nz = -1; nz <= 1; nz++) {
+                        if ((nx != 0 || nz != 0) && GameBootstrap.isOnStoneRing(dx + nx, dz + nz)) {
+                            hasNeighbour = true;
+                            break;
+                        }
+                    }
+                }
+                assertTrue(hasNeighbour, "ring column " + dx + "," + dz + " is isolated");
+            }
+        }
+        assertTrue(count > 40, "a radius-8 ring should be ~50 blocks of stone, got " + count);
+    }
+
+    /** The ring sits clear of the Hive mound and of the scattered garden nodes at radius 5-6. */
+    @Test
+    void stoneRingClearsTheHiveAndGarden() {
+        assertFalse(GameBootstrap.isOnStoneRing(0, 0), "the ring must not cover the Hive core");
+        assertFalse(GameBootstrap.isOnStoneRing(5, 0), "the ring must not sit on a garden node");
+        assertFalse(GameBootstrap.isOnStoneRing(6, 2), "the ring must not sit on a garden node");
+        assertTrue(GameBootstrap.isOnStoneRing(8, 0), "the ring passes through the cardinal offsets");
+        assertTrue(GameBootstrap.isOnStoneRing(0, -8), "the ring passes through the cardinal offsets");
+    }
+
     @Test
     void rejectsHivesWithinMinSeparation() {
         List<BlockPos> placed = List.of(new BlockPos(0, 64, 0));

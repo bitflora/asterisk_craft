@@ -52,6 +52,13 @@ public record UnitStat(
         Optional<Flight> flight,
         /** Absent = a shot hits exactly one target. */
         Optional<Bounce> bounce,
+        /**
+         * Extra damage this unit's attack deals to an air target (an {@code entity.Flyer}), on top of
+         * {@link #attackDamage}; 0 = it hits air and ground alike. It is a flat bonus rather than a
+         * second damage number so that one attribute still describes the attack — the anti-air case is
+         * applied at the attack site, and nothing about targeting or acquisition changes with it.
+         */
+        double antiAirBonus,
         /** Length of the client strike animation, in ticks; 0 = none. */
         int attackAnimTicks,
         /**
@@ -119,6 +126,7 @@ public record UnitStat(
         private Optional<Ranged> ranged = Optional.empty();
         private Optional<Flight> flight = Optional.empty();
         private Optional<Bounce> bounce = Optional.empty();
+        private double antiAirBonus;           // 0.0 == hits air and ground for the same damage
         private int attackAnimTicks;
         private int buildTicks;                // required iff the cost is purchasable
         private UnitCost cost;                 // required (use UnitCost.NONE for a non-purchasable unit)
@@ -187,6 +195,12 @@ public record UnitStat(
             return this;
         }
 
+        /** Flat extra damage against air targets, on top of {@link #attackDamage}. */
+        public Builder antiAirBonus(double v) {
+            this.antiAirBonus = v;
+            return this;
+        }
+
         public Builder attackAnimTicks(int v) {
             this.attackAnimTicks = v;
             return this;
@@ -220,6 +234,10 @@ public record UnitStat(
                         + " never trained — a producer would otherwise pop it out on the same tick it"
                         + " was ordered");
             }
+            if (this.antiAirBonus != 0.0 && this.attackDamage.isEmpty()) {
+                throw new IllegalStateException(this.id
+                        + ": an anti-air bonus needs an attackDamage to add itself to");
+            }
             if (this.stepHeight >= 2.0) {
                 throw new IllegalStateException(this.id
                         + ": stepHeight must stay under 2.0 — at 2.0 the pathfinder starts planning"
@@ -227,7 +245,8 @@ public record UnitStat(
             }
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
                     this.knockbackResistance, this.stepHeight, this.followRange, this.shield,
-                    this.attackDamage, this.ranged, this.flight, this.bounce, this.attackAnimTicks,
+                    this.attackDamage, this.ranged, this.flight, this.bounce, this.antiAirBonus,
+                    this.attackAnimTicks,
                     this.buildTicks, this.cost);
         }
     }

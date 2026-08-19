@@ -65,6 +65,34 @@ class UnitBalanceTest {
         }
 
         @Test
+        void scoutHitsAirHarderThanGround() {
+            // The Scout is the interceptor: its bonus only applies to a Flyer target (applied in
+            // ScoutEntity.performRangedAttack), so a Mutalisk takes far more than a ground unit does.
+            double antiAir = UnitStats.SCOUT.attackDamageOrThrow() + UnitStats.SCOUT.antiAirBonus();
+            assertTrue(UnitStats.SCOUT.antiAirBonus() > 0.0);
+            assertTrue(antiAir > UnitStats.SCOUT.attackDamageOrThrow());
+            // And the bonus has to be big enough to decide the duel, not just shade it: on the shared
+            // cadence, a Scout must down a Mutalisk in far fewer volleys than the Mutalisk needs to
+            // chew through 75 HP behind 50 shields, or intercepting is never worth the Scout's price.
+            double scoutVolleys = Math.ceil(UnitStats.MUTALISK.maxHealth() / antiAir);
+            double mutaliskVolleys = Math.ceil(
+                    (UnitStats.SCOUT.maxHealth() + UnitStats.SCOUT.shield())
+                            / UnitStats.MUTALISK.attackDamageOrThrow());
+            assertTrue(scoutVolleys * 2 < mutaliskVolleys);
+        }
+
+        @Test
+        void onlyTheScoutCarriesAnAntiAirBonus() {
+            // Zerg air has no dedicated interceptor — a Mutalisk glave reads the same to everything,
+            // which is what makes the Scout the answer to a flock rather than a mirror of it.
+            for (UnitStat stat : UnitStats.all()) {
+                if (stat != UnitStats.SCOUT) {
+                    assertTrue(stat.antiAirBonus() == 0.0, stat.id() + " unexpectedly hits air harder");
+                }
+            }
+        }
+
+        @Test
         void scoutIsTheCostliestGatewayUnit() {
             // More stone than a Dragoon, and the only unit gated on refined metal.
             assertTrue(UnitStats.SCOUT.cost().amountOf(Resource.STONE) > UnitStats.DRAGOON.cost().amountOf(Resource.STONE));

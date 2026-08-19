@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.entity.protoss;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
+import net.bitflora.asteriskcraft.entity.Flyer;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
@@ -39,6 +40,10 @@ import net.minecraft.world.level.Level;
  * Like every flyer, melee ground units simply cannot reach it; a Photon Cannon still out-ranges it,
  * which keeps static defence the hard counter to air on both sides.
  *
+ * <p>It is the mod's dedicated interceptor: its missile carries an anti-air bonus, so it hits another
+ * {@link Flyer} for far more than it hits anything on the ground. That lives in the attack, not in
+ * targeting — a Scout still acquires whatever {@code FactionTargetGoal} hands it.
+ *
  * <p>Flight is the existing stack used verbatim, and no goal knows about it: a vanilla
  * {@link FlyingMoveControl} for the airborne motion plus a {@link HoverFlyingNavigation} that lifts
  * every destination to cruising altitude <em>before</em> pathing (see that class for why the altitude
@@ -50,7 +55,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#SCOUT} — not here.
  */
-public class ScoutEntity extends Monster implements Shielded, RangedAttackMob {
+public class ScoutEntity extends Monster implements Flyer, Shielded, RangedAttackMob {
     private static final UnitStat STAT = UnitStats.SCOUT;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
     private static final UnitStat.Flight FLIGHT = STAT.flightOrThrow();
@@ -106,7 +111,12 @@ public class ScoutEntity extends Monster implements Shielded, RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
-        HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
+        // The anti-air bonus rides on top of the attribute rather than replacing it, so a Scout's
+        // ground damage stays exactly what the attribute says while an intercepted flyer takes the
+        // full missile. Air-ness is the Flyer marker, never a concrete entity class.
+        double damage = this.getAttributeValue(Attributes.ATTACK_DAMAGE)
+                + (Flyer.isAir(target) ? STAT.antiAirBonus() : 0.0);
+        HitscanAttacks.fire(this, target, damage,
                 AsteriskCraftDamageTypes.ANTI_MATTER_MISSILE, ParticleTypes.ELECTRIC_SPARK, SoundEvents.SHULKER_SHOOT);
     }
 

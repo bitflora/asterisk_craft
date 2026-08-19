@@ -88,6 +88,13 @@ public final class GameBootstrap {
     // Zerg "creep": every exposed natural-ground surface block within this radius of a Hive is
     // overrun with mycelium.
     private static final int HIVE_INFEST_RADIUS = 10;
+
+    /**
+     * Radius of the unbroken stone ring laid around each Hive. Sits outside the scattered garden
+     * nodes (which reach out to 6) and inside the creep disc, so the ring is on ground the Hive
+     * has already cleared and infested.
+     */
+    private static final int HIVE_STONE_RING_RADIUS = 8;
     private static final Set<Block> INFESTABLE_GROUND = Set.of(
             Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
     // How far down to scan past a tree's logs and undergrowth when locating the real ground beneath
@@ -256,6 +263,7 @@ public final class GameBootstrap {
                 cores.add(core);
             }
             seedResourceGarden(level, chosen.getX(), chosen.getZ());
+            seedStoneRing(level, chosen.getX(), chosen.getZ());
         }
         level.setData(GameAttachments.HIVE_POSITIONS, List.copyOf(cores));
         seedZergArmyBank(level);
@@ -577,6 +585,36 @@ public final class GameBootstrap {
             int y = groundHeight(level, x, z);
             level.setBlock(new BlockPos(x, y, z), nodes[i], Block.UPDATE_ALL);
         }
+    }
+
+    /**
+     * Lays an unbroken ring of stone around a Hive at {@link #HIVE_STONE_RING_RADIUS}, so its
+     * Drones have a mineable seam that lasts rather than exhausting the handful of scattered
+     * {@link #seedResourceGarden} nodes and then standing idle.
+     *
+     * <p>A column joins the ring when its distance from the centre <i>rounds</i> to the radius,
+     * which is what makes the circle continuous: a strict {@code dist == radius} test leaves gaps
+     * wherever the circle passes between block centres. Placed at {@link #groundHeight} like the
+     * garden nodes, so the ring follows the terrain instead of hanging over a slope.
+     */
+    private static void seedStoneRing(ServerLevel level, int cx, int cz) {
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        for (int dx = -HIVE_STONE_RING_RADIUS; dx <= HIVE_STONE_RING_RADIUS; dx++) {
+            for (int dz = -HIVE_STONE_RING_RADIUS; dz <= HIVE_STONE_RING_RADIUS; dz++) {
+                if (!isOnStoneRing(dx, dz)) {
+                    continue;
+                }
+                int x = cx + dx;
+                int z = cz + dz;
+                int y = groundHeight(level, x, z);
+                level.setBlock(new BlockPos(x, y, z), stone, Block.UPDATE_ALL);
+            }
+        }
+    }
+
+    /** True if this offset from a Hive's centre belongs to the stone ring. Pure, so it is unit-testable. */
+    static boolean isOnStoneRing(int dx, int dz) {
+        return Math.round(Math.sqrt(dx * dx + dz * dz)) == HIVE_STONE_RING_RADIUS;
     }
 
     /**
