@@ -37,6 +37,7 @@ public class CursorItem extends Item {
         adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.select").withStyle(ChatFormatting.GRAY));
         adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.group").withStyle(ChatFormatting.GRAY));
         adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.order").withStyle(ChatFormatting.GRAY));
+        adder.accept(Component.translatable("item.asteriskcraft.cursor.tip.groups").withStyle(ChatFormatting.GRAY));
     }
 
     @SubscribeEvent

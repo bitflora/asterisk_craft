@@ -26,9 +26,21 @@ public final class CommandAttachments {
     public static final Supplier<AttachmentType<PlayerSelection>> SELECTION = ATTACHMENT_TYPES.register(
             "selection", () -> AttachmentType.<PlayerSelection>builder(PlayerSelection::new).build());
 
-    public static final Supplier<AttachmentType<ControlGroups>> CONTROL_GROUPS = ATTACHMENT_TYPES.register(
-            "control_groups", () -> AttachmentType.<ControlGroups>builder(ControlGroups::new)
-                    .serialize(ControlGroups.CODEC.fieldOf("groups")).build());
+    /**
+     * {@code copyOnDeath} because dying is not losing here — the player respawns and their army is
+     * still standing out in the world, so the groups pointing at it must survive with them.
+     */
+    public static final Supplier<AttachmentType<UnitGroups>> UNIT_GROUPS = ATTACHMENT_TYPES.register(
+            "unit_groups", () -> AttachmentType.<UnitGroups>builder(UnitGroups::new)
+                    .serialize(UnitGroups.CODEC.fieldOf("groups")).copyOnDeath().build());
+
+    /**
+     * The last {@link UnitGroupSnapshot} pushed to this player's client, so {@link UnitGroupSync}'s
+     * once-a-second sweep only puts a packet on the wire when something actually changed. Transient
+     * on purpose: a reconnecting client has no cache, and login force-sends anyway.
+     */
+    public static final Supplier<AttachmentType<UnitGroupSnapshot>> LAST_SYNCED_GROUPS = ATTACHMENT_TYPES.register(
+            "last_synced_groups", () -> AttachmentType.<UnitGroupSnapshot>builder(() -> UnitGroupSnapshot.EMPTY).build());
 
     /**
      * Game time at which the unit's current move order stops overriding combat, or 0 for "not
@@ -100,7 +112,7 @@ public final class CommandAttachments {
         return player.getData(SELECTION);
     }
 
-    public static ControlGroups controlGroups(Player player) {
-        return player.getData(CONTROL_GROUPS);
+    public static UnitGroups unitGroups(Player player) {
+        return player.getData(UNIT_GROUPS);
     }
 }

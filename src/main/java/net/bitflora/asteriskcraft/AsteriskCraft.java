@@ -18,8 +18,9 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
 import net.bitflora.asteriskcraft.command.CommandInputResolver;
-import net.bitflora.asteriskcraft.command.ControlGroupPacket;
-import net.bitflora.asteriskcraft.command.ControlGroupResolver;
+import net.bitflora.asteriskcraft.command.UnitGroupPacket;
+import net.bitflora.asteriskcraft.command.UnitGroupResolver;
+import net.bitflora.asteriskcraft.command.UnitGroupSyncPacket;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.combat.ZergRegenAttachments;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
@@ -450,9 +451,15 @@ public class AsteriskCraft {
         event.registrar("1").playToServer(CommandInputPacket.TYPE, CommandInputPacket.STREAM_CODEC,
                 (packet, context) -> context.enqueueWork(
                         () -> CommandInputResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
-        event.registrar("1").playToServer(ControlGroupPacket.TYPE, ControlGroupPacket.STREAM_CODEC,
+        event.registrar("1").playToServer(UnitGroupPacket.TYPE, UnitGroupPacket.STREAM_CODEC,
                 (packet, context) -> context.enqueueWork(
-                        () -> ControlGroupResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
+                        () -> UnitGroupResolver.handle(packet, (net.minecraft.server.level.ServerPlayer) context.player())));
+        // The mod's only server->client payload. ClientUnitGroups is client-dist only, so it is
+        // named inside the lambda body: a dedicated server registers this handler but never runs
+        // it, and the class is therefore never resolved there.
+        event.registrar("1").playToClient(UnitGroupSyncPacket.TYPE, UnitGroupSyncPacket.STREAM_CODEC,
+                (packet, context) -> context.enqueueWork(
+                        () -> net.bitflora.asteriskcraft.command.client.ClientUnitGroups.accept(packet)));
     }
 
     // One line per net.bitflora.asteriskcraft.stats.UnitStats entry — stats.UnitStatsTest pins the
