@@ -24,6 +24,7 @@ import net.bitflora.asteriskcraft.command.UnitGroupSyncPacket;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.faction.DetectionAttachments;
 import net.bitflora.asteriskcraft.combat.ZergRegenAttachments;
+import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
 import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
@@ -206,6 +207,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scout"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<DarkTemplarEntity>> DARK_TEMPLAR =
+            ENTITY_TYPES.register("dark_templar", () -> EntityType.Builder.of(DarkTemplarEntity::new, MobCategory.MONSTER)
+                    // Identical to the Zealot's, deliberately: it is the same frame, and the same
+                    // pathfinding footprint means a squad of both moves through the same gaps.
+                    .sized(0.8f, 1.99f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dark_templar"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
             ENTITY_TYPES.register("drone", () -> EntityType.Builder.of(DroneEntity::new, MobCategory.CREATURE)
                     // Squat and wide, matching its carapace: broader than it is tall. Still under 1.0
@@ -296,6 +305,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ENEMY = ITEMS.registerItem("scout_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SCOUT, Faction.ZERG));
 
+    public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ALLY = ITEMS.registerItem("dark_templar_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ENEMY = ITEMS.registerItem("dark_templar_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, Faction.ZERG));
+
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ALLY = ITEMS.registerItem("drone_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, DRONE, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ENEMY = ITEMS.registerItem("drone_spawn_egg_enemy",
@@ -382,6 +396,14 @@ public class AsteriskCraft {
     public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_AMBIENT =
             SOUND_EVENTS.register("entity.scout.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.ambient")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> DARK_TEMPLAR_AMBIENT =
+            SOUND_EVENTS.register("entity.dark_templar.ambient",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.dark_templar.ambient")));
+    // No hurt event: the ported clips carry no hurt bark, so it keeps vanilla's (as the Ultralisk does).
+    public static final DeferredHolder<SoundEvent, SoundEvent> DARK_TEMPLAR_DEATH =
+            SOUND_EVENTS.register("entity.dark_templar.death",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.dark_templar.death")));
+
     // --- Creative tab ---
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()
@@ -404,6 +426,8 @@ public class AsteriskCraft {
                 output.accept(DRAGOON_SPAWN_EGG_ENEMY.get());
                 output.accept(SCOUT_SPAWN_EGG_ALLY.get());
                 output.accept(SCOUT_SPAWN_EGG_ENEMY.get());
+            output.accept(DARK_TEMPLAR_SPAWN_EGG_ALLY.get());
+            output.accept(DARK_TEMPLAR_SPAWN_EGG_ENEMY.get());
                 output.accept(DRONE_SPAWN_EGG_ALLY.get());
                 output.accept(DRONE_SPAWN_EGG_ENEMY.get());
                 output.accept(ZERGLING_SPAWN_EGG_ALLY.get());
@@ -472,6 +496,7 @@ public class AsteriskCraft {
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());
+        event.put(DARK_TEMPLAR.get(), DarkTemplarEntity.createAttributes().build());
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
         event.put(ULTRALISK.get(), UltraliskEntity.createAttributes().build());

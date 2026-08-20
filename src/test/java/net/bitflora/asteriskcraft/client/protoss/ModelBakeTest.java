@@ -37,6 +37,11 @@ class ModelBakeTest {
     }
 
     @Test
+    void darkTemplarModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new DarkTemplarModel(DarkTemplarModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
     void zerglingModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new ZerglingModel(ZerglingModel.createBodyLayer().bakeRoot()));
     }

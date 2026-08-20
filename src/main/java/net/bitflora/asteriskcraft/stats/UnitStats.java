@@ -54,6 +54,19 @@ public final class UnitStats {
             .cost(UnitCost.all(line(STONE, 150), line(IRON, 20))).buildTicks(200)
             .build();
 
+    /**
+     * The first unit in the mod to carry {@code faction.Cloaked}, and priced for it. Hits harder than
+     * anything else the Gateway makes and cannot be fought back at while undetected — so it is
+     * deliberately the most fragile thing on the Protoss roster behind the Probe: a single Sunken
+     * Colony spike (20) takes half of it, and the shield does not cover the gap. Expensive in build
+     * time rather than in any one resource, so massing them costs tempo the player feels.
+     */
+    public static final UnitStat DARK_TEMPLAR = UnitStat.builder("dark_templar")
+            .health(40.0).shield(20).armor(1.0).speed(0.25)
+            .attackDamage(20.0).attackAnimTicks(12)
+            .cost(UnitCost.all(line(STONE, 75), line(WOOD, 50), line(IRON, 2))).buildTicks(20 * 50)
+            .build();
+
     /** Kit-bought at the Nexus for {@code NexusBlockEntity.BUILDING_COST}, not trained directly — hence NONE. */
     public static final UnitStat PHOTON_CANNON = UnitStat.builder("photon_cannon")
             .health(50.0).shield(50).rooted()
@@ -128,7 +141,7 @@ public final class UnitStats {
 
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
     public static final List<UnitStat> PROTOSS_ROSTER =
-            List.of(PROBE, ZEALOT, DRAGOON, SCOUT, PHOTON_CANNON);
+            List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =

@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.faction;
 
 import net.bitflora.asteriskcraft.entity.Detector;
+import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
@@ -27,8 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * underneath it, and the detector wiring — a marker interface is exactly the kind of thing that is
  * silently easy to drop, since nothing fails to compile without it.
  *
- * <p>No unit currently carries {@link Cloaked}: the mechanism is finished and deliberately dormant,
- * waiting on a design decision about which unit should have it rather than on any more code.
+ * <p>Exactly one unit carries {@link Cloaked}: the Dark Templar, which is what the mechanism was
+ * built for and priced against. Cloak is opt-in and is meant to stay rare — a unit that gets it
+ * essentially cannot be fought back at, so it is a property a unit is designed around rather than
+ * one handed to a line trooper.
  */
 class CloakingTest {
 
@@ -123,10 +126,18 @@ class CloakingTest {
     // --- The wiring: markers are easy to drop, and nothing else notices ---
 
     @Test
-    void noUnitCloaksYet() {
-        // The mechanism is complete and dormant: nothing on the roster carries the marker, so cloak
-        // costs a live game one instanceof per targeting check and nothing else. Assigning it is a
-        // one-word edit to a class declaration — this is not a placeholder waiting on more code.
+    void theDarkTemplarIsTheCloakedUnit() {
+        // The marker is the entire implementation of its cloak — there is no state and no toggle —
+        // so nothing else fails if it is dropped by accident. Hence a test.
+        assertTrue(Cloaked.class.isAssignableFrom(DarkTemplarEntity.class));
+    }
+
+    @Test
+    void lineUnitsDoNotCloak() {
+        // Cloak is opt-in and meant to stay rare. The Zealot and Hydralisk are named specifically
+        // because both carried it during the mechanism's spike and both were taken back off it: an
+        // undetected attacker cannot be retaliated against, which is far too much to hand a unit at
+        // a Zealot's price.
         //
         // Deliberately spot-checks rather than sweeping the roster: a sweep would turn "somebody
         // gave a unit cloak" into a test failure, and that is a design decision to review, not a

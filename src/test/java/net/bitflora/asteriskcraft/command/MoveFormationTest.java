@@ -25,7 +25,8 @@ class MoveFormationTest {
     /** Every mobile unit that can receive a move order, so a hitbox change can't quietly break spacing. */
     private static final EntityType<?>[] COMMANDABLE_UNITS = {
             AsteriskCraft.PROBE.get(), AsteriskCraft.ZEALOT.get(), AsteriskCraft.DRAGOON.get(),
-            AsteriskCraft.SCOUT.get(), AsteriskCraft.DRONE.get(), AsteriskCraft.ZERGLING.get(),
+            AsteriskCraft.SCOUT.get(), AsteriskCraft.DARK_TEMPLAR.get(),
+            AsteriskCraft.DRONE.get(), AsteriskCraft.ZERGLING.get(),
             AsteriskCraft.HYDRALISK.get(), AsteriskCraft.MUTALISK.get(),
     };
 

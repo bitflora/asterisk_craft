@@ -37,6 +37,8 @@ public final class UnitLabels {
             Map.entry("dragoon", "D"),
             Map.entry("scout", "S"),
             Map.entry("photon_cannon", "C"),
+            // T for Templar: D is the Dragoon's, and the letters only need to be unique per roster.
+            Map.entry("dark_templar", "T"),
             // Zerg
             Map.entry("drone", "D"),
             Map.entry("zergling", "Z"),

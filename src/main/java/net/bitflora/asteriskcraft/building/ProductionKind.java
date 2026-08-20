@@ -62,7 +62,10 @@ public enum ProductionKind {
                     CostText.tooltip(UnitStats.DRAGOON.cost(), 0), 1),
             new OptionView(
                     Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 112, 111),
-                    CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2)));
+                    CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2),
+            new OptionView(
+                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dark_templar.png"), 117, 114),
+                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 3)));
 
     /** One train button: an icon, a cost tooltip, and the unit column it stacks into (see class docs). */
     public record OptionView(Icon icon, Component costTooltip, int column) {

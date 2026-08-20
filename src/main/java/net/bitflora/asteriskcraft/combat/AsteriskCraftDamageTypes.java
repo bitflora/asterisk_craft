@@ -34,6 +34,7 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> PHASE_DISRUPTOR = key("phase_disruptor");
     public static final ResourceKey<DamageType> ANTI_MATTER_MISSILE = key("anti_matter_missile");
     public static final ResourceKey<DamageType> PHOTON_BLAST = key("photon_blast");
+    public static final ResourceKey<DamageType> WARP_BLADE = key("warp_blade");
 
     // Zerg
     public static final ResourceKey<DamageType> ZERGLING_CLAWS = key("zergling_claws");
@@ -44,7 +45,7 @@ public final class AsteriskCraftDamageTypes {
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
-            PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST,
+            PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_SPINES);
 
     private AsteriskCraftDamageTypes() {

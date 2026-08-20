@@ -52,7 +52,7 @@ import java.util.List;
 public class GatewayBlockEntity extends BlockEntity
         implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding, SiegeTarget {
     public enum UnitType implements StringRepresentable {
-        ZEALOT("zealot"), DRAGOON("dragoon"), SCOUT("scout");
+        ZEALOT("zealot"), DRAGOON("dragoon"), SCOUT("scout"), DARK_TEMPLAR("dark_templar");
 
         public static final Codec<UnitType> CODEC = StringRepresentable.fromEnum(UnitType::values);
         public static final Codec<List<UnitType>> LIST_CODEC = CODEC.listOf();
@@ -95,6 +95,7 @@ public class GatewayBlockEntity extends BlockEntity
                 case ProductionMenu.DATA_QUEUE_BASE -> countQueued(UnitType.ZEALOT);
                 case ProductionMenu.DATA_QUEUE_BASE + 1 -> countQueued(UnitType.DRAGOON);
                 case ProductionMenu.DATA_QUEUE_BASE + 2 -> countQueued(UnitType.SCOUT);
+            case ProductionMenu.DATA_QUEUE_BASE + 3 -> countQueued(UnitType.DARK_TEMPLAR);
                 default -> 0;
             };
         }
@@ -197,6 +198,7 @@ public class GatewayBlockEntity extends BlockEntity
             case 0 -> UnitType.ZEALOT;
             case 1 -> UnitType.DRAGOON;
             case 2 -> UnitType.SCOUT;
+            case 3 -> UnitType.DARK_TEMPLAR;
             default -> null;
         };
         if (type != null) {
@@ -246,6 +248,7 @@ public class GatewayBlockEntity extends BlockEntity
             case ZEALOT -> UnitStats.ZEALOT;
             case DRAGOON -> UnitStats.DRAGOON;
             case SCOUT -> UnitStats.SCOUT;
+            case DARK_TEMPLAR -> UnitStats.DARK_TEMPLAR;
         };
     }
 
@@ -254,6 +257,7 @@ public class GatewayBlockEntity extends BlockEntity
             case ZEALOT -> AsteriskCraft.ZEALOT.get();
             case DRAGOON -> AsteriskCraft.DRAGOON.get();
             case SCOUT -> AsteriskCraft.SCOUT.get();
+            case DARK_TEMPLAR -> AsteriskCraft.DARK_TEMPLAR.get();
         };
         UnitSpawns.spawn(level, pos, entityType, this.faction, false);
     }

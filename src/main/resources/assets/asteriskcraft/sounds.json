@@ -1,4 +1,18 @@
 {
+  "entity.dark_templar.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dark_templar.ambient",
+    "sounds": [
+      "asteriskcraft:mob/dark_templar/dark_templar-live1",
+      "asteriskcraft:mob/dark_templar/dark_templar-live2",
+      "asteriskcraft:mob/dark_templar/dark_templar-live3"
+    ]
+  },
+  "entity.dark_templar.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dark_templar.death",
+    "sounds": ["asteriskcraft:mob/dark_templar/dark_templar-death"]
+  },
   "entity.zealot.ambient": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zealot.ambient",

@@ -1,6 +1,8 @@
 package net.bitflora.asteriskcraft.client;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.client.protoss.DarkTemplarModel;
+import net.bitflora.asteriskcraft.client.protoss.DarkTemplarRenderer;
 import net.bitflora.asteriskcraft.client.protoss.DragoonModel;
 import net.bitflora.asteriskcraft.client.protoss.DragoonRenderer;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
@@ -39,6 +41,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation ZEALOT_LAYER = new ModelLayerLocation(AsteriskCraft.id("zealot"), "main");
     public static final ModelLayerLocation DRAGOON_LAYER = new ModelLayerLocation(AsteriskCraft.id("dragoon"), "main");
     public static final ModelLayerLocation SCOUT_LAYER = new ModelLayerLocation(AsteriskCraft.id("scout"), "main");
+    public static final ModelLayerLocation DARK_TEMPLAR_LAYER = new ModelLayerLocation(AsteriskCraft.id("dark_templar"), "main");
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
     /** Same geometry as the Zergling, baked separately so the Ultralisk can fork its model later. */
     public static final ModelLayerLocation ULTRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("ultralisk"), "main");
@@ -54,6 +57,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(ZEALOT_LAYER, ZealotModel::createBodyLayer);
         event.registerLayerDefinition(DRAGOON_LAYER, DragoonModel::createBodyLayer);
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
+        event.registerLayerDefinition(DARK_TEMPLAR_LAYER, DarkTemplarModel::createBodyLayer);
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(ULTRALISK_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
@@ -69,6 +73,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), DragoonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SCOUT.get(), ScoutRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.DARK_TEMPLAR.get(), DarkTemplarRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ULTRALISK.get(), UltraliskRenderer::new);

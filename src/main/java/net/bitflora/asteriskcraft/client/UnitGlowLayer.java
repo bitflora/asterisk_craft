@@ -27,19 +27,26 @@ public class UnitGlowLayer<S extends LivingEntityRenderState, M extends EntityMo
     }
 
     /**
-     * Suppressed entirely while the unit is invisible.
+     * Suppressed when the body is not being drawn at all.
      *
-     * <p>{@link EyesLayer} carries no {@code isInvisible} check of its own — unlike
+     * <p>{@link EyesLayer} carries no invisibility check of its own — unlike
      * {@code RenderLayer.coloredCutoutModelCopyLayerRender}, which has one — so without this a
-     * cloaked unit would keep drawing a full-bright glow in the exact shape of the body that isn't
-     * being drawn, which is worse than not hiding it at all. It matters for anything invisible, not
-     * just for cloak: this is the layer, and this is where the check belongs, rather than in eleven
-     * renderers that all happen to add it.
+     * hidden unit would keep drawing a full-bright glow in the exact shape of the body that isn't
+     * being drawn, which is worse than not hiding it at all. This is the layer, so this is where
+     * the check belongs, rather than in every renderer that happens to add it.
+     *
+     * <p>The condition is deliberately <em>both</em> flags rather than {@code isInvisible} alone,
+     * and the difference is the whole look of a cloaked unit. An invisible body that is still drawn
+     * for this viewer — a {@code faction.Cloaked} unit seen by the side that commands it, which
+     * vanilla renders at 15% alpha — keeps its glow, so a Dark Templar reads as a dim shimmer
+     * carrying a bright blade instead of a flat grey smear. A body that is genuinely not submitted
+     * has both flags set, and stays dark. See {@code client.CloakRenderStateModifier}, which is
+     * what sets them.
      */
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector collector, int lightCoords, S state,
                        float yRot, float xRot) {
-        if (state.isInvisible) {
+        if (state.isInvisible && state.isInvisibleToPlayer) {
             return;
         }
         super.submit(poseStack, collector, lightCoords, state, yRot, xRot);

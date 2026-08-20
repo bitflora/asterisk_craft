@@ -49,6 +49,7 @@ class UnitFootprintTest {
                 new Ground(AsteriskCraft.PROBE.get(), UnitStats.PROBE),
                 new Ground(AsteriskCraft.ZEALOT.get(), UnitStats.ZEALOT),
                 new Ground(AsteriskCraft.DRAGOON.get(), UnitStats.DRAGOON),
+                new Ground(AsteriskCraft.DARK_TEMPLAR.get(), UnitStats.DARK_TEMPLAR),
                 new Ground(AsteriskCraft.DRONE.get(), UnitStats.DRONE),
                 new Ground(AsteriskCraft.ZERGLING.get(), UnitStats.ZERGLING),
                 new Ground(AsteriskCraft.HYDRALISK.get(), UnitStats.HYDRALISK),
