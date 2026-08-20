@@ -1,7 +1,9 @@
 package net.bitflora.asteriskcraft.building;
 
+import net.bitflora.asteriskcraft.entity.Rooted;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
 
@@ -61,8 +63,9 @@ public final class SpawnSpots {
     }
 
     /**
-     * True if a {@code type} standing centred on {@code spot} has solid footing and its whole body —
-     * not just the column it stands in — is clear of blocks.
+     * True if a {@code type} standing centred on {@code spot} has solid footing, its whole body —
+     * not just the column it stands in — is clear of blocks, and nothing already standing there is
+     * unable to get out of the way.
      */
     private static boolean fits(ServerLevel level, BlockPos spot, EntityType<?> type) {
         // The centre column is checked for air specifically, not merely for a lack of collision, so
@@ -75,6 +78,16 @@ public final class SpawnSpots {
         // Deflated by a hair: a unit exactly as wide as its block sits flush against the neighbouring
         // column's face, which would otherwise read as a collision with it.
         AABB body = type.getSpawnAABB(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5).deflate(1.0E-4);
-        return level.noBlockCollision(null, body);
+        if (!level.noBlockCollision(null, body)) {
+            return false;
+        }
+        // A spot is also taken if a rooted unit is already standing in it. Blocks are not the only
+        // thing that can occupy ground, and the search is deterministic — every caller asking for a
+        // spot near the same core walks the same rings in the same order and would otherwise be
+        // handed the identical block. Two mobile units shove each other apart within a tick, so this
+        // never mattered before; two rooted ones stand inside each other forever, which is exactly
+        // what a Hive's Sunken and Spore Colony did. Only {@link Rooted} counts, so a Drone milling
+        // around the Hive still can't push production out to the far rings.
+        return level.getEntities((Entity) null, body, Rooted::isRooted).isEmpty();
     }
 }

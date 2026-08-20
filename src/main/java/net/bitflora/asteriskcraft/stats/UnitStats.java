@@ -134,7 +134,26 @@ public final class UnitStats {
             .health(150.0).armor(0.0).rooted()
             .attackDamage(20.0).ranged(11.0f, 32).attackAnimTicks(12)
             .followRange(11.0) // == range: a rooted attacker can't close the gap
-            // The Zerg answer to a cloaked Protoss push, on the same envelope as the Photon Cannon.
+            .cost(UnitCost.NONE) // never trained, so no buildTicks either
+            .build();
+
+    /**
+     * The Zerg answer to the air, and the only thing on either side that fires <em>exclusively</em> at
+     * it: acquisition is narrowed by {@code entity.Altitude#isAirborne} rather than by unit type, so
+     * what it may shoot is decided by where a target is, not what it is. Pre-placed beside every Hive
+     * like the Sunken, hence NONE.
+     *
+     * <p>Tuned as a wall rather than a gun: the toughest unit in the mod at 200 HP (a rooted structure
+     * that cannot answer a ground army at all has to survive being ignored), but only 7.5 a shot on a
+     * one-second cadence — 7.5 DPS, less than half the Sunken's, because a flyer it out-ranges cannot
+     * shoot back at all and the exchange should still take a moment.
+     */
+    public static final UnitStat SPORE_COLONY = UnitStat.builder("spore_colony")
+            .health(200.0).armor(0.0).rooted()
+            .attackDamage(7.5).ranged(14.0f, 20).attackAnimTicks(10)
+            .followRange(11.0) // == range: a rooted attacker can't close the gap
+            // The Zerg detector, on the shared envelope — a Hive perimeter now lights up
+            // cloaked attackers from both of its rooted defences.
             .detector(16.0, 20, 60)
             .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
@@ -145,7 +164,7 @@ public final class UnitStats {
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, SUNKEN_COLONY);
+            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, SUNKEN_COLONY, SPORE_COLONY);
 
     private UnitStats() {
     }

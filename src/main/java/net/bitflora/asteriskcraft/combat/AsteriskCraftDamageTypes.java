@@ -42,11 +42,12 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> GLAVE_WURM = key("glave_wurm");
     public static final ResourceKey<DamageType> KAISER_BLADES = key("kaiser_blades");
     public static final ResourceKey<DamageType> SUBTERRANEAN_SPINES = key("subterranean_spines");
+    public static final ResourceKey<DamageType> SEEKER_SPORES = key("seeker_spores");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
-            ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_SPINES);
+            ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_SPINES, SEEKER_SPORES);
 
     private AsteriskCraftDamageTypes() {
     }

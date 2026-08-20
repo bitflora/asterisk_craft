@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
-import net.bitflora.asteriskcraft.entity.Detector;
+import net.bitflora.asteriskcraft.entity.Rooted;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.zerg.SunkenSpikeGoal;
@@ -39,7 +39,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#SUNKEN_COLONY} — not here.
  */
-public class SunkenColonyEntity extends Monster implements Detector {
+public class SunkenColonyEntity extends Monster implements Rooted {
     private static final UnitStat STAT = UnitStats.SUNKEN_COLONY;
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
@@ -68,12 +68,6 @@ public class SunkenColonyEntity extends Monster implements Detector {
         this.goalSelector.addGoal(1, new SunkenSpikeGoal(this));
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));
         this.targetSelector.addGoal(1, new FactionTargetGoal(this));
-    }
-
-    /** A Sunken Colony is the Zerg detector; the envelope is in the balance table. */
-    @Override
-    public UnitStat.Detection detection() {
-        return STAT.detectionOrThrow();
     }
 
     /** Starts the strike animation on every client tracking this colony. */

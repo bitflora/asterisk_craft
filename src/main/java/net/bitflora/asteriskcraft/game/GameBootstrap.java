@@ -85,6 +85,9 @@ public final class GameBootstrap {
     // Static defence planted with each Hive, so an early rush into a Zerg base meets something with
     // teeth even when its army is out on a wave.
     private static final int SUNKEN_COLONIES_PER_HIVE = 1;
+    // Its anti-air counterpart, so a Scout flock can't simply fly over a Hive the way it could
+    // before. Neither colony covers what the other does.
+    private static final int SPORE_COLONIES_PER_HIVE = 1;
     // Zerg "creep": every exposed natural-ground surface block within this radius of a Hive is
     // overrun with mycelium.
     private static final int HIVE_INFEST_RADIUS = 10;
@@ -533,6 +536,9 @@ public final class GameBootstrap {
             }
             for (int i = 0; i < SUNKEN_COLONIES_PER_HIVE; i++) {
                 UnitSpawns.spawn(level, core, AsteriskCraft.SUNKEN_COLONY.get(), Faction.ZERG, false);
+            }
+            for (int i = 0; i < SPORE_COLONIES_PER_HIVE; i++) {
+                UnitSpawns.spawn(level, core, AsteriskCraft.SPORE_COLONY.get(), Faction.ZERG, false);
             }
         }
         return core;

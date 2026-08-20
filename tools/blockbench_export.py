@@ -86,6 +86,7 @@ UNITS = {
     "mutalisk": ("zerg", "MutaliskModel"),
     "drone": ("zerg", "DroneModel"),
     "sunken_colony": ("zerg", "SunkenColonyModel"),
+    "spore_colony": ("zerg", "SporeColonyModel"),
 }
 
 GUTTER = 1  # texels between islands, so painting can't bleed across and fractional sizes stay clear

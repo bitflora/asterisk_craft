@@ -22,7 +22,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(12, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(13, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -55,10 +55,10 @@ class UnitStatsTest {
 
     @Test
     void onlyStaticDefenceIsRooted() {
-        // The executable form of the MOVEMENT_SPEED-defaults-to-0.7 trap: exactly these two units
-        // must be zero-speed / full-knockback-resistance, and nothing else should be.
+        // The executable form of the MOVEMENT_SPEED-defaults-to-0.7 trap: exactly the rooted
+        // defences must be zero-speed / full-knockback-resistance, and nothing else should be.
         for (UnitStat stat : UnitStats.all()) {
-            boolean isStaticDefence = stat == UnitStats.PHOTON_CANNON || stat == UnitStats.SUNKEN_COLONY;
+            boolean isStaticDefence = isStaticDefence(stat);
             assertEquals(isStaticDefence, stat.movementSpeed() == 0.0,
                     stat.id() + ": zero movement speed should match static-defence status");
             assertEquals(isStaticDefence, stat.knockbackResistance() == 1.0,
@@ -127,8 +127,7 @@ class UnitStatsTest {
     @Test
     void staticDefenceNeverAcquiresBeyondItsReach() {
         for (UnitStat stat : UnitStats.all()) {
-            boolean isStaticDefence = stat == UnitStats.PHOTON_CANNON || stat == UnitStats.SUNKEN_COLONY;
-            if (!isStaticDefence) {
+            if (!isStaticDefence(stat)) {
                 continue;
             }
             assertEquals(stat.followRange(), (double) stat.rangedOrThrow().range(), 0.0001,
@@ -200,6 +199,14 @@ class UnitStatsTest {
     void kitBoughtAndPrePlacedUnitsHaveNoDirectCost() {
         assertEquals(UnitCost.NONE, UnitStats.PHOTON_CANNON.cost());
         assertEquals(UnitCost.NONE, UnitStats.SUNKEN_COLONY.cost());
+        assertEquals(UnitCost.NONE, UnitStats.SPORE_COLONY.cost());
+    }
+
+    /** The rooted defences: one per race for ground, plus the Zerg's anti-air Spore Colony. */
+    private static boolean isStaticDefence(UnitStat stat) {
+        return stat == UnitStats.PHOTON_CANNON
+                || stat == UnitStats.SUNKEN_COLONY
+                || stat == UnitStats.SPORE_COLONY;
     }
 
     @Test

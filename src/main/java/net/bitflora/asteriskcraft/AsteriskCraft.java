@@ -35,6 +35,7 @@ import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
+import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.UltraliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
@@ -272,6 +273,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("sunken_colony"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<SporeColonyEntity>> SPORE_COLONY =
+            ENTITY_TYPES.register("spore_colony", () -> EntityType.Builder.of(SporeColonyEntity::new, MobCategory.MONSTER)
+                    // Squat and wide like the Sunken's mound, per the reference art: a low body
+                    // with a chimney on top, broader than it is tall.
+                    .sized(1.4f, 1.4f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("spore_colony"))));
+
     // The spike a Sunken Colony drives out of the ground. Sized like the vanilla Evoker Fangs it
     // extends, since it reuses their renderer wholesale (see AsteriskCraftClient).
     public static final DeferredHolder<EntityType<?>, EntityType<SunkenSpikeEntity>> SUNKEN_SPIKE =
@@ -339,6 +348,11 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.ZERG));
+
+    public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("spore_colony_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("spore_colony_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, Faction.ZERG));
 
     // --- Sounds ---
     // Ambient events each name several ogg files in sounds.json; vanilla's sound system already
@@ -440,6 +454,8 @@ public class AsteriskCraft {
                 output.accept(MUTALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ALLY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ENEMY.get());
+                output.accept(SPORE_COLONY_SPAWN_EGG_ALLY.get());
+                output.accept(SPORE_COLONY_SPAWN_EGG_ENEMY.get());
             }).build());
 
     public AsteriskCraft(IEventBus modEventBus, ModContainer modContainer) {
@@ -504,6 +520,7 @@ public class AsteriskCraft {
         event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
         event.put(SUNKEN_COLONY.get(), SunkenColonyEntity.createAttributes().build());
+        event.put(SPORE_COLONY.get(), SporeColonyEntity.createAttributes().build());
         // No attributes for SUNKEN_SPIKE — it's a plain Entity, not a LivingEntity.
     }
 }

@@ -4,6 +4,7 @@ import net.bitflora.asteriskcraft.building.PhotonCannonTargeting;
 import net.bitflora.asteriskcraft.building.WarpInVulnerability;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.entity.Detector;
+import net.bitflora.asteriskcraft.entity.Rooted;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal;
 import net.bitflora.asteriskcraft.faction.Cloaking;
@@ -49,7 +50,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * is {@code UnitCost.NONE}): it's warped in from a kit bought at the Nexus for
  * {@code NexusBlockEntity.BUILDING_COST}.
  */
-public class PhotonCannonEntity extends Mob implements Shielded, Detector {
+public class PhotonCannonEntity extends Mob implements Shielded, Detector, Rooted {
     // Far quicker than a Gateway or Nexus: a cannon is what you throw up when a wave is already
     // coming. This is the warp-in mechanic (shared conceptually with the buildings' WARP_TICKS,
     // which are out of stats/UnitStats' scope), not a combat stat — it stays here rather than

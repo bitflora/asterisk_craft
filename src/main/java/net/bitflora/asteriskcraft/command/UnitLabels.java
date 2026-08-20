@@ -46,7 +46,9 @@ public final class UnitLabels {
             Map.entry("mutalisk", "M"),
             Map.entry("ultralisk", "U"),
             // Sunken Colony takes K, since S is the Scout's and both rosters are checked separately
-            Map.entry("sunken_colony", "K"));
+            Map.entry("sunken_colony", "K"),
+            // ...which leaves S free on the Zerg side for the Spore Colony
+            Map.entry("spore_colony", "S"));
 
     private UnitLabels() {
     }

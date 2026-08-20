@@ -6,6 +6,7 @@ import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
+import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -69,5 +70,10 @@ class ModelBakeTest {
     @Test
     void sunkenColonyModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new SunkenColonyModel(SunkenColonyModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void sporeColonyModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new SporeColonyModel(SporeColonyModel.createBodyLayer().bakeRoot()));
     }
 }

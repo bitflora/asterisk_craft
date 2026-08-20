@@ -86,6 +86,31 @@ class SpawnSpotsTest {
     }
 
     @Test
+    void asecondRootedUnitDoesNotLandOnTheFirst() {
+        // The Hive plants a Sunken Colony and then a Spore Colony, both through this same search.
+        // It is deterministic, so without the occupancy half of the real `fits` check the second one
+        // is handed the identical block and — being rooted — stands inside the first forever.
+        BlockPos first = SpawnSpots.findGroundSpot(CORE, WIDE_UNIT_AT_HIVE);
+
+        // What the live check adds: a spot whose body overlaps an already-placed rooted unit is not
+        // open. Both colonies are 1.4 wide, so their bodies overlap at one block apart too.
+        Predicate<BlockPos> clearOfTheFirst = spot -> WIDE_UNIT_AT_HIVE.test(spot)
+                && (Math.abs(spot.getX() - first.getX()) > 1 || Math.abs(spot.getZ() - first.getZ()) > 1);
+        BlockPos second = SpawnSpots.findGroundSpot(CORE, clearOfTheFirst);
+
+        assertNotEquals(first, second, "the second rooted unit must not be placed on top of the first");
+        assertTrue(clearOfTheFirst.test(second), "the chosen spot must clear the unit already standing: " + second);
+    }
+
+    @Test
+    void bothColoniesOverhangEachOtherAtOneBlockApart() {
+        // Why the occupancy test uses the whole body and not just the centre column: two 1.4-wide
+        // colonies on neighbouring blocks still intersect, so "a different block" isn't far enough.
+        float span = (AsteriskCraft.SUNKEN_COLONY.get().getWidth() + AsteriskCraft.SPORE_COLONY.get().getWidth()) / 2.0f;
+        assertTrue(span > 1.0f, "adjacent blocks would still bury one colony in the other");
+    }
+
+    @Test
     void sunkenColonyIsWiderThanItsOwnColumn() {
         // The reason the spot search is given the entity type at all. If this ever drops to <= 1.0
         // the overhang goes away, but so does the mound-sized silhouette the colony is drawn with.

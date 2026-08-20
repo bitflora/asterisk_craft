@@ -58,6 +58,7 @@ class UnitLabelsTest {
         assertEquals("Z", UnitLabels.letterFor(AsteriskCraft.ZEALOT.get()));
         assertEquals("D", UnitLabels.letterFor(AsteriskCraft.DRAGOON.get()));
         assertEquals("K", UnitLabels.letterFor(AsteriskCraft.SUNKEN_COLONY.get()));
+        assertEquals("S", UnitLabels.letterFor(AsteriskCraft.SPORE_COLONY.get()));
     }
 
     @Test

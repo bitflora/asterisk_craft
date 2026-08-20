@@ -5,7 +5,7 @@ import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
-import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
+import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
 import net.bitflora.asteriskcraft.stats.UnitCost;
 import net.bitflora.asteriskcraft.stats.UnitStat;
@@ -71,7 +71,7 @@ class CloakingTest {
 
     @Test
     void detectionIsPerFactionNotGlobal() {
-        // A Zerg Sunken Colony revealing a cloaked Protoss unit must not reveal it to a third party.
+        // A Zerg Spore Colony revealing a cloaked Protoss unit must not reveal it to a third party.
         // Nothing in the MVP has three sides, which is exactly why this needs a test rather than a
         // playtest: a single-Faction field instead of a mask would pass every game played today.
         byte detectedByZerg = Cloaking.with(NOBODY, Faction.ZERG);
@@ -148,11 +148,13 @@ class CloakingTest {
     }
 
     @Test
-    void bothStaticDefencesAreDetectors() {
+    void eachRaceHasADetector() {
         // Cloak is only a mechanic if the other side has an answer to it; a detector-less faction
-        // just loses. Each race's rooted defence is that answer.
+        // just loses. Detection is one specific building per race — deliberately not a property every
+        // rooted defence carries, which is why the Sunken Colony (a static defence, and not a
+        // detector) is absent here.
         assertTrue(Detector.class.isAssignableFrom(PhotonCannonEntity.class), "the Protoss detector");
-        assertTrue(Detector.class.isAssignableFrom(SunkenColonyEntity.class), "the Zerg detector");
+        assertTrue(Detector.class.isAssignableFrom(SporeColonyEntity.class), "the Zerg detector");
     }
 
     @Test
@@ -160,7 +162,7 @@ class CloakingTest {
         // Detector.detection() reads detectionOrThrow(), so a marker without a matching .detector()
         // entry would throw on the first sweep — in play, not here. Fail at build time instead.
         assertDetectorEnvelope(UnitStats.PHOTON_CANNON);
-        assertDetectorEnvelope(UnitStats.SUNKEN_COLONY);
+        assertDetectorEnvelope(UnitStats.SPORE_COLONY);
     }
 
     private static void assertDetectorEnvelope(UnitStat stat) {

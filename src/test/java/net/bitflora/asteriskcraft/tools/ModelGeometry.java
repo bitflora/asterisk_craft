@@ -18,6 +18,7 @@ import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
+import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -147,6 +148,7 @@ final class ModelGeometry {
         map.put("mutalisk", MutaliskModel::createBodyLayer);
         map.put("drone", DroneModel::createBodyLayer);
         map.put("sunken_colony", SunkenColonyModel::createBodyLayer);
+        map.put("spore_colony", SporeColonyModel::createBodyLayer);
         // Collections.unmodifiableMap, not Map.copyOf — the latter does not preserve insertion order.
         return Collections.unmodifiableMap(map);
     }
