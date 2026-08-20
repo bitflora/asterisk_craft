@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
+import net.bitflora.asteriskcraft.entity.Altitude;
 import net.bitflora.asteriskcraft.entity.Rooted;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
@@ -14,6 +15,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
@@ -30,7 +32,9 @@ import net.minecraft.world.level.Level;
  * in the mod.
  *
  * <p>Targeting goes through {@link FactionTargetGoal} like every other combat unit, so nothing here
- * knows or cares which side is the enemy. It is deliberately <em>not</em> commandable (no
+ * knows or cares which side is the enemy — narrowed by {@link #canStrike} to what a spike coming up
+ * out of the ground can actually reach, so it is the exact complement of the {@link SporeColonyEntity}
+ * beside it: ground only, air never. It is deliberately <em>not</em> commandable (no
  * {@code CommandableGoals}) — a rooted building has nowhere to be ordered to.
  *
  * <p>The colony itself is silent — no hurt or death sound — since a rooted structure grunting or
@@ -66,8 +70,20 @@ public class SunkenColonyEntity extends Monster implements Rooted {
     protected void registerGoals() {
         // No movement, look, or wander goals at all — like the Photon Cannon, this is a fixed turret.
         this.goalSelector.addGoal(1, new SunkenSpikeGoal(this));
-        this.targetSelector.addGoal(-1, new RetaliateGoal(this));
-        this.targetSelector.addGoal(1, new FactionTargetGoal(this));
+        this.targetSelector.addGoal(-1, new RetaliateGoal(this, SunkenColonyEntity::canStrike));
+        this.targetSelector.addGoal(1, new FactionTargetGoal(this, SunkenColonyEntity::canStrike));
+    }
+
+    /**
+     * Whether the colony can reach {@code target} at all: its spike comes up out of the ground, so
+     * anything {@link Altitude#isAirborne} is simply beyond it. The mirror of the Spore Colony's
+     * filter, sharing the one definition of "air" with it, and passed to <em>both</em> target-selector
+     * goals — retaliation included, since a Mutalisk strafing the colony would otherwise lock it onto
+     * a target {@link SunkenSpikeGoal} must then refuse, leaving it inert against the ground units it
+     * exists to stop.
+     */
+    private static boolean canStrike(LivingEntity target) {
+        return !Altitude.isAirborne(target);
     }
 
     /** Starts the strike animation on every client tracking this colony. */

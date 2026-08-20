@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.ai.zerg;
 
+import net.bitflora.asteriskcraft.entity.Altitude;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.stats.UnitStat;
@@ -26,6 +27,12 @@ import org.jetbrains.annotations.Nullable;
  * target chosen by the colony's target selector is alive, within range and in line of sight (all
  * from {@link UnitStats#SUNKEN_COLONY}), the tentacle whips forward and a {@link SunkenSpikeEntity}
  * erupts from the ground under the target.
+ *
+ * <p>The extra condition, the mirror of {@link SporeFireGoal}'s, is that the target is not
+ * {@link Altitude#isAirborne}: a spike erupting from the ground cannot reach something in the air.
+ * Checking it here as well as in the colony's target selector is not redundant — the rule is
+ * positional, so a target can climb after it was acquired, and this goal ticks every tick while the
+ * selector only re-runs on its own cadence.
  *
  * <p>Unlike the cannon, no damage is dealt here — the spike carries it (see
  * {@link net.bitflora.asteriskcraft.combat.SunkenSpikeDamageHandler}), and it lands ~8 ticks later at
@@ -85,7 +92,7 @@ public class SunkenSpikeGoal extends Goal {
     @Nullable
     private LivingEntity inRangeTarget() {
         LivingEntity target = this.colony.getTarget();
-        if (target == null || !target.isAlive()) {
+        if (target == null || !target.isAlive() || Altitude.isAirborne(target)) {
             return null;
         }
         double reachSq = (double) RANGED.range() * RANGED.range();

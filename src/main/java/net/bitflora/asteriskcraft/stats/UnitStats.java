@@ -151,7 +151,7 @@ public final class UnitStats {
     public static final UnitStat SPORE_COLONY = UnitStat.builder("spore_colony")
             .health(200.0).armor(0.0).rooted()
             .attackDamage(7.5).ranged(14.0f, 20).attackAnimTicks(10)
-            .followRange(11.0) // == range: a rooted attacker can't close the gap
+            .followRange(14.0) // == range: a rooted attacker can't close the gap
             // The Zerg detector, on the shared envelope — a Hive perimeter now lights up
             // cloaked attackers from both of its rooted defences.
             .detector(16.0, 20, 60)
