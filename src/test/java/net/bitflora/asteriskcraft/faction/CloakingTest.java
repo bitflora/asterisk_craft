@@ -24,8 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * needs a live {@code ServerLevel} to scan and the render half needs a client, so neither is
  * testable in the JUnit bootstrap. Those are covered by the {@code runClient} demo script instead.
  * What <em>is</em> pinned here is the whole truth table of {@link Cloaking#isVisibleTo}, the bitmask
- * underneath it, and the fact that the units meant to cloak and detect actually declare it — a
- * marker interface is exactly the kind of wiring that is silently easy to drop.
+ * underneath it, and the detector wiring — a marker interface is exactly the kind of thing that is
+ * silently easy to drop, since nothing fails to compile without it.
+ *
+ * <p>No unit currently carries {@link Cloaked}: the mechanism is finished and deliberately dormant,
+ * waiting on a design decision about which unit should have it rather than on any more code.
  */
 class CloakingTest {
 
@@ -45,7 +48,7 @@ class CloakingTest {
     @Test
     void anUndetectedCloakedUnitIsInvisibleToTheEnemy() {
         assertFalse(Cloaking.isVisibleTo(true, Faction.PROTOSS, Faction.ZERG, NOBODY),
-                "an undetected cloaked Zealot must not exist as far as the Zerg are concerned");
+                "an undetected cloaked unit must not exist as far as the enemy is concerned");
         assertFalse(Cloaking.isVisibleTo(true, Faction.ZERG, Faction.PROTOSS, NOBODY),
                 "the rule is faction-generic, not Protoss-only");
     }
@@ -65,7 +68,7 @@ class CloakingTest {
 
     @Test
     void detectionIsPerFactionNotGlobal() {
-        // A Zerg Sunken Colony revealing a cloaked Zealot must not also reveal it to a third party.
+        // A Zerg Sunken Colony revealing a cloaked Protoss unit must not reveal it to a third party.
         // Nothing in the MVP has three sides, which is exactly why this needs a test rather than a
         // playtest: a single-Faction field instead of a mask would pass every game played today.
         byte detectedByZerg = Cloaking.with(NOBODY, Faction.ZERG);
@@ -120,15 +123,17 @@ class CloakingTest {
     // --- The wiring: markers are easy to drop, and nothing else notices ---
 
     @Test
-    void theSpikesCloakedUnitsDeclareIt() {
-        assertTrue(Cloaked.class.isAssignableFrom(ZealotEntity.class), "the Protoss cloaked unit");
-        assertTrue(Cloaked.class.isAssignableFrom(HydraliskEntity.class), "the Zerg cloaked unit");
-    }
-
-    @Test
-    void ordinaryUnitsDoNotCloak() {
-        assertFalse(Cloaked.class.isAssignableFrom(ZerglingEntity.class),
-                "cloak must be opt-in — a whole army of it is not the mechanic");
+    void noUnitCloaksYet() {
+        // The mechanism is complete and dormant: nothing on the roster carries the marker, so cloak
+        // costs a live game one instanceof per targeting check and nothing else. Assigning it is a
+        // one-word edit to a class declaration — this is not a placeholder waiting on more code.
+        //
+        // Deliberately spot-checks rather than sweeping the roster: a sweep would turn "somebody
+        // gave a unit cloak" into a test failure, and that is a design decision to review, not a
+        // regression to block.
+        assertFalse(Cloaked.class.isAssignableFrom(ZealotEntity.class));
+        assertFalse(Cloaked.class.isAssignableFrom(HydraliskEntity.class));
+        assertFalse(Cloaked.class.isAssignableFrom(ZerglingEntity.class));
     }
 
     @Test

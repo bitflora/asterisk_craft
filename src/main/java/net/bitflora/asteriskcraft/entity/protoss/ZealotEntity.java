@@ -8,7 +8,6 @@ import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.MeleeAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
-import net.bitflora.asteriskcraft.faction.Cloaked;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -38,7 +37,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#ZEALOT} — not here.
  */
-public class ZealotEntity extends Monster implements Shielded, Cloaked {
+public class ZealotEntity extends Monster implements Shielded {
     private static final UnitStat STAT = UnitStats.ZEALOT;
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not
