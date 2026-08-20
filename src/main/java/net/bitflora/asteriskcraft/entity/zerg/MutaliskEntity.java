@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
 import net.bitflora.asteriskcraft.entity.Flyer;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
@@ -14,7 +15,6 @@ import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -102,7 +102,7 @@ public class MutaliskEntity extends Monster implements Flyer, RangedAttackMob {
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
         HitscanAttacks.fireChained(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
-                AsteriskCraftDamageTypes.GLAVE_WURM, ParticleTypes.ITEM_SLIME, SoundEvents.SHULKER_SHOOT, BOUNCE);
+                AsteriskCraftDamageTypes.GLAVE_WURM, ParticleTypes.ITEM_SLIME, AsteriskCraft.MUTALISK_ATTACK.get(), BOUNCE);
     }
 
     @Override
@@ -112,6 +112,6 @@ public class MutaliskEntity extends Monster implements Flyer, RangedAttackMob {
         return false;
     }
 
-    // No sound overrides: there are no Mutalisk .ogg assets to port, so it stays silent like the
-    // Dragoon rather than borrowing another unit's voice.
+    // No ambient/hurt/death overrides: the only ported Mutalisk clip is its attack, so the rest
+    // stay vanilla rather than borrowing another unit's voice.
 }

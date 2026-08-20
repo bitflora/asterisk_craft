@@ -8,6 +8,11 @@
       "asteriskcraft:mob/dark_templar/dark_templar-live3"
     ]
   },
+  "entity.dark_templar.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dark_templar.attack",
+    "sounds": ["asteriskcraft:mob/dark_templar/dark_templar-attack"]
+  },
   "entity.dark_templar.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dark_templar.death",
@@ -141,6 +146,11 @@
       "asteriskcraft:mob/dragoon/dragoon-live2"
     ]
   },
+  "entity.dragoon.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.dragoon.attack",
+    "sounds": ["asteriskcraft:mob/dragoon/dragoon-attack"]
+  },
   "entity.dragoon.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dragoon.death",
@@ -155,5 +165,20 @@
       "asteriskcraft:mob/scout/scout-live3",
       "asteriskcraft:mob/scout/scout-live4"
     ]
+  },
+  "entity.scout.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.scout.attack",
+    "sounds": ["asteriskcraft:mob/scout/scout-attack"]
+  },
+  "entity.mutalisk.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.mutalisk.attack",
+    "sounds": ["asteriskcraft:mob/mutalisk/mutalisk-attack"]
+  },
+  "entity.photon_cannon.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.photon_cannon.attack",
+    "sounds": ["asteriskcraft:mob/photon_cannon/photon_cannon-attack"]
   }
 }

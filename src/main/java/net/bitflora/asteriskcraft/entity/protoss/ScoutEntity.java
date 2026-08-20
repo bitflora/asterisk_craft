@@ -16,7 +16,6 @@ import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -117,7 +116,7 @@ public class ScoutEntity extends Monster implements Flyer, Shielded, RangedAttac
         double damage = this.getAttributeValue(Attributes.ATTACK_DAMAGE)
                 + (Flyer.isAir(target) ? STAT.antiAirBonus() : 0.0);
         HitscanAttacks.fire(this, target, damage,
-                AsteriskCraftDamageTypes.ANTI_MATTER_MISSILE, ParticleTypes.ELECTRIC_SPARK, SoundEvents.SHULKER_SHOOT);
+                AsteriskCraftDamageTypes.ANTI_MATTER_MISSILE, ParticleTypes.ELECTRIC_SPARK, AsteriskCraft.SCOUT_ATTACK.get());
     }
 
     @Override

@@ -98,14 +98,10 @@ public class DarkTemplarEntity extends Monster implements Shielded, Cloaked {
         }
     }
 
-    /**
-     * No swing sound, so this takes {@code MeleeAttacks}' four-argument form rather than the
-     * Zealot's five — there is no Dark Templar attack clip in the source audio, the same reason the
-     * Zergling goes without one.
-     */
     @Override
     public boolean doHurtTarget(ServerLevel level, Entity target) {
-        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.WARP_BLADE);
+        return MeleeAttacks.doHurtTarget(this, level, target, AsteriskCraftDamageTypes.WARP_BLADE,
+                AsteriskCraft.DARK_TEMPLAR_ATTACK.get());
     }
 
     /** Ticks remaining in the strike animation; 0 when idle. Read by the renderer. */

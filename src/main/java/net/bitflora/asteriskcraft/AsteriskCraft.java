@@ -407,8 +407,17 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.dragoon.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_DEATH =
             SOUND_EVENTS.register("entity.dragoon.death", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DRAGOON_ATTACK =
+            SOUND_EVENTS.register("entity.dragoon.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.dragoon.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_AMBIENT =
             SOUND_EVENTS.register("entity.scout.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_ATTACK =
+            SOUND_EVENTS.register("entity.scout.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.attack")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> MUTALISK_ATTACK =
+            SOUND_EVENTS.register("entity.mutalisk.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.mutalisk.attack")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> PHOTON_CANNON_ATTACK =
+            SOUND_EVENTS.register("entity.photon_cannon.attack",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.photon_cannon.attack")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> DARK_TEMPLAR_AMBIENT =
             SOUND_EVENTS.register("entity.dark_templar.ambient",
@@ -417,6 +426,9 @@ public class AsteriskCraft {
     public static final DeferredHolder<SoundEvent, SoundEvent> DARK_TEMPLAR_DEATH =
             SOUND_EVENTS.register("entity.dark_templar.death",
                     () -> SoundEvent.createVariableRangeEvent(id("entity.dark_templar.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> DARK_TEMPLAR_ATTACK =
+            SOUND_EVENTS.register("entity.dark_templar.attack",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.dark_templar.attack")));
 
     // --- Creative tab ---
 

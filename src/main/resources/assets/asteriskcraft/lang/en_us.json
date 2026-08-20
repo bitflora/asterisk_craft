@@ -129,9 +129,14 @@
   "subtitles.entity.asteriskcraft.drone.death": "Drone dies",
   "subtitles.entity.asteriskcraft.dragoon.ambient": "Dragoon rumbles",
   "subtitles.entity.asteriskcraft.dragoon.death": "Dragoon dies",
+  "subtitles.entity.asteriskcraft.dragoon.attack": "Dragoon fires",
   "subtitles.entity.asteriskcraft.scout.ambient": "Scout reports in",
+  "subtitles.entity.asteriskcraft.scout.attack": "Scout fires",
+  "subtitles.entity.asteriskcraft.mutalisk.attack": "Mutalisk spits",
+  "subtitles.entity.asteriskcraft.photon_cannon.attack": "Photon Cannon fires",
   "subtitles.entity.asteriskcraft.dark_templar.ambient": "Dark Templar whispers",
   "subtitles.entity.asteriskcraft.dark_templar.death": "Dark Templar dies",
+  "subtitles.entity.asteriskcraft.dark_templar.attack": "Dark Templar strikes",
   "config.jade.plugin_asteriskcraft.protoss_shield": "Protoss Shield",
   "config.jade.plugin_asteriskcraft.building_defense": "Building Health & Shields"
 }

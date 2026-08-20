@@ -13,7 +13,6 @@ import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -80,7 +79,7 @@ public class DragoonEntity extends Monster implements Shielded, RangedAttackMob 
     @Override
     public void performRangedAttack(LivingEntity target, float power) {
         HitscanAttacks.fire(this, target, this.getAttributeValue(Attributes.ATTACK_DAMAGE),
-                AsteriskCraftDamageTypes.PHASE_DISRUPTOR, ParticleTypes.SCULK_CHARGE_POP, SoundEvents.SKELETON_SHOOT);
+                AsteriskCraftDamageTypes.PHASE_DISRUPTOR, ParticleTypes.SCULK_CHARGE_POP, AsteriskCraft.DRAGOON_ATTACK.get());
     }
 
     public int getShield() {
