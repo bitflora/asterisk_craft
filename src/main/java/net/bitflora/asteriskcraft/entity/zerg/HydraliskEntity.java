@@ -9,6 +9,7 @@ import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.bitflora.asteriskcraft.entity.ai.StuckWanderGoal;
+import net.bitflora.asteriskcraft.faction.Cloaked;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -40,7 +41,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#HYDRALISK} — not here.
  */
-public class HydraliskEntity extends Monster implements RangedAttackMob {
+public class HydraliskEntity extends Monster implements RangedAttackMob, Cloaked {
     private static final UnitStat STAT = UnitStats.HYDRALISK;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 

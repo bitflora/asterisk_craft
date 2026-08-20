@@ -59,6 +59,9 @@ public final class UnitStats {
             .health(50.0).shield(50).rooted()
             .attackDamage(10.0).ranged(14.0f, 20)
             .followRange(14.0) // == range: never acquire what it can't shoot
+            // Detection reaches two blocks past the gun on purpose: a cannon lights a cloaked
+            // attacker up for the whole base a moment before it can shoot at it itself.
+            .detector(16.0, 20, 60)
             .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 
@@ -118,6 +121,8 @@ public final class UnitStats {
             .health(150.0).armor(0.0).rooted()
             .attackDamage(20.0).ranged(11.0f, 32).attackAnimTicks(12)
             .followRange(11.0) // == range: a rooted attacker can't close the gap
+            // The Zerg answer to a cloaked Protoss push, on the same envelope as the Photon Cannon.
+            .detector(16.0, 20, 60)
             .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 

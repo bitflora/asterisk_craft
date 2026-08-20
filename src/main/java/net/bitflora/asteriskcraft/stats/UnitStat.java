@@ -50,6 +50,8 @@ public record UnitStat(
         Optional<Ranged> ranged,
         /** Absent = ground unit. */
         Optional<Flight> flight,
+        /** Absent = this unit detects nothing; cloaked enemies stay invisible to it. */
+        Optional<Detection> detection,
         /** Absent = a shot hits exactly one target. */
         Optional<Bounce> bounce,
         /**
@@ -83,6 +85,17 @@ public record UnitStat(
     }
 
     /**
+     * A detector's envelope: how far it sees cloaked enemies, how often it sweeps for them, and how
+     * long one sweep keeps a unit revealed.
+     *
+     * <p>{@code revealTicks} must exceed {@code sweepInterval} so consecutive sweeps overlap — a
+     * reveal window shorter than the gap between sweeps would strobe. The excess is also the
+     * tactical tail: a unit that has just slipped out of range stays lit for the difference.
+     */
+    public record Detection(double radius, int sweepInterval, int revealTicks) {
+    }
+
+    /**
      * A chaining attack: how many enemies one shot may hit in total, the damage multiplier applied
      * on each additional hop (compounding — hit n takes {@code base * damageFalloff^n}), and how far
      * from the enemy just hit the next one may be found.
@@ -96,6 +109,10 @@ public record UnitStat(
 
     public Flight flightOrThrow() {
         return this.flight.orElseThrow(() -> new IllegalStateException(this.id + " does not fly"));
+    }
+
+    public Detection detectionOrThrow() {
+        return this.detection.orElseThrow(() -> new IllegalStateException(this.id + " is not a detector"));
     }
 
     public Bounce bounceOrThrow() {
@@ -125,6 +142,7 @@ public record UnitStat(
         private OptionalDouble attackDamage = OptionalDouble.empty();
         private Optional<Ranged> ranged = Optional.empty();
         private Optional<Flight> flight = Optional.empty();
+        private Optional<Detection> detection = Optional.empty();
         private Optional<Bounce> bounce = Optional.empty();
         private double antiAirBonus;           // 0.0 == hits air and ground for the same damage
         private int attackAnimTicks;
@@ -190,6 +208,12 @@ public record UnitStat(
             return this;
         }
 
+        /** Makes this unit a detector: it reveals cloaked enemies inside {@code radius}. */
+        public Builder detector(double radius, int sweepInterval, int revealTicks) {
+            this.detection = Optional.of(new Detection(radius, sweepInterval, revealTicks));
+            return this;
+        }
+
         public Builder bounce(int maxHits, float damageFalloff, float searchRadius) {
             this.bounce = Optional.of(new Bounce(maxHits, damageFalloff, searchRadius));
             return this;
@@ -238,6 +262,17 @@ public record UnitStat(
                 throw new IllegalStateException(this.id
                         + ": an anti-air bonus needs an attackDamage to add itself to");
             }
+            this.detection.ifPresent(d -> {
+                if (d.radius() <= 0.0 || d.sweepInterval() <= 0 || d.revealTicks() <= 0) {
+                    throw new IllegalStateException(this.id
+                            + ": a detector needs a positive radius, sweep interval and reveal duration");
+                }
+                if (d.revealTicks() <= d.sweepInterval()) {
+                    throw new IllegalStateException(this.id
+                            + ": revealTicks must exceed sweepInterval, or consecutive sweeps leave a"
+                            + " gap and a detected unit strobes in and out of view");
+                }
+            });
             if (this.stepHeight >= 2.0) {
                 throw new IllegalStateException(this.id
                         + ": stepHeight must stay under 2.0 — at 2.0 the pathfinder starts planning"
@@ -245,7 +280,8 @@ public record UnitStat(
             }
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
                     this.knockbackResistance, this.stepHeight, this.followRange, this.shield,
-                    this.attackDamage, this.ranged, this.flight, this.bounce, this.antiAirBonus,
+                    this.attackDamage, this.ranged, this.flight, this.detection, this.bounce,
+                    this.antiAirBonus,
                     this.attackAnimTicks,
                     this.buildTicks, this.cost);
         }

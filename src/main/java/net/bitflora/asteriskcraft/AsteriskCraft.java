@@ -22,6 +22,7 @@ import net.bitflora.asteriskcraft.command.UnitGroupPacket;
 import net.bitflora.asteriskcraft.command.UnitGroupResolver;
 import net.bitflora.asteriskcraft.command.UnitGroupSyncPacket;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
+import net.bitflora.asteriskcraft.faction.DetectionAttachments;
 import net.bitflora.asteriskcraft.combat.ZergRegenAttachments;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
@@ -429,6 +430,7 @@ public class AsteriskCraft {
         GameAttachments.ATTACHMENT_TYPES.register(modEventBus);
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
+        DetectionAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ZergRegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
         CoreCensus.ATTACHMENT_TYPES.register(modEventBus);

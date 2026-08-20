@@ -66,9 +66,25 @@ public final class FactionAttachments {
      *
      * <p>This is the one place the hostile-class check lives. Targeting code calls this and
      * stays free of entity-type tests, exactly as before — the rule is centralized, not scattered.
+     *
+     * <p>It is also where <b>cloak</b> is enforced ({@link Cloaking}): a {@link Cloaked} enemy that
+     * no detector of {@code self}'s faction currently reveals is not hostile, because as far as
+     * {@code self} is concerned it is not there at all. Putting the gate here rather than in each
+     * goal is what makes it total — acquisition ({@code FactionTargetGoal}), <em>retaliation</em>
+     * ({@code RetaliateGoal}) and splash chains ({@code HitscanAttacks.fireChained}) all resolve
+     * hostility through this one call, so an undetected cloaked attacker cannot even be swung back
+     * at. That is the intended rule, and it is the whole reason cloak is frightening rather than
+     * cosmetic.
+     *
+     * <p>The pure overload below is deliberately left cloak-free: cloak is a fact about a live
+     * entity, not about a pair of factions, and keeping it out preserves that rule's testability.
+     * The one targeting site that consumes the pure overload directly — the Photon Cannon's own
+     * selector, via {@code building.PhotonCannonTargeting} — therefore applies
+     * {@link Cloaking#isVisibleTo(Entity, Faction)} itself.
      */
     public static boolean isHostile(Entity self, Entity candidate) {
-        return isHostile(get(self), get(candidate), candidate instanceof Enemy);
+        return isHostile(get(self), get(candidate), candidate instanceof Enemy)
+                && Cloaking.isVisibleTo(candidate, get(self));
     }
 
     /** The pure rule behind {@link #isHostile(Entity, Entity)}, free of any live entity. */
