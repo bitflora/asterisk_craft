@@ -176,13 +176,34 @@ public final class UnitStats {
             .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 
+    /**
+     * The swarm's dividend on an overrun village: raised from a villager's corpse rather than trained,
+     * which is why it costs nothing and has no build time — {@code combat.InfestationHandler} is its
+     * only producer.
+     *
+     * <p>It is the roster's first <em>suicide</em> unit, so its 250 damage is not a per-swing number
+     * but the one detonation it ever gets: eight Zerglings' worth of damage delivered once, to
+     * everything inside three blocks and to whatever building it was standing against. Priced against
+     * that in the only currency it has — 30 HP and no armour, less than a Hydralisk, so a defended
+     * base kills it on the approach and an undefended one loses a third of a Nexus.
+     *
+     * <p>It walks a little faster than a Zergling: a bomb that can be out-run is a bomb that never
+     * goes off.
+     */
+    public static final UnitStat INFESTED_VILLAGER = UnitStat.builder("infested_villager")
+            .health(30.0).armor(0.0).speed(0.32)
+            .attackDamage(250.0).blast(3.0f, 30)
+            .cost(UnitCost.NONE) // never trained, so no buildTicks either
+            .build();
+
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
     public static final List<UnitStat> PROTOSS_ROSTER =
             List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, LURKER, SUNKEN_COLONY, SPORE_COLONY);
+            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, LURKER, SUNKEN_COLONY, SPORE_COLONY,
+                    INFESTED_VILLAGER);
 
     private UnitStats() {
     }

@@ -20,6 +20,7 @@ import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
+import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -145,6 +146,7 @@ final class ModelGeometry {
         map.put("dark_templar", DarkTemplarModel::createBodyLayer);
         map.put("photon_cannon", PhotonCannonModel::createBodyLayer);
         map.put("zergling", ZerglingModel::createBodyLayer);
+        map.put("infested_villager", InfestedVillagerModel::createBodyLayer);
         map.put("hydralisk", HydraliskModel::createBodyLayer);
         map.put("lurker", LurkerModel::createBodyLayer);
         map.put("mutalisk", MutaliskModel::createBodyLayer);

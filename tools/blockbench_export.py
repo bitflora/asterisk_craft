@@ -82,6 +82,7 @@ UNITS = {
     "dark_templar": ("protoss", "DarkTemplarModel"),
     "photon_cannon": ("protoss", "PhotonCannonModel"),
     "zergling": ("zerg", "ZerglingModel"),
+    "infested_villager": ("zerg", "InfestedVillagerModel"),
     "hydralisk": ("zerg", "HydraliskModel"),
     "lurker": ("zerg", "LurkerModel"),
     "mutalisk": ("zerg", "MutaliskModel"),

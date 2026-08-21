@@ -54,6 +54,8 @@ public record UnitStat(
         Optional<Detection> detection,
         /** Absent = a shot hits exactly one target. */
         Optional<Bounce> bounce,
+        /** Absent = this unit does not detonate; present = it is a suicide bomber. */
+        Optional<Blast> blast,
         /**
          * Extra damage this unit's attack deals to an air target (an {@code entity.Flyer}), on top of
          * {@link #attackDamage}; 0 = it hits air and ground alike. It is a flat bonus rather than a
@@ -103,6 +105,18 @@ public record UnitStat(
     public record Bounce(int maxHits, float damageFalloff, float searchRadius) {
     }
 
+    /**
+     * A suicide unit's detonation: how far the blast reaches, and how long the fuse burns once the
+     * unit has armed itself. The damage it deals is the unit's ordinary {@link #attackDamage} — a
+     * bomber's blast <em>is</em> its attack, so it is not a second damage number.
+     *
+     * <p>{@code fuseTicks} is the whole windup from arming to detonation, and is the only window in
+     * which the victim can walk out of the blast; {@code radius} is fed straight to
+     * {@code Level.explode}, so it is a vanilla explosion radius rather than a plain distance.
+     */
+    public record Blast(float radius, int fuseTicks) {
+    }
+
     public Ranged rangedOrThrow() {
         return this.ranged.orElseThrow(() -> new IllegalStateException(this.id + " has no ranged attack"));
     }
@@ -117,6 +131,10 @@ public record UnitStat(
 
     public Bounce bounceOrThrow() {
         return this.bounce.orElseThrow(() -> new IllegalStateException(this.id + " does not bounce"));
+    }
+
+    public Blast blastOrThrow() {
+        return this.blast.orElseThrow(() -> new IllegalStateException(this.id + " does not detonate"));
     }
 
     public double attackDamageOrThrow() {
@@ -144,6 +162,7 @@ public record UnitStat(
         private Optional<Flight> flight = Optional.empty();
         private Optional<Detection> detection = Optional.empty();
         private Optional<Bounce> bounce = Optional.empty();
+        private Optional<Blast> blast = Optional.empty();
         private double antiAirBonus;           // 0.0 == hits air and ground for the same damage
         private int attackAnimTicks;
         private int buildTicks;                // required iff the cost is purchasable
@@ -219,6 +238,12 @@ public record UnitStat(
             return this;
         }
 
+        /** Makes this unit a suicide bomber: it detonates for its {@link #attackDamage} instead of swinging. */
+        public Builder blast(float radius, int fuseTicks) {
+            this.blast = Optional.of(new Blast(radius, fuseTicks));
+            return this;
+        }
+
         /** Flat extra damage against air targets, on top of {@link #attackDamage}. */
         public Builder antiAirBonus(double v) {
             this.antiAirBonus = v;
@@ -262,6 +287,17 @@ public record UnitStat(
                 throw new IllegalStateException(this.id
                         + ": an anti-air bonus needs an attackDamage to add itself to");
             }
+            this.blast.ifPresent(b -> {
+                if (this.attackDamage.isEmpty()) {
+                    throw new IllegalStateException(this.id
+                            + ": a blast needs an attackDamage to detonate for");
+                }
+                if (b.radius() <= 0.0f || b.fuseTicks() <= 0) {
+                    throw new IllegalStateException(this.id
+                            + ": a blast needs a positive radius and fuse — a zero fuse would detonate"
+                            + " on the tick the unit armed, with no window to escape it");
+                }
+            });
             this.detection.ifPresent(d -> {
                 if (d.radius() <= 0.0 || d.sweepInterval() <= 0 || d.revealTicks() <= 0) {
                     throw new IllegalStateException(this.id
@@ -281,6 +317,7 @@ public record UnitStat(
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
                     this.knockbackResistance, this.stepHeight, this.followRange, this.shield,
                     this.attackDamage, this.ranged, this.flight, this.detection, this.bounce,
+                    this.blast,
                     this.antiAirBonus,
                     this.attackAnimTicks,
                     this.buildTicks, this.cost);

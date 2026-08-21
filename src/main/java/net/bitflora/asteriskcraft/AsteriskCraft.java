@@ -33,6 +33,7 @@ import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
+import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
 import net.bitflora.asteriskcraft.entity.zerg.LurkerEntity;
 import net.bitflora.asteriskcraft.entity.zerg.LurkerSpineEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
@@ -273,6 +274,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("lurker"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<InfestedVillagerEntity>> INFESTED_VILLAGER =
+            ENTITY_TYPES.register("infested_villager", () -> EntityType.Builder.of(InfestedVillagerEntity::new, MobCategory.MONSTER)
+                    // A villager's own footprint, hunched: one pathfinding node wide, and under two
+                    // blocks tall so it still walks through the doorways of the village it came from.
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("infested_villager"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<PhotonCannonEntity>> PHOTON_CANNON =
             ENTITY_TYPES.register("photon_cannon", () -> EntityType.Builder.of(PhotonCannonEntity::new, MobCategory.MISC)
                     .sized(2.6f, 2.5f) // 3x3-block star base + lens drum + domed head
@@ -369,6 +378,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ENEMY = ITEMS.registerItem("lurker_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, LURKER, Faction.ZERG));
 
+    public static final DeferredItem<FactionSpawnEggItem> INFESTED_VILLAGER_SPAWN_EGG_ALLY = ITEMS.registerItem("infested_villager_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> INFESTED_VILLAGER_SPAWN_EGG_ENEMY = ITEMS.registerItem("infested_villager_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, Faction.ZERG));
+
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
@@ -422,6 +436,13 @@ public class AsteriskCraft {
     // One clip for both directions of the dig — it is the same animal doing the same thing.
     public static final DeferredHolder<SoundEvent, SoundEvent> LURKER_BURROW =
             SOUND_EVENTS.register("entity.lurker.burrow", () -> SoundEvent.createVariableRangeEvent(id("entity.lurker.burrow")));
+
+    // Only the two "what" clips exist for this one, so it has an ambient bark and nothing else; hurt
+    // and death fall back to vanilla, as the Ultralisk's and Dragoon's do. Its fuse and its blast are
+    // vanilla sounds by design — a creeper's priming hiss is already the universal "get away from
+    // that" cue, and re-voicing it would only make the warning less legible.
+    public static final DeferredHolder<SoundEvent, SoundEvent> INFESTED_VILLAGER_AMBIENT =
+            SOUND_EVENTS.register("entity.infested_villager.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.infested_villager.ambient")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_AMBIENT =
             SOUND_EVENTS.register("entity.probe.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.ambient")));
@@ -499,6 +520,8 @@ public class AsteriskCraft {
                 output.accept(MUTALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(LURKER_SPAWN_EGG_ALLY.get());
                 output.accept(LURKER_SPAWN_EGG_ENEMY.get());
+                output.accept(INFESTED_VILLAGER_SPAWN_EGG_ALLY.get());
+                output.accept(INFESTED_VILLAGER_SPAWN_EGG_ENEMY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ALLY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ENEMY.get());
                 output.accept(SPORE_COLONY_SPAWN_EGG_ALLY.get());
@@ -567,6 +590,7 @@ public class AsteriskCraft {
         event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
         event.put(LURKER.get(), LurkerEntity.createAttributes().build());
+        event.put(INFESTED_VILLAGER.get(), InfestedVillagerEntity.createAttributes().build());
         event.put(SUNKEN_COLONY.get(), SunkenColonyEntity.createAttributes().build());
         event.put(SPORE_COLONY.get(), SporeColonyEntity.createAttributes().build());
         // No attributes for SUNKEN_SPIKE — it's a plain Entity, not a LivingEntity.

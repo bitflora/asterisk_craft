@@ -14,6 +14,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -102,6 +103,31 @@ public final class CoreCensus {
             }
         }
         return found;
+    }
+
+    /**
+     * The standing core of {@code faction} closest to {@code from}, or empty if it has none left.
+     *
+     * <p>Distinct from what {@link net.bitflora.asteriskcraft.director.ZergDirector} does with
+     * {@link #standing}: a wave picks its target at <em>random</em>, deliberately, so the swarm
+     * spreads its attention across a player's expansions. A unit raised in the field has no such
+     * choice to make — it is one body with one detonation and nothing to spread — so it marches on
+     * whatever base is actually nearest, which is also the only reading of "aim it at the player's
+     * base" that means anything when there are several.
+     *
+     * <p>Shares {@link #standing}'s pruning, so the census is still cleaned by exactly one code path.
+     */
+    public static Optional<BlockPos> nearest(ServerLevel level, Faction faction, BlockPos from) {
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (BlockPos pos : standing(level, faction)) {
+            double dist = pos.distSqr(from);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = pos;
+            }
+        }
+        return Optional.ofNullable(best);
     }
 
     /**

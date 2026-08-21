@@ -45,12 +45,14 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> SUBTERRANEAN_TENTACLE = key("subterranean_tentacle");
     public static final ResourceKey<DamageType> SUBTERRANEAN_SPINES = key("subterranean_spines");
     public static final ResourceKey<DamageType> SEEKER_SPORES = key("seeker_spores");
+    /** The Infested Villager's detonation. Its blast, not a swing — the unit only ever deals it once. */
+    public static final ResourceKey<DamageType> INFESTED_BLAST = key("infested_blast");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
-            SUBTERRANEAN_SPINES, SEEKER_SPORES);
+            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST);
 
     private AsteriskCraftDamageTypes() {
     }

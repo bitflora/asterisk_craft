@@ -121,6 +121,14 @@
     "subtitle": "subtitles.entity.asteriskcraft.lurker.attack",
     "sounds": ["asteriskcraft:mob/lurker/lurker-attack"]
   },
+  "entity.infested_villager.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.infested_villager.ambient",
+    "sounds": [
+      "asteriskcraft:mob/infested_villager/infested_villager-live1",
+      "asteriskcraft:mob/infested_villager/infested_villager-live2"
+    ]
+  },
   "entity.lurker.burrow": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.lurker.burrow",

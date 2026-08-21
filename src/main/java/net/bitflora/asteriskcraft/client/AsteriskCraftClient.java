@@ -17,6 +17,8 @@ import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneRenderer;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskRenderer;
+import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerModel;
+import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerRenderer;
 import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.LurkerRenderer;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
@@ -48,6 +50,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation DARK_TEMPLAR_LAYER = new ModelLayerLocation(AsteriskCraft.id("dark_templar"), "main");
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
     /** Same geometry as the Zergling, baked separately so the Ultralisk can fork its model later. */
+    public static final ModelLayerLocation INFESTED_VILLAGER_LAYER = new ModelLayerLocation(AsteriskCraft.id("infested_villager"), "main");
     public static final ModelLayerLocation ULTRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("ultralisk"), "main");
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
     public static final ModelLayerLocation LURKER_LAYER = new ModelLayerLocation(AsteriskCraft.id("lurker"), "main");
@@ -65,6 +68,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
         event.registerLayerDefinition(DARK_TEMPLAR_LAYER, DarkTemplarModel::createBodyLayer);
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
+        event.registerLayerDefinition(INFESTED_VILLAGER_LAYER, InfestedVillagerModel::createBodyLayer);
         event.registerLayerDefinition(ULTRALISK_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
         event.registerLayerDefinition(LURKER_LAYER, LurkerModel::createBodyLayer);
@@ -84,6 +88,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.DARK_TEMPLAR.get(), DarkTemplarRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.INFESTED_VILLAGER.get(), InfestedVillagerRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ULTRALISK.get(), UltraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.LURKER.get(), LurkerRenderer::new);
