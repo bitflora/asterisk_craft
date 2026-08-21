@@ -29,10 +29,10 @@ public final class SpawnSpots {
 
     /**
      * An open spot near {@code pos} where an entity of {@code type} fits with no part of it inside a
-     * block. The type matters: units wider than a block (the Sunken Colony and the Mutalisk, both
-     * 1.4) overlap the neighbouring columns, so a spot whose own column is clear can still bury them
-     * in the very building they were produced at — and a rooted Sunken Colony can never walk out of
-     * it, so it simply suffocates against the Hive.
+     * block. The type matters: units wider than a block (the Mutalisk at 1.4, the two colonies and
+     * the Photon Cannon at 2.6) overlap the neighbouring columns, so a spot whose own column is
+     * clear can still bury them in the very building they were produced at — and a rooted Sunken
+     * Colony can never walk out of it, so it simply suffocates against the Hive.
      */
     public static BlockPos findGroundSpot(ServerLevel level, BlockPos pos, EntityType<?> type) {
         return findGroundSpot(pos, candidate -> fits(level, candidate, type));

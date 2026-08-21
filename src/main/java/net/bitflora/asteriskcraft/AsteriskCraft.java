@@ -291,15 +291,19 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<EntityType<?>, EntityType<SunkenColonyEntity>> SUNKEN_COLONY =
             ENTITY_TYPES.register("sunken_colony", () -> EntityType.Builder.of(SunkenColonyEntity::new, MobCategory.MONSTER)
-                    .sized(1.4f, 1.6f) // squat root mound, wider than it is tall
+                    // Sized to the Photon Cannon's box: the two races' static defences are
+                    // counterparts and should stand at the same bulk. See SunkenColonyRenderer for
+                    // the scale that grows the model to fill it.
+                    .sized(2.6f, 2.5f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("sunken_colony"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<SporeColonyEntity>> SPORE_COLONY =
             ENTITY_TYPES.register("spore_colony", () -> EntityType.Builder.of(SporeColonyEntity::new, MobCategory.MONSTER)
-                    // Squat and wide like the Sunken's mound, per the reference art: a low body
-                    // with a chimney on top, broader than it is tall.
-                    .sized(1.4f, 1.4f)
+                    // The Sunken's box, and so the Photon Cannon's — the three static defences all
+                    // stand at the same bulk. See SporeColonyRenderer for the scale that grows the
+                    // model to fill it.
+                    .sized(2.6f, 2.5f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("spore_colony"))));
 
