@@ -65,11 +65,14 @@ public final class ZergUnitCatalog {
                 UnitStats.MUTALISK.cost(), UnitStats.MUTALISK.buildTicks(), false, false);
         UnitDef ultralisk = new UnitDef(AsteriskCraft.ULTRALISK.get(),
                 UnitStats.ULTRALISK.cost(), UnitStats.ULTRALISK.buildTicks(), false, false);
+        UnitDef lurker = new UnitDef(AsteriskCraft.LURKER.get(),
+                UnitStats.LURKER.cost(), UnitStats.LURKER.buildTicks(), false, false);
         return Map.of(
                 UnitStats.DRONE.id(), drone,
                 UnitStats.ZERGLING.id(), zergling,
                 UnitStats.HYDRALISK.id(), hydralisk,
                 UnitStats.MUTALISK.id(), mutalisk,
-                UnitStats.ULTRALISK.id(), ultralisk);
+                UnitStats.ULTRALISK.id(), ultralisk,
+                UnitStats.LURKER.id(), lurker);
     }
 }

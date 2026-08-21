@@ -5,20 +5,17 @@ import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.EnumSet;
+import java.util.OptionalDouble;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -35,15 +32,12 @@ import org.jetbrains.annotations.Nullable;
  * selector only re-runs on its own cadence.
  *
  * <p>Unlike the cannon, no damage is dealt here — the spike carries it (see
- * {@link net.bitflora.asteriskcraft.combat.SunkenSpikeDamageHandler}), and it lands ~8 ticks later at
+ * {@link net.bitflora.asteriskcraft.combat.FangStrikeDamageHandler}), and it lands ~8 ticks later at
  * wherever the spike was planted. A target that keeps moving can walk out from under the strike.
  * Exactly one spike goes out per attack, so a hit is worth exactly one
  * {@link UnitStats#SUNKEN_COLONY}'s worth of attack damage.
  */
 public class SunkenSpikeGoal extends Goal {
-    /** How far below the spike's spawn column to keep searching for solid footing before giving up. */
-    private static final int GROUND_SEARCH_DEPTH = 4;
-
     private static final UnitStat STAT = UnitStats.SUNKEN_COLONY;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 
@@ -115,37 +109,17 @@ public class SunkenSpikeGoal extends Goal {
     }
 
     /**
-     * Places one spike standing on the surface below {@code (x, z)}. Ported from vanilla's
-     * {@code Evoker$EvokerAttackSpellGoal.createSpellEntity}: walk down from {@code maxY} to the first
-     * block whose top face is sturdy, then sit the spike on that block's collision height so it
-     * doesn't sink into a slab or stair.
+     * Places one spike standing on the surface below {@code (x, z)}, or nothing at all if there is no
+     * footing there — the target is airborne, or over a void, and the strike simply misses. The
+     * search itself is {@link GroundStrike}'s, shared with the Lurker's row.
      */
     private void plantSpike(double x, double z, double minY, double maxY, float angle) {
         Level level = this.colony.level();
-        BlockPos pos = BlockPos.containing(x, maxY, z);
-        double topOffset = 0.0;
-        boolean footed = false;
-
-        while (pos.getY() >= Mth.floor(minY) - GROUND_SEARCH_DEPTH) {
-            BlockPos below = pos.below();
-            BlockState belowState = level.getBlockState(below);
-            if (belowState.isFaceSturdy(level, below, Direction.UP)) {
-                if (!level.isEmptyBlock(pos)) {
-                    VoxelShape shape = level.getBlockState(pos).getCollisionShape(level, pos);
-                    if (!shape.isEmpty()) {
-                        topOffset = shape.max(Direction.Axis.Y);
-                    }
-                }
-                footed = true;
-                break;
-            }
-            pos = pos.below();
+        OptionalDouble footing = GroundStrike.footingY(level, x, z, minY, maxY);
+        if (footing.isEmpty()) {
+            return;
         }
-        if (!footed) {
-            return; // target is airborne or over a void — the strike simply misses
-        }
-
-        double y = pos.getY() + topOffset;
+        double y = footing.getAsDouble();
         level.addFreshEntity(new SunkenSpikeEntity(level, x, y, z, angle, this.colony));
         level.gameEvent(GameEvent.ENTITY_PLACE, new Vec3(x, y, z), GameEvent.Context.of(this.colony));
     }

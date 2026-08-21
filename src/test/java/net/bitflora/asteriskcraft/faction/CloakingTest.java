@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
+import net.bitflora.asteriskcraft.entity.zerg.LurkerEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
 import net.bitflora.asteriskcraft.stats.UnitCost;
@@ -28,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * underneath it, and the detector wiring — a marker interface is exactly the kind of thing that is
  * silently easy to drop, since nothing fails to compile without it.
  *
- * <p>Exactly one unit carries {@link Cloaked}: the Dark Templar, which is what the mechanism was
- * built for and priced against. Cloak is opt-in and is meant to stay rare — a unit that gets it
- * essentially cannot be fought back at, so it is a property a unit is designed around rather than
- * one handed to a line trooper.
+ * <p>Two units carry {@link Cloaked}, one per race, and they carry it differently: the Dark Templar
+ * is cloaked always, and the Lurker only while it is burrowed. Cloak is opt-in and is meant to stay
+ * rare — a unit that gets it essentially cannot be fought back at, so it is a property a unit is
+ * designed around rather than one handed to a line trooper.
  */
 class CloakingTest {
 
@@ -126,10 +127,37 @@ class CloakingTest {
     // --- The wiring: markers are easy to drop, and nothing else notices ---
 
     @Test
-    void theDarkTemplarIsTheCloakedUnit() {
-        // The marker is the entire implementation of its cloak — there is no state and no toggle —
-        // so nothing else fails if it is dropped by accident. Hence a test.
-        assertTrue(Cloaked.class.isAssignableFrom(DarkTemplarEntity.class));
+    void eachRaceHasACloakedUnit() {
+        // The marker is the entire implementation of a unit's cloak, so nothing else fails if it is
+        // dropped by accident. Hence a test.
+        assertTrue(Cloaked.class.isAssignableFrom(DarkTemplarEntity.class), "the Protoss cloaked unit");
+        assertTrue(Cloaked.class.isAssignableFrom(LurkerEntity.class), "the Zerg cloaked unit");
+    }
+
+    @Test
+    void aPermanentlyCloakedUnitNeedsNoStateToBeCloaked() {
+        // The default the Dark Templar takes. Worth pinning because it is what keeps opting in to a
+        // permanent cloak a single `implements` — if the default ever flipped to false, that unit
+        // would silently stop being cloaked with nothing failing to compile.
+        Cloaked always = new Cloaked() {
+        };
+        assertTrue(always.isCloakActive());
+    }
+
+    @Test
+    void cloakIsAskedOfTheUnitNotOfItsClass() {
+        // The Lurker's shape, and the reason Cloaked is not a bare instanceof any more: a surfaced
+        // Lurker carries the marker but is not cloaked, and would be as unfightable as a buried one
+        // if the rule went by class. Only the override is exercisable without a live entity — that a
+        // *particular* Lurker's answer tracks its burrow depth needs a world, and is the runClient
+        // demo's job.
+        Cloaked conditional = new Cloaked() {
+            @Override
+            public boolean isCloakActive() {
+                return false;
+            }
+        };
+        assertFalse(conditional.isCloakActive());
     }
 
     @Test

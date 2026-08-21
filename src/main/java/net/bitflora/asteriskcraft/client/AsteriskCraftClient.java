@@ -17,6 +17,8 @@ import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneRenderer;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskRenderer;
+import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
+import net.bitflora.asteriskcraft.client.zerg.LurkerRenderer;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskRenderer;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
@@ -48,6 +50,7 @@ public class AsteriskCraftClient {
     /** Same geometry as the Zergling, baked separately so the Ultralisk can fork its model later. */
     public static final ModelLayerLocation ULTRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("ultralisk"), "main");
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
+    public static final ModelLayerLocation LURKER_LAYER = new ModelLayerLocation(AsteriskCraft.id("lurker"), "main");
     public static final ModelLayerLocation MUTALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("mutalisk"), "main");
     public static final ModelLayerLocation DRONE_LAYER = new ModelLayerLocation(AsteriskCraft.id("drone"), "main");
     public static final ModelLayerLocation PHOTON_CANNON_LAYER = new ModelLayerLocation(AsteriskCraft.id("photon_cannon"), "main");
@@ -64,6 +67,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(ULTRALISK_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
+        event.registerLayerDefinition(LURKER_LAYER, LurkerModel::createBodyLayer);
         event.registerLayerDefinition(MUTALISK_LAYER, MutaliskModel::createBodyLayer);
         event.registerLayerDefinition(DRONE_LAYER, DroneModel::createBodyLayer);
         event.registerLayerDefinition(PHOTON_CANNON_LAYER, PhotonCannonModel::createBodyLayer);
@@ -82,6 +86,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ULTRALISK.get(), UltraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.LURKER.get(), LurkerRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.MUTALISK.get(), MutaliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.PHOTON_CANNON.get(), PhotonCannonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SUNKEN_COLONY.get(), SunkenColonyRenderer::new);
@@ -89,6 +94,7 @@ public class AsteriskCraftClient {
         // The Sunken Colony's spike extends EvokerFangs, and EvokerFangsRenderer is generic over that
         // class — so the vanilla renderer works verbatim, no model or texture of our own needed.
         event.registerEntityRenderer(AsteriskCraft.SUNKEN_SPIKE.get(), EvokerFangsRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.LURKER_SPINE.get(), EvokerFangsRenderer::new);
         // Nexus/Hive shoot a vanilla beacon beam upward as a locator; reuses BeaconRenderer since
         // both block entities implement BeaconBeamOwner. See docs/neoforge-api-notes.md.
         event.registerBlockEntityRenderer(AsteriskCraft.NEXUS_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());

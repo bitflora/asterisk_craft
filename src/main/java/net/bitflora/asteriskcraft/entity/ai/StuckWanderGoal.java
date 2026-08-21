@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
 import java.util.EnumSet;
+import java.util.function.BooleanSupplier;
 
 /**
  * The last resort for a unit that has stopped getting anywhere: after {@link StuckClock#STUCK_TICKS}
@@ -41,6 +42,7 @@ public class StuckWanderGoal extends Goal {
 
     private final Mob mob;
     private final double busyRangeSqr;
+    private final BooleanSupplier alsoBusy;
     private final StuckClock clock = new StuckClock();
     private int wanderTicks;
     private int repickTicks;
@@ -57,8 +59,24 @@ public class StuckWanderGoal extends Goal {
      *                  fighting rather than being stuck
      */
     public StuckWanderGoal(Mob mob, double busyRange) {
+        this(mob, busyRange, () -> false);
+    }
+
+    /**
+     * For a unit whose ordinary behaviour includes standing perfectly still for reasons neither
+     * signal below can see — the Lurker, which is motionless the entire time it is burrowed and
+     * would otherwise be judged stuck every 40 seconds and dig itself out to wander.
+     *
+     * @param busyRange  as above
+     * @param alsoBusy   an extra reason to be standing still, OR-ed into the two built-in ones. Like
+     *                   the narrowing predicates on {@code FactionTargetGoal} and
+     *                   {@code RetaliateGoal}, it may only ever <em>add</em> patience, never remove
+     *                   it: a unit this returns false for is judged exactly as it was before.
+     */
+    public StuckWanderGoal(Mob mob, double busyRange, BooleanSupplier alsoBusy) {
         this.mob = mob;
         this.busyRangeSqr = busyRange * busyRange;
+        this.alsoBusy = alsoBusy;
         this.setFlags(EnumSet.of(Flag.MOVE));
     }
 
@@ -74,10 +92,11 @@ public class StuckWanderGoal extends Goal {
      * covers every unit: {@code swinging} catches a melee unit landing hits and a unit battering a
      * building (both go through {@code Mob.swing}), while a ranged unit does neither — vanilla's
      * {@code RangedAttackGoal} stops its navigation and fires without any swing, so a Hydralisk
-     * shooting something down would otherwise read as pinned.
+     * shooting something down would otherwise read as pinned. A unit may name a third of its own
+     * through the three-argument constructor.
      */
     private boolean busy() {
-        if (this.mob.swinging) {
+        if (this.mob.swinging || this.alsoBusy.getAsBoolean()) {
             return true;
         }
         LivingEntity target = this.mob.getTarget();

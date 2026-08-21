@@ -108,6 +108,24 @@
     "subtitle": "subtitles.entity.asteriskcraft.hydralisk.death",
     "sounds": ["asteriskcraft:mob/hydralisk/hydralisk-death"]
   },
+  "entity.lurker.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.lurker.ambient",
+    "sounds": [
+      "asteriskcraft:mob/lurker/lurker-live1",
+      "asteriskcraft:mob/lurker/lurker-live2"
+    ]
+  },
+  "entity.lurker.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.lurker.attack",
+    "sounds": ["asteriskcraft:mob/lurker/lurker-attack"]
+  },
+  "entity.lurker.burrow": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.lurker.burrow",
+    "sounds": ["asteriskcraft:mob/lurker/lurker-burrow"]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

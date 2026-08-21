@@ -45,7 +45,11 @@ public final class DetectionHandler {
         if (entity instanceof Detector detector) {
             sweep(entity, detector);
         }
-        if (Cloaked.isCloaked(entity)) {
+        // Not "if cloaked": a Lurker's cloak drops the moment it starts digging out, and an entity
+        // that stopped being cloaked while revealed would then never tick its reveal down — it would
+        // come back up already lit, anywhere on the map, forever. Anything carrying a live mask keeps
+        // expiring it, whether or not it is cloaked at this instant.
+        if (Cloaked.isCloaked(entity) || DetectionAttachments.detectedBy(entity) != 0) {
             expire(entity);
         }
     }

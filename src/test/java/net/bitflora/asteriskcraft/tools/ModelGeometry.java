@@ -16,6 +16,7 @@ import net.bitflora.asteriskcraft.client.protoss.ScoutModel;
 import net.bitflora.asteriskcraft.client.protoss.ZealotModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
+import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
@@ -145,6 +146,7 @@ final class ModelGeometry {
         map.put("photon_cannon", PhotonCannonModel::createBodyLayer);
         map.put("zergling", ZerglingModel::createBodyLayer);
         map.put("hydralisk", HydraliskModel::createBodyLayer);
+        map.put("lurker", LurkerModel::createBodyLayer);
         map.put("mutalisk", MutaliskModel::createBodyLayer);
         map.put("drone", DroneModel::createBodyLayer);
         map.put("sunken_colony", SunkenColonyModel::createBodyLayer);

@@ -33,6 +33,8 @@ import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
+import net.bitflora.asteriskcraft.entity.zerg.LurkerEntity;
+import net.bitflora.asteriskcraft.entity.zerg.LurkerSpineEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
@@ -261,6 +263,16 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("mutalisk"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<LurkerEntity>> LURKER =
+            ENTITY_TYPES.register("lurker", () -> EntityType.Builder.of(LurkerEntity::new, MobCategory.MONSTER)
+                    // Spider-broad in the art but deliberately under 1.0 here, so it stays a single
+                    // pathfinding node and still fits a one-block gap. The silhouette overhangs the
+                    // hitbox, exactly as the Ultralisk's does. Low and long: the head rears, the body
+                    // doesn't, and the back spines are what has to clear the ground when it burrows.
+                    .sized(0.9f, 1.2f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("lurker"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<PhotonCannonEntity>> PHOTON_CANNON =
             ENTITY_TYPES.register("photon_cannon", () -> EntityType.Builder.of(PhotonCannonEntity::new, MobCategory.MISC)
                     .sized(2.6f, 2.5f) // 3x3-block star base + lens drum + domed head
@@ -288,6 +300,14 @@ public class AsteriskCraft {
                     .sized(0.5f, 0.8f)
                     .clientTrackingRange(6)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("sunken_spike"))));
+
+    // One spine of a Lurker's row. Same shape as the Sunken's spike and, like it, rendered by
+    // vanilla's EvokerFangsRenderer (see AsteriskCraftClient).
+    public static final DeferredHolder<EntityType<?>, EntityType<LurkerSpineEntity>> LURKER_SPINE =
+            ENTITY_TYPES.register("lurker_spine", () -> EntityType.Builder.<LurkerSpineEntity>of(LurkerSpineEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.8f)
+                    .clientTrackingRange(6)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("lurker_spine"))));
 
     // --- Spawn eggs ---
     // Two per unit: one stamps the spawned mob as the player's own (PROTOSS, matching
@@ -344,6 +364,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("mutalisk_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, MUTALISK, Faction.ZERG));
 
+    public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ALLY = ITEMS.registerItem("lurker_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, LURKER, Faction.PROTOSS));
+    public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ENEMY = ITEMS.registerItem("lurker_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, LURKER, Faction.ZERG));
+
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.PROTOSS));
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
@@ -389,6 +414,14 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.hydralisk.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.hurt")));
     public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_DEATH =
             SOUND_EVENTS.register("entity.hydralisk.death", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.death")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> LURKER_AMBIENT =
+            SOUND_EVENTS.register("entity.lurker.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.lurker.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> LURKER_ATTACK =
+            SOUND_EVENTS.register("entity.lurker.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.lurker.attack")));
+    // One clip for both directions of the dig — it is the same animal doing the same thing.
+    public static final DeferredHolder<SoundEvent, SoundEvent> LURKER_BURROW =
+            SOUND_EVENTS.register("entity.lurker.burrow", () -> SoundEvent.createVariableRangeEvent(id("entity.lurker.burrow")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_AMBIENT =
             SOUND_EVENTS.register("entity.probe.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.ambient")));
@@ -464,6 +497,8 @@ public class AsteriskCraft {
                 output.accept(HYDRALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(MUTALISK_SPAWN_EGG_ALLY.get());
                 output.accept(MUTALISK_SPAWN_EGG_ENEMY.get());
+                output.accept(LURKER_SPAWN_EGG_ALLY.get());
+                output.accept(LURKER_SPAWN_EGG_ENEMY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ALLY.get());
                 output.accept(SUNKEN_COLONY_SPAWN_EGG_ENEMY.get());
                 output.accept(SPORE_COLONY_SPAWN_EGG_ALLY.get());
@@ -531,6 +566,7 @@ public class AsteriskCraft {
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
         event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
+        event.put(LURKER.get(), LurkerEntity.createAttributes().build());
         event.put(SUNKEN_COLONY.get(), SunkenColonyEntity.createAttributes().build());
         event.put(SPORE_COLONY.get(), SporeColonyEntity.createAttributes().build());
         // No attributes for SUNKEN_SPIKE — it's a plain Entity, not a LivingEntity.

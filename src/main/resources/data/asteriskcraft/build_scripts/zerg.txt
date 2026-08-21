@@ -12,7 +12,7 @@
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Zergling, 1 Hydralisk". Qty may be a range "3-5".
 #   Units: Zergling (melee), Hydralisk (ranged), Mutalisk (air), Ultralisk (heavy melee),
-#          Drone (worker).
+#          Lurker (burrowing ambusher, ground only), Drone (worker).
 #
 # The AI waits until it can afford each unit, so a wave only leaves once fully trained. Each unit
 # also takes its own build time — an Ultralisk alone is a minute — so adding one lengthens a wave.
@@ -33,6 +33,11 @@ Wait 200
 # First air: a lone Mutalisk. Melee units can't touch it — answer it with Dragoons or a Cannon.
 Wave: 5-6 Zergling, 1-3 Hydralisk, 1 Mutalisk
 
+# Lurkers are defence, not wave material: one digs in near the Hive that made it and waits, and it
+# cannot be shot at until a Cannon reveals it. Sending them out would waste them — a Lurker walking
+# with a wave spends the whole approach surfaced, visible and unable to fire.
+Defence: 2 Lurker
+
 Defence: 1 Ultralisk
 Defence: 1 Ultralisk
 Defence: 1 Ultralisk
@@ -46,6 +51,8 @@ Wait 220
 Wave: 7-12 Zergling, 3-4 Hydralisk, 1-2 Mutalisk, 1 Ultralisk
 Wait 220
 
+
+Defence: 1-2 Lurker
 
 Wave: 2-12 Zergling, 3-6 Hydralisk, 1-6 Mutalisk, 0-4 Ultralisk
 Wait 220

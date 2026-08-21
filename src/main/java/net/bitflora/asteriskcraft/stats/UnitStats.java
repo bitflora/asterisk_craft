@@ -129,6 +129,24 @@ public final class UnitStats {
             .cost(UnitCost.of(ANY, 200)).buildTicks(20 * 60)
             .build();
 
+    /**
+     * The Zerg answer to the Dark Templar, and the roster's first <em>conditionally</em> cloaked unit:
+     * it is hidden and armed only while burrowed, and spends three seconds helpless in the dirt at
+     * each end of that. Priced as a heavy siege piece rather than an assassin — 63 HP behind 1 armour
+     * is more than a Hydralisk carries, because a unit that cannot move while it fights cannot
+     * disengage from a mistake, and a 40-second build time is what keeps a wall of them from being
+     * the obvious answer to everything.
+     *
+     * <p>Its 6 blocks of range is the Hydralisk's, deliberately: what the Lurker buys with the burrow
+     * is not reach but a row of spines that each land in full, so it out-trades anything that walks
+     * up the line at it and loses to anything that shoots it from 8.
+     */
+    public static final UnitStat LURKER = UnitStat.builder("lurker")
+            .health(63.0).armor(1.0).speed(0.25)
+            .attackDamage(10.0).ranged(6.0f, 40).attackAnimTicks(12)
+            .cost(UnitCost.of(ANY, 100)).buildTicks(20 * 40)
+            .build();
+
     /** Pre-placed by {@code GameBootstrap}, not trained — hence NONE. */
     public static final UnitStat SUNKEN_COLONY = UnitStat.builder("sunken_colony")
             .health(150.0).armor(0.0).rooted()
@@ -164,7 +182,7 @@ public final class UnitStats {
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, SUNKEN_COLONY, SPORE_COLONY);
+            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, LURKER, SUNKEN_COLONY, SPORE_COLONY);
 
     private UnitStats() {
     }

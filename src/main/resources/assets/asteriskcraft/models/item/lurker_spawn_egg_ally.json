@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "asteriskcraft:item/lurker_spawn_egg_ally"
+  }
+}

@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.EnumSet;
+import java.util.function.BooleanSupplier;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -36,7 +37,10 @@ import org.jetbrains.annotations.Nullable;
  * obstruction-breaking only triggers once navigation reports it is done (see {@code obstructionAhead}).
  * Installed on Zealots, Dragoons, Zerglings, Hydralisks and Mutalisks — never on workers, so miners
  * don't grief. Reach is per-unit (see the two-argument constructor) because an air unit sieges from
- * altitude rather than from arm's length.
+ * altitude rather than from arm's length. A unit that stops its own navigation on purpose (the
+ * burrowed Lurker) passes a predicate saying so, which suppresses <em>obstruction-digging alone</em>,
+ * since that branch keys off "navigation done and not arrived" and would otherwise read as
+ * permanently stuck — see the three-argument constructor.
  * (The Photon Cannon is an entity, so retaliating against it needs no special case here — units
  * target and hit it back through the normal {@link RetaliateGoal}/{@code FactionTargetGoal} path.)
  */
@@ -53,6 +57,7 @@ public class SiegeBlockGoal extends Goal {
 
     private final Mob mob;
     private final double reachSqr;
+    private final BooleanSupplier standingStillOnPurpose;
     private Mode mode = Mode.BUILDING;
     @Nullable
     private BlockPos buildingPos;
@@ -72,8 +77,30 @@ public class SiegeBlockGoal extends Goal {
      *              its own attack range instead and batters the building from where it flies.
      */
     public SiegeBlockGoal(Mob mob, double reach) {
+        this(mob, reach, () -> false);
+    }
+
+    /** Melee reach, plus the deliberate-stillness predicate documented on the three-argument form. */
+    public SiegeBlockGoal(Mob mob, BooleanSupplier standingStillOnPurpose) {
+        this(mob, DEFAULT_REACH, standingStillOnPurpose);
+    }
+
+    /**
+     * For a unit that stands still on purpose, where "navigation is done and we haven't arrived" is
+     * no longer evidence of being stuck — the burrowed Lurker, whose navigation is stopped every tick
+     * by design. Without this it would surface and chew through the first lip of terrain between it
+     * and a target it could already shoot over, every time it dug in.
+     *
+     * <p>It suppresses the <b>obstruction-digging</b> branch only. Building assault still preempts,
+     * and must: a unit parked next to an enemy core with nothing alive to shoot at has to bring the
+     * core down rather than sit there.
+     *
+     * @param standingStillOnPurpose whether the unit's stillness is deliberate right now
+     */
+    public SiegeBlockGoal(Mob mob, double reach, BooleanSupplier standingStillOnPurpose) {
         this.mob = mob;
         this.reachSqr = reach * reach;
+        this.standingStillOnPurpose = standingStillOnPurpose;
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -213,6 +240,11 @@ public class SiegeBlockGoal extends Goal {
      */
     @Nullable
     private BlockPos obstructionAhead() {
+        if (this.standingStillOnPurpose.getAsBoolean()) {
+            // Not stuck — parked. The whole branch keys off "navigation done and not arrived", which
+            // for a unit that stops its own navigation is true continuously and means nothing.
+            return null;
+        }
         BlockPos dest = destination();
         if (dest == null || !this.mob.getNavigation().isDone()) {
             return null; // still pathing, or nowhere to go — nothing to dig

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
+import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
@@ -50,6 +51,11 @@ class ModelBakeTest {
     @Test
     void hydraliskModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new HydraliskModel(HydraliskModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void lurkerModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new LurkerModel(LurkerModel.createBodyLayer().bakeRoot()));
     }
 
     @Test
