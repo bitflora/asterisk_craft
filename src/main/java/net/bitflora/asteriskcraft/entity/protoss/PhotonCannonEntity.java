@@ -9,6 +9,7 @@ import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal;
 import net.bitflora.asteriskcraft.faction.Cloaking;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.WildKind;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -24,7 +25,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -90,12 +90,12 @@ public class PhotonCannonEntity extends Mob implements Shielded, Detector, Roote
         // Targets the nearest enemy-faction unit OR any living vanilla hostile in range, reusing the
         // pure PhotonCannonTargeting rule so the "also defend against wild hostiles" logic and its
         // unit test stay in one place. Follow range is the cannon's attack range, so it never
-        // acquires anything it couldn't shoot. The class test is Enemy, not Monster — see
-        // FactionAttachments.isHostile for why (slimes, ghasts and phantoms aren't Monsters).
+        // acquires anything it couldn't shoot. Which slice of the neutral world that second half
+        // covers is the race's, not the cannon's — see Faction.attacksWild and WildKind.
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
                 (target, level) -> PhotonCannonTargeting.isTargetable(
                         FactionAttachments.get(this), FactionAttachments.get(target),
-                        target.isAlive(), target instanceof Enemy)
+                        target.isAlive(), WildKind.of(target))
                         // The cannon is the one targeting site that doesn't route through
                         // FactionAttachments.isHostile(Entity, Entity) — it consumes the pure
                         // faction overload instead — so it applies the cloak gate itself. Being a

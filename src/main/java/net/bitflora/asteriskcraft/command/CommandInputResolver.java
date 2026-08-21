@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.command;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.WildKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
@@ -13,7 +14,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Enemy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -174,9 +174,10 @@ public final class CommandInputResolver {
     }
 
     /**
-     * A valid attack-order target: a living enemy-faction unit, or a wild vanilla hostile
-     * (zombies, creepers, slimes, etc.) — those default to {@link Faction#NEUTRAL} but units should
-     * still be orderable to fight them off, same as the Photon Cannon auto-targets them. Both cases
+     * A valid attack-order target: a living enemy-faction unit, or whatever part of the neutral
+     * world the owner's race hunts (wild hostiles for the Protoss, villagers and golems for the
+     * Zerg) — those default to {@link Faction#NEUTRAL} but units should still be orderable onto
+     * them, same as the Photon Cannon auto-targets what it may. Both cases
      * are exactly {@link FactionAttachments#isHostile}, so ask it rather than restating the rule
      * here; this used to carry its own {@code instanceof Monster} copy and so silently refused
      * attack orders on every hostile that isn't a {@code Monster} subclass.
@@ -186,7 +187,7 @@ public final class CommandInputResolver {
             return null;
         }
         if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()
-                && FactionAttachments.isHostile(owner, FactionAttachments.get(target), target instanceof Enemy)) {
+                && FactionAttachments.isHostile(owner, FactionAttachments.get(target), WildKind.of(target))) {
             return target;
         }
         return null;
