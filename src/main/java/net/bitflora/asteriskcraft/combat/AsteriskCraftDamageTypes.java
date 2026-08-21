@@ -22,10 +22,20 @@ import java.util.List;
  * entry shows as a raw key in chat rather than failing anything, which is exactly the kind of silent
  * gap {@code DamageTypeResourceTest} exists to catch.
  *
- * <p><b>Deliberately not in {@code #minecraft:bypasses_armor} or {@code #minecraft:no_knockback}</b>,
- * both of which {@code minecraft:magic} is in — so unlike before, armour reduces these hits and they
- * knock their target back. They <em>are</em> in {@code #minecraft:panic_causes}, which magic also was;
- * dropping out of it would have stopped animals fleeing from combat.
+ * <p><b>None of them are in {@code #minecraft:bypasses_armor}</b>, which {@code minecraft:magic} is in
+ * — so unlike before, armour reduces every one of these hits. They <em>are</em> all in
+ * {@code #minecraft:panic_causes}, which magic also was; dropping out of it would have stopped animals
+ * fleeing from combat.
+ *
+ * <p>{@code #minecraft:no_knockback} is the one tag they split on, and the line is <b>melee versus
+ * ranged</b>. The shove is worth keeping when a unit closes to arm's length and connects, so the four
+ * melee types and the two fanged ones stay out of the tag. Every type dealt by
+ * {@link net.bitflora.asteriskcraft.entity.ai.HitscanAttacks} is in it: a shooter that pushed its
+ * target back a little on each shot was kiting it by accident, which turns a firing line holding
+ * ground into a bumper and stops an assault ever arriving. Membership is declared in
+ * {@code data/minecraft/tags/damage_type/no_knockback.json} (additively — vanilla's own members are
+ * kept), and the shove itself comes from {@code hurtServer} gated on that tag, so nothing in the
+ * attack code decides it. See docs/neoforge-api-notes.md.
  */
 public final class AsteriskCraftDamageTypes {
 

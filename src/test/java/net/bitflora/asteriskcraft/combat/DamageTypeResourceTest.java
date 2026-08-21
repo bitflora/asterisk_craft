@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.combat;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.resources.ResourceKey;
@@ -9,8 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,9 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * into chat. Both are exactly the kind of gap a test should catch instead of a play session.
  *
  * <p>Reads the files straight off the classpath rather than through a live resource manager, so it
- * needs no server. That does mean the <b>tag</b> membership these types rely on
- * ({@code #minecraft:panic_causes}) is out of scope: tags aren't bound in the JUnit bootstrap at all
- * (see {@code entity.protoss.ProbeEconomyTest} for the same limitation), so that side is verified in
+ * needs no server. That splits the <b>tag</b> memberships these types rely on
+ * ({@code #minecraft:panic_causes}, {@code #minecraft:no_knockback}) in half: the tag files' contents
+ * are just JSON on the classpath and are checked here, but whether a type is actually <em>bound</em>
+ * into a tag at runtime is out of scope — tags aren't bound in the JUnit bootstrap at all (see
+ * {@code entity.protoss.ProbeEconomyTest} for the same limitation), so that side is verified in
  * {@code runClient} instead.
  */
 class DamageTypeResourceTest {
@@ -69,6 +75,56 @@ class DamageTypeResourceTest {
                     "en_us.json is missing death.attack." + messageId);
             assertTrue(lang.has("death.attack." + messageId + ".player"),
                     "en_us.json is missing death.attack." + messageId + ".player");
+        }
+    }
+
+    /**
+     * A vanilla tag file the mod adds to fails silently in both directions it can be wrong: a typo'd
+     * value is simply a membership that never happens, and a missing {@code "replace": false} wipes
+     * vanilla's own entries instead of joining them. Neither shows up as an error anywhere. Which
+     * types belong in a tag is a balance question and deliberately not asserted here.
+     */
+    /**
+     * As {@link #readJson}, but for a file in the {@code minecraft} namespace, where the mod is not the
+     * only thing on the classpath holding that exact path — vanilla ships its own copy of every tag the
+     * mod adds to, and a plain {@code getResourceAsStream} is free to hand back either. The mod's
+     * resources are a plain directory on the test classpath while vanilla's arrive inside the MC jar,
+     * so the {@code file:} candidate is the one written in this repo.
+     */
+    private static JsonObject readOverlayJson(String path) {
+        try {
+            Enumeration<URL> candidates = DamageTypeResourceTest.class.getClassLoader().getResources(path);
+            while (candidates.hasMoreElements()) {
+                URL url = candidates.nextElement();
+                if (!"file".equals(url.getProtocol())) {
+                    continue;
+                }
+                try (InputStream in = url.openStream()) {
+                    return JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                }
+            }
+        } catch (IOException e) {
+            throw new AssertionError("could not read " + path, e);
+        }
+        throw new AssertionError("the mod ships no " + path);
+    }
+
+    @Test
+    void damageTypeTagsListOnlyRealTypesAndDoNotReplaceVanilla() {
+        Set<String> declared = new HashSet<>();
+        for (ResourceKey<DamageType> key : AsteriskCraftDamageTypes.ALL) {
+            declared.add(key.identifier().toString());
+        }
+
+        for (String tag : List.of("panic_causes", "no_knockback")) {
+            String path = "data/minecraft/tags/damage_type/" + tag + ".json";
+            JsonObject json = readOverlayJson(path);
+            assertTrue(json.has("replace") && !json.get("replace").getAsBoolean(),
+                    path + " must declare \"replace\": false or it wipes vanilla's members of the tag");
+            for (JsonElement value : json.getAsJsonArray("values")) {
+                assertTrue(declared.contains(value.getAsString()),
+                        path + " lists " + value.getAsString() + ", which no key in AsteriskCraftDamageTypes declares");
+            }
         }
     }
 

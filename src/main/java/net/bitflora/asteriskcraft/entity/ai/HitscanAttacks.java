@@ -25,8 +25,13 @@ import java.util.List;
  * weapon that made it. The source is built with the attacker as its cause, which is what sets
  * {@code getLastHurtByMob()} and so lets {@link RetaliateGoal} fire on ranged hits — the old shared
  * {@code damageSources().magic()} carried no entity at all, and nothing shot at range ever fought
- * back. Because the source now has an entity and its type is outside {@code #minecraft:no_knockback},
- * hits also knock their target away from the shooter.
+ * back.
+ *
+ * <p>Every type fired through here is in {@code #minecraft:no_knockback}, so a shot hurts without
+ * shoving. That is what separates ranged from melee, which keeps its stagger: nudging a target back
+ * on each shot means a firing line kites whatever walks at it and an assault never closes. The tag is
+ * the whole mechanism — {@code hurtServer} gates its own shove on it — so there is nothing to do here
+ * beyond naming a type that is a member (see {@code AsteriskCraftDamageTypes}).
  */
 public final class HitscanAttacks {
     private static final int BEAM_STEPS = 8;
