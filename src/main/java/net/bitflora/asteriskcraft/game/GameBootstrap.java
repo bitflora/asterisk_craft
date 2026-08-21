@@ -34,6 +34,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntBinaryOperator;
@@ -95,9 +96,9 @@ public final class GameBootstrap {
     // it — comfortably taller than any vanilla tree (a jungle giant on a slope is the worst case) so
     // we always reach the floor rather than falling back to the top of the scan.
     private static final int MAX_TREE_SCAN = 64;
-    // How far up a submerged column may be followed to the water's surface when averaging a
-    // footprint's height — deeper than any vanilla lake or river, but bounded so an ocean trench
-    // can't run the climb away.
+    // How far up a submerged column may be followed to the top of the water or ice over it when
+    // taking a footprint's height — deeper than any vanilla lake or river, but bounded so an ocean
+    // trench can't run the climb away.
     private static final int MAX_WATER_RISE = 32;
 
     private GameBootstrap() {
@@ -288,7 +289,7 @@ public final class GameBootstrap {
      * would otherwise report as valid, burying the structure underground).
      *
      * <p>The probe starts from the higher of the platform and this column's own ground, because
-     * {@link #averageGround} can seat the platform <i>below</i> the center column — on a rise, a
+     * {@link #medianGround} can seat the platform <i>below</i> the center column — on a rise, a
      * probe from the platform up would start inside the dirt the building is about to be cut into
      * and reject a perfectly open spot as a cave.
      */
@@ -355,6 +356,13 @@ public final class GameBootstrap {
      * {@link #isGround} — logs and leaves, but also the vines and cocoa a jungle drapes over them,
      * which a logs-and-leaves-only sweep left dangling in mid-air over a cleared base. Genuine solid
      * overhangs are ground, so they survive; the column's own floor is below the band and untouched.
+     *
+     * <p>{@link #isSurfaceCover Water and ice} survive too, and that carve-out is load-bearing rather
+     * than cosmetic: neither is {@link #isGround}, so this sweep used to drain a lake to its bed
+     * across the whole disc — and on the player's base it runs <em>before</em> the height is measured,
+     * so {@link #surfaceHeight} then found nothing left to climb and reported the bed. A base on a
+     * frozen lake was stamped at the bottom of it. Whatever this clears must be terrain a building
+     * would stand over, never terrain it is meant to stand <i>on</i>.
      */
     private static void clearTrees(ServerLevel level, int cx, int cz, int radius) {
         BlockState air = Blocks.AIR.defaultBlockState();
@@ -372,7 +380,7 @@ public final class GameBootstrap {
                 for (int cy = top; cy > ground; cy--) {
                     BlockPos pos = new BlockPos(x, cy, z);
                     BlockState state = level.getBlockState(pos);
-                    if (!state.isAir() && !isGround(state)) {
+                    if (!state.isAir() && !isGround(state) && !isSurfaceCover(level, pos)) {
                         level.setBlock(pos, air, Block.UPDATE_ALL);
                     }
                 }
@@ -421,12 +429,19 @@ public final class GameBootstrap {
     }
 
     /**
-     * Mean surface height across a building's footprint, rounded to nearest, so the building settles
-     * into the terrain instead of standing on stilts on its tallest column. Site prep squares up
-     * whatever the average leaves behind in both directions: the head-room clear cuts back the uphill
-     * ground that now rises above the platform, and the support fill (for the buildings that ask for
-     * one) closes the gap under the downhill columns. On flat terrain this is unchanged from the old
-     * highest-column rule.
+     * Median surface height across a building's footprint, so the building settles into the terrain
+     * instead of standing on stilts on its tallest column. Site prep squares up whatever the median
+     * leaves behind in both directions: the head-room clear cuts back the uphill ground that now
+     * rises above the platform, and the support fill (for the buildings that ask for one) closes the
+     * gap under the downhill columns. On flat terrain this is unchanged from the old highest-column
+     * rule.
+     *
+     * <p>Median rather than mean because it is the outliers that decide where a base ends up
+     * standing, and a footprint's outliers are exactly the terrain it should ignore: one pillar, one
+     * tree-stump column or one ravine mouth clipping a corner drags a mean off the ground the rest of
+     * the square is actually sitting on, while the median stays on the level the bulk of the columns
+     * agree about. The square is {@code (2 * radius + 1)^2} columns, always odd, so the median is a
+     * single sampled height and never an interpolation.
      *
      * <p>This is the Y of the ground itself — the block the building stands <i>on</i>, not the one it
      * occupies; see {@link #platformHeight} for the layer above it that actually gets stamped.
@@ -437,52 +452,72 @@ public final class GameBootstrap {
      * with footprint-relative offsets and walks the full square, matching the square the template is
      * actually stamped over rather than the disc {@link #clearTrees} sweeps.
      */
-    static int averageGround(int radius, IntBinaryOperator columnHeight) {
-        long sum = 0;
+    static int medianGround(int radius, IntBinaryOperator columnHeight) {
+        int span = 2 * radius + 1;
+        int[] heights = new int[span * span];
         int count = 0;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
-                sum += columnHeight.applyAsInt(dx, dz);
-                count++;
+                heights[count++] = columnHeight.applyAsInt(dx, dz);
             }
         }
-        return (int) Math.round((double) sum / count);
+        Arrays.sort(heights);
+        return heights[count / 2];
     }
 
     /**
-     * The origin Y to stamp a building at: one above {@link #averageGround}, because
+     * The origin Y to stamp a building at: one above {@link #medianGround}, because
      * {@link net.bitflora.asteriskcraft.building.BuildingTemplates#place} lays the template's bottom
-     * layer <i>at</i> the origin's height. Passing the average itself sank every building a block, its
+     * layer <i>at</i> the origin's height. Passing the median itself sank every building a block, its
      * platform replacing the surface it was meant to be resting on.
      */
     private static int platformHeight(ServerLevel level, int cx, int cz, int radius) {
-        return averageGround(radius, (dx, dz) -> surfaceHeight(level, cx + dx, cz + dz)) + 1;
+        return medianGround(radius, (dx, dz) -> surfaceHeight(level, cx + dx, cz + dz)) + 1;
     }
 
     /**
-     * Walks up from {@code ground} for as long as the block above is fluid, stopping after
-     * {@code limit} steps, and returns the last Y — i.e. the top of the water covering a submerged
-     * column, or {@code ground} untouched on dry land. Pure and probe-driven for the same reason
-     * {@link #scanToGround} is.
+     * Walks up from {@code ground} for as long as the block above is cover, stopping after
+     * {@code limit} steps, and returns the last Y — i.e. the top of the water or ice lying over a
+     * submerged column, or {@code ground} untouched on dry land. Pure and probe-driven for the same
+     * reason {@link #scanToGround} is.
      */
-    static int riseThroughFluid(int ground, int limit, IntPredicate isFluid) {
+    static int riseThroughCover(int ground, int limit, IntPredicate isCover) {
         int y = ground;
-        while (y - ground < limit && isFluid.test(y + 1)) {
+        while (y - ground < limit && isCover.test(y + 1)) {
             y++;
         }
         return y;
     }
 
     /**
-     * The height a column contributes to {@link #averageGround}: its ground, but a submerged one
-     * reported at the water's surface rather than its bed. {@link #groundHeight} deliberately scans
-     * straight through water down to the bed (which is what {@link #isSurroundedByWater} needs), and
-     * averaging that raw value in would drag a base built along a shoreline down under the waterline.
+     * True if this block is a water or ice surface a building should stand <i>on</i> rather than sink
+     * through. Ice needs stating because {@link #isGround} rejects it: {@link Blocks#ICE} and
+     * {@link Blocks#FROSTED_ICE} are declared {@code noOcclusion()} in vanilla, so
+     * {@code isSolidRender} says no and the ground scan walks straight through a frozen lake to its
+     * bed (the two hard ices, packed and blue, do occlude and are already ground — the tag covers all
+     * four either way, and matching on the tag rather than the two soft blocks means a modded ice is
+     * in as well). The fluid test is a state question, not a block one, so it stays separate: a
+     * waterlogged block is not "water" here.
+     */
+    private static boolean isSurfaceCover(ServerLevel level, BlockPos pos) {
+        return !level.getFluidState(pos).isEmpty() || level.getBlockState(pos).is(BlockTags.ICE);
+    }
+
+    /**
+     * The height a column contributes to {@link #medianGround}: its ground, but one under water or
+     * ice reported at the top of that cover rather than at the bed beneath it — a base on a lake or a
+     * frozen one stands on the surface, the way anything walking up to it does.
+     * {@link #groundHeight} deliberately scans straight through both down to the bed (which is what
+     * {@link #isSurroundedByWater} needs), and folding that raw value in would drag a base built along
+     * a shoreline down under the waterline.
+     *
+     * <p>The climb tests water and ice together rather than one after the other, because a frozen
+     * lake is both: ice on top with water beneath it. Rising through the fluid alone stopped a block
+     * short, under the ice, and rising through the ice alone never left the lakebed.
      */
     private static int surfaceHeight(ServerLevel level, int x, int z) {
         int ground = groundHeight(level, x, z);
-        return riseThroughFluid(ground, MAX_WATER_RISE,
-                y -> !level.getFluidState(new BlockPos(x, y, z)).isEmpty());
+        return riseThroughCover(ground, MAX_WATER_RISE, y -> isSurfaceCover(level, new BlockPos(x, y, z)));
     }
 
     /** True if this surface block is natural ground a base's cover should overrun. */
@@ -531,8 +566,8 @@ public final class GameBootstrap {
         // Hive's own template has dirt speckled through its mycelium that the sweep would otherwise
         // eat. A race that lays no cover skips this.
         coverGround(level, x, z, profile);
-        // The support fill matters here because averageGround settles a pre-placed base at its
-        // footprint's mean height: the downhill half of a slope still falls away beneath it and
+        // The support fill matters here because medianGround settles a pre-placed base at its
+        // footprint's median height: the downhill half of a slope still falls away beneath it and
         // would otherwise overhang open air.
         BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, profile.baseTemplate(),
                 profile.coreBlock().get(), support(profile));

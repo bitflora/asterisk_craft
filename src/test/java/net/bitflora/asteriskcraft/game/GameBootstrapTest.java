@@ -25,9 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * runClient-verified. What remains of placement (fluid-based water avoidance, end-to-end stamping)
  * needs a live ServerLevel and is likewise runClient-verified.
  *
- * <p>The height those columns add up to is covered the same way: {@code averageGround} for the
- * footprint arithmetic and {@code riseThroughFluid} for the climb to a water surface, both fed by
- * probe lambdas. Which blocks count as fluid is a live-level question and stays runClient-verified.
+ * <p>The height those columns add up to is covered the same way: {@code medianGround} for the
+ * footprint arithmetic and {@code riseThroughCover} for the climb to the top of the water or ice over
+ * a column, both fed by probe lambdas. Which blocks count as that cover is a live-level question
+ * (and, for ice, a block-tag one) and stays runClient-verified.
  */
 class GameBootstrapTest {
 
@@ -145,59 +146,59 @@ class GameBootstrapTest {
     }
 
     @Test
-    void flatGroundAveragesToItsOwnHeight() {
+    void flatGroundSettlesAtItsOwnHeight() {
         // The Nexus's footprint radius. Flat terrain must come out exactly where it always did,
-        // so switching from the highest column to the mean is a no-op away from slopes.
-        assertEquals(70, GameBootstrap.averageGround(4, (dx, dz) -> 70));
+        // so switching from the highest column to the median is a no-op away from slopes.
+        assertEquals(70, GameBootstrap.medianGround(4, (dx, dz) -> 70));
     }
 
     @Test
     void slopeSettlesAtItsMidpointNotItsPeak() {
         // A ramp climbing one block per step across the footprint: 60 on the low edge, 68 on the high
         // edge. The building belongs halfway up, cut into the hill — not perched at 68 on stilts.
-        assertEquals(64, GameBootstrap.averageGround(4, (dx, dz) -> 64 + dx),
-                "a building on a slope must sit at its footprint's mean height, not its highest column");
+        assertEquals(64, GameBootstrap.medianGround(4, (dx, dz) -> 64 + dx),
+                "a building on a slope must sit at its footprint's middle height, not its highest column");
     }
 
     @Test
-    void oneTallSpikeBarelyMovesTheResult() {
-        // Otherwise-flat ground at 64 with a single pillar towering over one corner. The old rule
-        // hoisted the whole building to 120; the mean shifts by less than a block.
-        // (5240 / 81 columns = 64.69 -> 65, which also pins the scan to the full 9x9 square.)
-        assertEquals(65, GameBootstrap.averageGround(4, (dx, dz) -> dx == 4 && dz == 4 ? 120 : 64));
+    void oneTallSpikeDoesNotMoveTheResult() {
+        // Otherwise-flat ground at 64 with a single pillar towering over one corner. The old
+        // highest-column rule hoisted the whole building to 120 and a mean still lifted it a block;
+        // the median leaves it on the ground the other 80 columns agree about.
+        assertEquals(64, GameBootstrap.medianGround(4, (dx, dz) -> dx == 4 && dz == 4 ? 120 : 64));
     }
 
     @Test
-    void averageRoundsToTheNearestBlock() {
-        // 9 columns, one of them raised: 64.44 rounds down, 64.56 rounds up.
-        assertEquals(64, GameBootstrap.averageGround(1, (dx, dz) -> dx == 1 && dz == 1 ? 68 : 64));
-        assertEquals(65, GameBootstrap.averageGround(1, (dx, dz) -> dx == 1 && dz == 1 ? 69 : 64));
+    void aMinorityOfOutliersDoesNotMoveTheResult() {
+        // A ravine mouth taking two edges of the footprint: 32 of the 81 columns drop away to -60.
+        // The building stays on the plateau the majority sits on rather than being dragged down.
+        assertEquals(64, GameBootstrap.medianGround(4, (dx, dz) -> dx >= 3 || dz >= 3 ? -60 : 64));
     }
 
     @Test
-    void averageRoundsToTheNearestBlockBelowSeaLevel() {
-        // Deepslate-level terrain: the rounding must stay nearest-wins with negative heights rather
-        // than truncating toward zero, which would drift the building a block uphill every time.
-        assertEquals(-59, GameBootstrap.averageGround(1, (dx, dz) -> dx == 1 && dz == 1 ? -55 : -60));
-        assertEquals(-60, GameBootstrap.averageGround(1, (dx, dz) -> dx == 1 && dz == 1 ? -56 : -60));
+    void settlesOnTheMiddleColumnBelowSeaLevel() {
+        // Deepslate-level terrain: negative heights must order the same way as positive ones rather
+        // than drifting the building toward zero.
+        assertEquals(-60, GameBootstrap.medianGround(1, (dx, dz) -> dx == 1 && dz == 1 ? -55 : -60));
+        assertEquals(-58, GameBootstrap.medianGround(1, (dx, dz) -> dx < 0 ? -70 : -58));
     }
 
     @Test
     void dryColumnsContributeTheirOwnGround() {
-        assertEquals(64, GameBootstrap.riseThroughFluid(64, 32, y -> false),
+        assertEquals(64, GameBootstrap.riseThroughCover(64, 32, y -> false),
                 "dry land must report its ground untouched");
     }
 
     @Test
-    void submergedColumnsContributeTheirWaterSurface() {
-        // Lakebed at 55 under water up to 62: averaging in the bed would drag a shoreline base under.
-        assertEquals(62, GameBootstrap.riseThroughFluid(55, 32, y -> y <= 62));
+    void coveredColumnsContributeTheTopOfTheirCover() {
+        // Lakebed at 55 under water up to 62: folding in the bed would drag a shoreline base under.
+        assertEquals(62, GameBootstrap.riseThroughCover(55, 32, y -> y <= 62));
     }
 
     @Test
-    void fluidClimbHonorsItsLimit() {
-        // Bottomless fluid column — stop after the budget rather than run away up the world.
-        assertEquals(59, GameBootstrap.riseThroughFluid(55, 4, y -> true));
+    void coverClimbHonorsItsLimit() {
+        // Bottomless water column — stop after the budget rather than run away up the world.
+        assertEquals(59, GameBootstrap.riseThroughCover(55, 4, y -> true));
     }
 
     @Test
