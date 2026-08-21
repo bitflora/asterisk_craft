@@ -1,7 +1,7 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.sounds.SoundEvent;
@@ -14,22 +14,19 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * The Zerg worker. Mechanically identical to the {@link ProbeEntity} it extends — same
- * non-destructive harvest of {@code #asteriskcraft:harvestable} blocks, same delivery straight
- * into its home core (a {@link net.bitflora.asteriskcraft.building.HiveBlockEntity} here) —
- * except it won't touch crimson hyphae, which the shared {@code #minecraft:logs} tag would
- * otherwise pull in as "wood".
+ * The Zerg worker. Mechanically the shared {@link WorkerEntity} — same non-destructive harvest of
+ * {@code #asteriskcraft:harvestable} blocks, same delivery straight into its home base — except it
+ * won't touch crimson hyphae, which the shared {@code #minecraft:logs} tag would otherwise pull in
+ * as "wood".
  *
- * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#DRONE} — its own entry,
- * not silently inherited from {@link ProbeEntity} despite the class extension.
+ * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#DRONE}.
  */
-public class DroneEntity extends ProbeEntity {
+public class DroneEntity extends WorkerEntity {
 
     public DroneEntity(EntityType<? extends DroneEntity> type, Level level) {
         super(type, level);
     }
 
-    /** Own entry, not {@link ProbeEntity#createAttributes()} — see the class javadoc. */
     public static AttributeSupplier.Builder createAttributes() {
         return UnitAttributes.apply(PathfinderMob.createMobAttributes(), UnitStats.DRONE);
     }

@@ -8,11 +8,11 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 /**
- * Backing attachment for the Zerg health-regen mechanic (see {@link ZergRegenEventHandler}):
- * unlike Protoss shields, Zerg regenerate HP itself, slowly, once they've gone a few seconds
- * without taking damage.
+ * Backing attachment for the health-regen mechanic (see {@link RegenEventHandler}): a race with
+ * {@code faction.Race.regen()} set regenerates HP itself, slowly, once it has gone a few seconds
+ * without taking damage — the swarm's answer to the shield buffer a shielded race carries instead.
  */
-public final class ZergRegenAttachments {
+public final class RegenAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
 
@@ -20,6 +20,6 @@ public final class ZergRegenAttachments {
     public static final Supplier<AttachmentType<Integer>> REGEN_DELAY = ATTACHMENT_TYPES.register(
             "zerg_regen_delay", () -> AttachmentType.builder(() -> 0).build());
 
-    private ZergRegenAttachments() {
+    private RegenAttachments() {
     }
 }

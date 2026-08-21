@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.building;
 
-import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.command.ControlledFaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -73,10 +73,10 @@ public class BuildingKitItem extends Item {
             return InteractionResult.FAIL;
         }
         BlockEntity core = serverLevel.getBlockEntity(placed.core());
-        // Every kit is placed by the player for now, so it's always PROTOSS; a real
-        // player->faction registry arrives with race selection/PvP (see docs/shaping.md V5).
+        // The building belongs to whoever warped it in, asked through the one chokepoint for
+        // command ownership — so a kit never assumes the player is Protoss.
         if (core instanceof WarpInBuilding building) {
-            building.setFaction(Faction.PROTOSS);
+            building.setFaction(ControlledFaction.of(player));
         }
         // Start the warp explicitly rather than trusting the stamped core to arrive mid-warp: the
         // template carries the block-entity NBT captured from a finished building, spent countdown

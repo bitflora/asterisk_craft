@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.director.script;
 
 import net.bitflora.asteriskcraft.director.script.InterpreterState.Batch;
 import net.bitflora.asteriskcraft.director.script.InterpreterState.PendingUnit;
+import net.minecraft.core.BlockPos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -141,8 +142,12 @@ public final class ScriptInterpreter {
     private static StepResult finishBatch(Batch batch, boolean isWave, InterpreterState state, DirectorWorld world) {
         if (isWave) {
             // Target picked here, at launch, rather than when the batch started: a core razed during
-            // the minute or so of training is never marched on.
-            world.orderMove(batch.spawned(), world.pickAttackTarget());
+            // the minute or so of training is never marched on. No enemy core standing means nowhere
+            // to send the wave; it holds its guard order instead.
+            BlockPos target = world.pickAttackTarget();
+            if (target != null) {
+                world.orderMove(batch.spawned(), target);
+            }
         }
         // Defence: units keep their guard order; nothing more to do.
         return advanced(state.withPc(state.pc() + 1).clearTransient());

@@ -1,0 +1,58 @@
+# AsteriskCraft — Protoss build order, run when the computer player is Protoss.
+#
+# Lines run top-to-bottom. Edit this file (or override it from your own datapack at
+# data/<namespace>/build_scripts/protoss.txt) and run /reload to change how that side plays.
+#
+# Commands:
+#   Workers: N            keep at least N probes alive from here on (trains more when short)
+#   Defence: <units>      train these units; they patrol and defend the base
+#   Wave: <units>         train these units, then send the whole group to attack once complete
+#   Wait S                pause S seconds before the next command
+#   Repeat N              loop the previous N commands endlessly (put it last)
+#
+#   <units> = comma list of "Qty Unit", e.g. "3 Zealot, 1 Dragoon". Qty may be a range "3-5".
+#   Units: Zealot (melee), Dragoon (ranged), Scout (air), Dark Templar (permanently cloaked
+#          melee — nothing without a detector can shoot back), Probe (worker).
+#
+# The AI waits until it can afford each unit, so a wave only leaves once fully trained. Each unit
+# also takes its own build time, so adding one lengthens a wave.
+#
+# Paced to mirror the Zerg script's escalation: the Protoss trade numbers for durability, so the
+# counts are lower and the shields make up the difference.
+
+Workers: 9
+
+# Opening: post a couple of defenders while the economy ramps up.
+Defence: 2 Zealot
+Wait 65
+
+# Escalating pushes.
+Wave: 2 Zealot
+Wait 160
+Wave: 2 Zealot, 1 Dragoon
+Wait 200
+Wave: 3 Zealot, 2 Dragoon
+Wait 200
+# First air: a lone Scout. Melee units can't touch it — answer it with Hydralisks or a Spore Colony.
+Wave: 3-4 Zealot, 1-2 Dragoon, 1 Scout
+
+# Dark Templar are an ambush, not wave material: without a detector on the field nothing can shoot
+# back at them, so they are worth far more sitting on the base than walking into one.
+Defence: 2 Dark Templar
+
+Defence: 1 Dragoon
+Defence: 1 Dragoon
+Wait 220
+
+# Endless combined waves from here on.
+Wave: 4-7 Zealot, 2-3 Dragoon, 1-2 Scout
+Wait 220
+
+Wave: 4-7 Zealot, 2-3 Dragoon, 1-2 Scout
+Wait 220
+
+Defence: 1 Dark Templar
+
+Wave: 2-8 Zealot, 2-5 Dragoon, 1-4 Scout, 1-2 Dark Templar
+Wait 220
+Repeat 2

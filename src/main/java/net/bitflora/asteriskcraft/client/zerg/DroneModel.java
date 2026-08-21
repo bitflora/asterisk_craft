@@ -118,7 +118,7 @@ public class DroneModel extends EntityModel<DroneRenderState> {
         animateLeg(this.legBackRight, this.shinBackRight, pos, speed, false, Mth.PI);
 
         // Mining stroke: the sickle rakes down and outward, and recovers, across one swing.
-        // ProbeEntity.HarvestGoal swings every tick it is in range of a node, and LivingEntity.swing
+        // WorkerEntity.HarvestGoal swings every tick it is in range of a node, and LivingEntity.swing
         // restarts from the half-way mark, so this cycles continuously for as long as the Drone works.
         //
         // The amplitudes are solved against the floor, not chosen. The blade already hangs at y=20.9

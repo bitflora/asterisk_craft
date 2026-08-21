@@ -2,7 +2,6 @@ package net.bitflora.asteriskcraft.combat;
 
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
-import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -16,16 +15,17 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 /**
- * Protoss shields: a regenerating damage buffer that sits in front of HP. Only Protoss-faction
- * units carry a nonzero max shield ({@link #maxShieldFor}); HP itself never regenerates. Damage
- * absorption happens in {@link ShieldEventHandler}.
+ * Shields: a regenerating damage buffer that sits in front of HP. Only units of a race whose
+ * {@link net.bitflora.asteriskcraft.faction.Race#shields()} is set carry a nonzero max shield
+ * ({@link #maxShieldFor}); HP itself never regenerates for them. Damage absorption happens in
+ * {@link ShieldEventHandler}.
  */
 public final class ShieldAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
 
     /**
-     * Current shield value. Defaults to this entity's max shield (so Protoss units spawn at full
+     * Current shield value. Defaults to this entity's max shield (so shielded units spawn at full
      * shields) rather than a flat zero, since the default is only ever consulted before the first
      * explicit set (i.e. before the unit has taken damage or regenerated).
      */
@@ -51,14 +51,16 @@ public final class ShieldAttachments {
     }
 
     /**
-     * Zero for anything that isn't a Protoss unit we've defined a shield pool for.
+     * Zero for anything that isn't a unit of a shielded race with a shield pool defined for it.
+     * Whether a race has shields at all is one flag on {@code faction.Race}, not a faction literal
+     * here — a match where the human plays Zerg must not hand the swarm Protoss shields.
      *
      * <p>Called on the client too (the Jade tooltip needs a max to show), so whatever a
      * {@link Shielded#getShield()} varies with has to be synced — see the Photon Cannon's warp-in
      * state, which is entity data rather than a plain field for exactly this reason.
      */
     public static float maxShieldFor(IAttachmentHolder holder) {
-        if (!(holder instanceof Entity entity) || FactionAttachments.get(entity) != Faction.PROTOSS) {
+        if (!(holder instanceof Entity entity) || !FactionAttachments.get(entity).hasShields()) {
             return 0.0f;
         }
         if (entity instanceof Shielded shielded) {

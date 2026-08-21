@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.command;
 
-import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.faction.WildKind;
@@ -100,7 +100,7 @@ public final class CommandInputResolver {
         boolean issued = false;
         for (Mob unit : units) {
             // Probes have no attack; they sit the attack order out rather than march into it.
-            if (unit instanceof ProbeEntity) {
+            if (unit instanceof WorkerEntity) {
                 continue;
             }
             CommandAttachments.setOrder(unit, CommandOrder.attack(attackTarget.getUUID()));
@@ -123,11 +123,11 @@ public final class CommandInputResolver {
             return false;
         }
         boolean atBlock = packet.kind() != CommandInputPacket.HitKind.ENTITY;
-        boolean harvestable = atBlock && level.getBlockState(packet.pos()).is(ProbeEntity.HARVESTABLE);
+        boolean harvestable = atBlock && level.getBlockState(packet.pos()).is(WorkerEntity.HARVESTABLE);
         List<Mob> movers = new ArrayList<>(units.size());
         boolean mining = false;
         for (Mob unit : units) {
-            if (harvestable && unit instanceof ProbeEntity) {
+            if (harvestable && unit instanceof WorkerEntity) {
                 // The block itself is the order — a mining Probe is not spread into the formation.
                 CommandAttachments.setOrder(unit, CommandOrder.mine(packet.pos()));
                 mining = true;

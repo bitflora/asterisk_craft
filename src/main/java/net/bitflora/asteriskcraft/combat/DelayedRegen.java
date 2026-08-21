@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 /**
  * The shared "recharge after a lull" tick shape behind both {@link ShieldEventHandler} (Protoss
- * shield buffer) and {@link ZergRegenEventHandler} (Zerg HP): each hit resets a per-entity delay
+ * shield buffer) and {@link RegenEventHandler} (HP): each hit resets a per-entity delay
  * attachment, and once that many ticks pass without damage the value climbs back toward its max at
  * a fixed rate. Only the pool being refilled (shield buffer vs. actual health) differs, so each
  * handler supplies its own current/max/setter; the delay countdown and the per-tick top-up live here.

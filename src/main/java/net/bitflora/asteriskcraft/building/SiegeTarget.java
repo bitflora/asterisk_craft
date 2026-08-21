@@ -6,10 +6,10 @@ import net.minecraft.server.level.ServerLevel;
 
 /**
  * A building block entity an enemy army has to batter down rather than simply dig out: it holds real
- * siege HP (and, for a Protoss building, a shield buffer) in a {@link BuildingDefense}.
+ * siege HP (and, for a shielded race's building, a shield buffer) in a {@link BuildingDefense}.
  * {@link net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal} only ever asks a target for its
  * {@link #buildingFaction()} and calls {@link #damageBuilding}, so it stays faction-generic and never
- * needs to know whether it is chewing on a Nexus, a Hive or a Gateway.
+ * needs to know whether it is chewing on a base or a unit factory.
  *
  * <p>{@link FactionCore} is the narrower subset whose fall decides the match — a Gateway is a siege
  * target but not a core, so losing one costs production, not the game.
@@ -21,7 +21,7 @@ public interface SiegeTarget {
     /**
      * This building's HP/shield/warp state, for anything that only wants to read it — the Jade
      * tooltip ({@code compat/jade/BuildingDefenseProvider}) reports every building through this one
-     * accessor instead of switching on Nexus-vs-Gateway-vs-Hive.
+     * accessor instead of switching on which building it is.
      */
     BuildingDefense defense();
 

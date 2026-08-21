@@ -2,10 +2,8 @@ package net.bitflora.asteriskcraft.compat.jade;
 
 import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
-import net.bitflora.asteriskcraft.building.HiveBlock;
-import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.building.NexusBlock;
-import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.BaseBlock;
+import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.minecraft.world.entity.LivingEntity;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
@@ -34,9 +32,8 @@ public final class AsteriskCraftJadePlugin implements IWailaPlugin {
     @Override
     public void register(IWailaCommonRegistration registration) {
         // Buildings only: HP/shield/warp-in state has to come from the server (see the class doc).
-        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, NexusBlockEntity.class);
+        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, BaseBlockEntity.class);
         registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, GatewayBlockEntity.class);
-        registration.registerBlockDataProvider(BuildingDefenseProvider.INSTANCE, HiveBlockEntity.class);
     }
 
     @Override
@@ -46,8 +43,7 @@ public final class AsteriskCraftJadePlugin implements IWailaPlugin {
         // supertype narrower than LivingEntity; ProtossShieldProvider guards non-shielded entities.
         registration.registerEntityComponent(ProtossShieldProvider.INSTANCE, LivingEntity.class);
 
-        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, NexusBlock.class);
+        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, BaseBlock.class);
         registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, GatewayBlock.class);
-        registration.registerBlockComponent(BuildingDefenseProvider.Client.INSTANCE, HiveBlock.class);
     }
 }

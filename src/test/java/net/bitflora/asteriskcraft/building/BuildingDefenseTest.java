@@ -1,5 +1,7 @@
 package net.bitflora.asteriskcraft.building;
 
+import net.bitflora.asteriskcraft.race.RaceProfile;
+import net.bitflora.asteriskcraft.race.Races;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,14 +21,14 @@ class BuildingDefenseTest {
 
     @Test
     void buildingStatsMatchDesign() {
-        assertEquals(325, NexusBlockEntity.MAX_HEALTH);
-        assertEquals(325, NexusBlockEntity.SHIELD);
-        assertEquals(20 * 120, NexusBlockEntity.WARP_TICKS, "the Nexus warps in over 2 minutes");
         assertEquals(250, GatewayBlockEntity.MAX_HEALTH);
         assertEquals(250, GatewayBlockEntity.SHIELD);
         assertEquals(20 * 60, GatewayBlockEntity.WARP_TICKS, "the Gateway warps in over 1 minute");
-        assertTrue(NexusBlockEntity.MAX_HEALTH > GatewayBlockEntity.MAX_HEALTH,
-                "the building you lose the game with must be the sturdier one");
+        for (RaceProfile profile : Races.all()) {
+            assertTrue(profile.baseHealth() > GatewayBlockEntity.MAX_HEALTH,
+                    profile.race() + "'s base is the building you lose the game with, so it must be"
+                            + " sturdier than a unit factory");
+        }
     }
 
     /**
@@ -51,10 +53,10 @@ class BuildingDefenseTest {
     @Test
     void aBuildingWithNoWarpPhaseCannotBeToldToWarp() {
         // A Hive. Refusing here is what stops a scaffold being raised with no countdown to fill it in.
-        BuildingDefense defense = new BuildingDefense(FactionCore.CORE_MAX_HEALTH, 0, 0);
+        BuildingDefense defense = new BuildingDefense(Races.ZERG.baseHealth(), 0, 0);
         assertFalse(defense.restartWarpIn());
         assertFalse(defense.isWarping());
-        assertEquals(FactionCore.CORE_MAX_HEALTH, defense.health());
+        assertEquals(Races.ZERG.baseHealth(), defense.health());
     }
 
     @Test

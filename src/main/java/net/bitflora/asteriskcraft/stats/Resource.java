@@ -19,7 +19,7 @@ import java.util.function.Predicate;
  * only {@link CostPayment} ever invokes a predicate.
  *
  * <p>{@link #STONE}'s label is deliberately the literal {@code "cobblestone"}, not "stone" — it is
- * interpolated into user-facing messages (e.g. {@code message.asteriskcraft.nexus.cannot_afford}),
+ * interpolated into user-facing messages (e.g. {@code message.asteriskcraft.base.cannot_afford}),
  * so changing it changes what the player reads.
  */
 public enum Resource implements StringRepresentable {

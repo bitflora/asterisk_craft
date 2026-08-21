@@ -6,8 +6,8 @@ import net.minecraft.world.Container;
 /**
  * Pays a {@link UnitCost} out of a {@link Container}, atomically, via {@link ResourceBank}. The
  * single payment path for every production building — replaces the three near-identical shapes
- * that used to live in {@code GatewayBlockEntity}, {@code NexusBlockEntity} and
- * {@code ZergDirector}.
+ * that used to live in {@code GatewayBlockEntity}, the Nexus block entity and the Zerg
+ * director.
  */
 public final class CostPayment {
 

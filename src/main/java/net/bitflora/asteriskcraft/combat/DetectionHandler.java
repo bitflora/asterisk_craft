@@ -21,7 +21,7 @@ import java.util.List;
  * Drives detection: detectors periodically light up the cloaked enemies around them, and those
  * reveals time out on their own.
  *
- * <p>Both halves ride {@link EntityTickEvent.Post}, mirroring {@link ZergRegenEventHandler}, which
+ * <p>Both halves ride {@link EntityTickEvent.Post}, mirroring {@link RegenEventHandler}, which
  * keeps the whole mechanic out of every entity class — a unit becomes a detector or becomes cloaked
  * purely by implementing the marker, with no tick override of its own to remember.
  *

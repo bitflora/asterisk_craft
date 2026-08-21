@@ -5,33 +5,34 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
-
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The sides of a AsteriskCraft match. Kept faction-generic so later versions can add
  * race selection and PvP: nothing outside the bootstrap should assume the player
  * is PROTOSS.
+ *
+ * <p>A side is not a race. Each faction currently plays one fixed {@link Race} and {@link #race()}
+ * is the bridge between the two, but every rule that is really about <em>what an army is</em>
+ * rather than <em>whose side it is on</em> — shields, HP regen, infestation, what it hunts in the
+ * wild — is a lookup on that race, so adding a third side, or letting the human play Zerg, does
+ * not duplicate a single one of those rules.
  */
 public enum Faction implements StringRepresentable {
-    NEUTRAL("neutral"),
-    PROTOSS("protoss", WildKind.HOSTILE),
-    ZERG("zerg", WildKind.CIVILIAN);
+    NEUTRAL("neutral", null),
+    PROTOSS("protoss", Race.PROTOSS),
+    ZERG("zerg", Race.ZERG);
 
     public static final Codec<Faction> CODEC = StringRepresentable.fromEnum(Faction::values);
     public static final StreamCodec<ByteBuf, Faction> STREAM_CODEC =
             ByteBufCodecs.VAR_INT.map(id -> Faction.values()[id], Faction::ordinal);
 
     private final String name;
-    private final Set<WildKind> wildTargets;
+    private final @Nullable Race race;
 
-    Faction(String name, WildKind... wildTargets) {
+    Faction(String name, @Nullable Race race) {
         this.name = name;
-        this.wildTargets = wildTargets.length == 0
-                ? EnumSet.noneOf(WildKind.class)
-                : EnumSet.copyOf(List.of(wildTargets));
+        this.race = race;
     }
 
     @Override
@@ -39,20 +40,45 @@ public enum Faction implements StringRepresentable {
         return this.name;
     }
 
+    /**
+     * Which race this side is playing, or null for {@link #NEUTRAL} — the unfactioned world is
+     * nobody's army and so has no race. Null rather than an Optional because every caller is
+     * either a per-tick combat check or a null-safe trait delegate below.
+     */
+    public @Nullable Race race() {
+        return this.race;
+    }
+
     public boolean isEnemy(Faction other) {
         return this != NEUTRAL && other != NEUTRAL && this != other;
     }
 
     /**
-     * Which parts of the unfactioned world this race picks a fight with — the per-race half of
+     * Which parts of the unfactioned world this side picks a fight with — the per-race half of
      * {@link FactionAttachments#isHostile}, which is otherwise strictly cross-faction.
      *
-     * <p>The Protoss defend themselves against wild hostiles and leave the settled world alone; the
-     * Zerg are the mirror image, ignoring monsters (they are not what a swarm is hunting) and
-     * overrunning villagers and golems. NEUTRAL's set is empty, which is what keeps
-     * "an unfactioned unit starts no fights" true without a separate guard.
+     * <p>The table itself is {@link Race#attacksWild}: the Protoss defend themselves against wild
+     * hostiles and leave the settled world alone; the Zerg are the mirror image, ignoring monsters
+     * (they are not what a swarm is hunting) and overrunning villagers and golems. NEUTRAL has no
+     * race at all, which is what keeps "an unfactioned unit starts no fights" true without a
+     * separate guard.
      */
     public boolean attacksWild(WildKind kind) {
-        return this.wildTargets.contains(kind);
+        return this.race != null && this.race.attacksWild(kind);
+    }
+
+    /** Whether this side's units carry a shield pool — a fact about its {@link Race}. */
+    public boolean hasShields() {
+        return this.race != null && this.race.shields();
+    }
+
+    /** Whether this side's units regenerate HP out of combat — a fact about its {@link Race}. */
+    public boolean hasRegen() {
+        return this.race != null && this.race.regen();
+    }
+
+    /** Whether a kill by this side can raise its victim as one of its own — see {@link Race}. */
+    public boolean infests() {
+        return this.race != null && this.race.infests();
     }
 }

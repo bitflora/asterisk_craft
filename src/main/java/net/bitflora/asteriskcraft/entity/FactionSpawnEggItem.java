@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.entity;
 
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -28,20 +29,39 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 /**
- * A spawn egg that stamps the spawned mob with a fixed {@link Faction} rather than deferring
- * to whatever egg-type/faction convention the entity would otherwise pick up. Vanilla's
- * {@code SpawnEggItem} keys the entity type off a data component and offers no hook to run code
- * on the freshly spawned mob, so this reimplements its place-on-block/place-in-liquid behavior
- * directly against a fixed {@link EntityType} instead.
+ * A spawn egg that stamps the spawned mob with a {@link Faction} rather than deferring to whatever
+ * egg-type/faction convention the entity would otherwise pick up. Vanilla's {@code SpawnEggItem}
+ * keys the entity type off a data component and offers no hook to run code on the freshly spawned
+ * mob, so this reimplements its place-on-block/place-in-liquid behavior directly against a fixed
+ * {@link EntityType} instead.
+ *
+ * <p>The faction is chosen by {@link Side} at use time, not fixed at registration. Every unit has
+ * an "ally" egg and an "enemy" egg, and which actual faction each of those means is a fact about
+ * the match ({@code game.MatchSetup}), not about the item — so a match where the human plays Zerg
+ * hands out the same eggs and they still spawn things on the right sides.
  */
 public class FactionSpawnEggItem extends Item {
-    private final Supplier<? extends EntityType<? extends Mob>> entityType;
-    private final Faction faction;
 
-    public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType, Faction faction) {
+    /** Whose side an egg's mob joins, resolved against the match when the egg is used. */
+    public enum Side {
+        /** The side the player commands. */
+        ALLY,
+        /** The side the computer plays. */
+        ENEMY;
+
+        Faction resolve(Level level) {
+            MatchSetup setup = MatchSetup.of(level);
+            return this == ALLY ? setup.playerFaction() : setup.aiFaction();
+        }
+    }
+
+    private final Supplier<? extends EntityType<? extends Mob>> entityType;
+    private final Side side;
+
+    public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType, Side side) {
         super(properties);
         this.entityType = entityType;
-        this.faction = faction;
+        this.side = side;
     }
 
     @Override
@@ -87,7 +107,7 @@ public class FactionSpawnEggItem extends Item {
         EntityType<? extends Mob> type = entityType.get();
         Mob mob = type.spawn(level, stack, user, pos, EntitySpawnReason.SPAWN_ITEM_USE, tryMoveDown, movedUp);
         if (mob != null) {
-            FactionAttachments.set(mob, faction);
+            FactionAttachments.set(mob, this.side.resolve(level));
             stack.consume(1, user);
             level.gameEvent(user, GameEvent.ENTITY_PLACE, pos);
         }

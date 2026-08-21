@@ -3,16 +3,14 @@ package net.bitflora.asteriskcraft;
 import com.mojang.logging.LogUtils;
 import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
+import net.bitflora.asteriskcraft.building.BaseBlock;
+import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
-import net.bitflora.asteriskcraft.building.HiveBlock;
-import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.building.NexusBlock;
-import net.bitflora.asteriskcraft.building.NexusBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
@@ -23,7 +21,7 @@ import net.bitflora.asteriskcraft.command.UnitGroupResolver;
 import net.bitflora.asteriskcraft.command.UnitGroupSyncPacket;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.faction.DetectionAttachments;
-import net.bitflora.asteriskcraft.combat.ZergRegenAttachments;
+import net.bitflora.asteriskcraft.combat.RegenAttachments;
 import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
@@ -42,7 +40,7 @@ import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
 import net.bitflora.asteriskcraft.entity.zerg.UltraliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
-import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.registries.Registries;
@@ -96,8 +94,11 @@ public class AsteriskCraft {
     // --- Blocks ---
     // NeoForge 26.1 registerBlock takes a UnaryOperator that decorates the base Properties.
 
-    public static final DeferredBlock<NexusBlock> NEXUS_CORE = BLOCKS.registerBlock("nexus_core",
-            NexusBlock::new,
+    // Both base cores are the same BaseBlock, registered once per race: what differs between a
+    // Nexus and a Hive is the race hung off it (and the model and template that follow from that),
+    // not any behaviour. See BaseBlockEntity.
+    public static final DeferredBlock<BaseBlock> NEXUS_CORE = BLOCKS.registerBlock("nexus_core",
+            props -> new BaseBlock(Race.PROTOSS, props),
             p -> p.mapColor(MapColor.GOLD).strength(15.0f, 1200.0f).lightLevel(s -> 12));
 
     public static final DeferredBlock<DepletedNodeBlock> DEPLETED_NODE = BLOCKS.registerBlock("depleted_node",
@@ -108,8 +109,8 @@ public class AsteriskCraft {
             GatewayBlock::new,
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
-    public static final DeferredBlock<HiveBlock> HIVE_CORE = BLOCKS.registerBlock("hive_core",
-            HiveBlock::new,
+    public static final DeferredBlock<BaseBlock> HIVE_CORE = BLOCKS.registerBlock("hive_core",
+            props -> new BaseBlock(Race.ZERG, props),
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
 
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
@@ -121,7 +122,7 @@ public class AsteriskCraft {
                     BuildingTemplates.GATEWAY_FOOTPRINT));
 
     // Bought from the Nexus's own production menu (paid from the shared army bank) rather than
-    // crafted, unlike the other kits — see NexusBlockEntity#trainOption. An expansion Nexus, so
+    // crafted, unlike the other kits — see BaseBlockEntity#trainOption. An expansion Nexus, so
     // it's deliberately not offered as a cheap personal-inventory crafting-table recipe.
     public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE,
@@ -130,7 +131,7 @@ public class AsteriskCraft {
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
     public static final DeferredItem<FactionSpawnEggItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
-            props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, FactionSpawnEggItem.Side.ALLY));
 
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
@@ -140,17 +141,17 @@ public class AsteriskCraft {
 
     // --- Block entities ---
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NexusBlockEntity>> NEXUS_BLOCK_ENTITY =
-            BLOCK_ENTITY_TYPES.register("nexus", () -> new BlockEntityType<>(NexusBlockEntity::new, NEXUS_CORE.get()));
+    // One type for every race's base — both core blocks are valid for it, which is what a shared
+    // BaseBlockEntity means.
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BaseBlockEntity>> BASE_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("base",
+                    () -> new BlockEntityType<>(BaseBlockEntity::new, NEXUS_CORE.get(), HIVE_CORE.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DepletedNodeBlockEntity>> DEPLETED_NODE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("depleted_node", () -> new BlockEntityType<>(DepletedNodeBlockEntity::new, DEPLETED_NODE.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GatewayBlockEntity>> GATEWAY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("gateway", () -> new BlockEntityType<>(GatewayBlockEntity::new, GATEWAY_CORE.get()));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HiveBlockEntity>> HIVE_BLOCK_ENTITY =
-            BLOCK_ENTITY_TYPES.register("hive", () -> new BlockEntityType<>(HiveBlockEntity::new, HIVE_CORE.get()));
 
     // --- Menus ---
 
@@ -319,79 +320,80 @@ public class AsteriskCraft {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("lurker_spine"))));
 
     // --- Spawn eggs ---
-    // Two per unit: one stamps the spawned mob as the player's own (PROTOSS, matching
-    // ControlledFaction), the other as the enemy (ZERG) — independent of the unit's own race,
-    // since Faction only controls targeting, not the mob's model/renderer.
+    // Two per unit: one stamps the spawned mob as the player's own side, the other as the
+    // computer's — resolved against the match at use time (see FactionSpawnEggItem.Side), so a
+    // match with the sides or races swapped hands out the same eggs. Independent of the unit's own
+    // race, since Faction only controls targeting, not the mob's model/renderer.
 
     public static final DeferredItem<FactionSpawnEggItem> PROBE_SPAWN_EGG_ALLY = ITEMS.registerItem("probe_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, PROBE, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, PROBE, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> PROBE_SPAWN_EGG_ENEMY = ITEMS.registerItem("probe_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, PROBE, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, PROBE, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, ZEALOT, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ENEMY = ITEMS.registerItem("zealot_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, ZEALOT, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> DRAGOON_SPAWN_EGG_ALLY = ITEMS.registerItem("dragoon_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, DRAGOON, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, DRAGOON, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> DRAGOON_SPAWN_EGG_ENEMY = ITEMS.registerItem("dragoon_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, DRAGOON, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, DRAGOON, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ALLY = ITEMS.registerItem("scout_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SCOUT, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, SCOUT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ENEMY = ITEMS.registerItem("scout_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, SCOUT, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, SCOUT, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ALLY = ITEMS.registerItem("dark_templar_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ENEMY = ITEMS.registerItem("dark_templar_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ALLY = ITEMS.registerItem("drone_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, DRONE, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, DRONE, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ENEMY = ITEMS.registerItem("drone_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, DRONE, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, DRONE, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> ZERGLING_SPAWN_EGG_ALLY = ITEMS.registerItem("zergling_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, ZERGLING, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, ZERGLING, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ZERGLING_SPAWN_EGG_ENEMY = ITEMS.registerItem("zergling_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, ZERGLING, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, ZERGLING, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> ULTRALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("ultralisk_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, ULTRALISK, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, ULTRALISK, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ULTRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("ultralisk_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, ULTRALISK, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, ULTRALISK, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("hydralisk_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, HYDRALISK, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> HYDRALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("hydralisk_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, HYDRALISK, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, HYDRALISK, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ALLY = ITEMS.registerItem("mutalisk_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, MUTALISK, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, MUTALISK, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("mutalisk_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, MUTALISK, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, MUTALISK, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ALLY = ITEMS.registerItem("lurker_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, LURKER, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, LURKER, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ENEMY = ITEMS.registerItem("lurker_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, LURKER, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, LURKER, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> INFESTED_VILLAGER_SPAWN_EGG_ALLY = ITEMS.registerItem("infested_villager_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> INFESTED_VILLAGER_SPAWN_EGG_ENEMY = ITEMS.registerItem("infested_villager_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("spore_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SPORE_COLONY, Faction.PROTOSS));
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("spore_colony_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, SPORE_COLONY, Faction.ZERG));
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ENEMY));
 
     // --- Sounds ---
     // Ambient events each name several ogg files in sounds.json; vanilla's sound system already
@@ -541,7 +543,7 @@ public class AsteriskCraft {
         CommandAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ShieldAttachments.ATTACHMENT_TYPES.register(modEventBus);
         DetectionAttachments.ATTACHMENT_TYPES.register(modEventBus);
-        ZergRegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
+        RegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
         CoreCensus.ATTACHMENT_TYPES.register(modEventBus);
 
@@ -551,12 +553,10 @@ public class AsteriskCraft {
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
-        // Expose the Nexus's and Hive's inventories as item handlers so Probes/Drones can
-        // deposit their harvest yield straight into their home core building.
-        event.registerBlockEntity(Capabilities.Item.BLOCK, NEXUS_BLOCK_ENTITY.get(),
-                (nexus, side) -> VanillaContainerWrapper.of(nexus));
-        event.registerBlockEntity(Capabilities.Item.BLOCK, HIVE_BLOCK_ENTITY.get(),
-                (hive, side) -> VanillaContainerWrapper.of(hive));
+        // Expose every base's inventory as an item handler so workers can deposit their harvest
+        // yield straight into their home core building.
+        event.registerBlockEntity(Capabilities.Item.BLOCK, BASE_BLOCK_ENTITY.get(),
+                (base, side) -> VanillaContainerWrapper.of(base));
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
@@ -575,8 +575,9 @@ public class AsteriskCraft {
     }
 
     // One line per net.bitflora.asteriskcraft.stats.UnitStats entry — stats.UnitStatsTest pins the
-    // roster size, so a new unit can't be added without landing here too. DroneEntity.createAttributes()
-    // is its own method (not inherited from ProbeEntity), so its numbers are its own UnitStats entry.
+    // roster size, so a new unit can't be added without landing here too. Each race's worker declares
+    // its own createAttributes(), so its numbers are its own UnitStats entry rather than the shared
+    // WorkerEntity's (which has none).
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());

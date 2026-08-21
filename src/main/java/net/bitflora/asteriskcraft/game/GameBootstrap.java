@@ -3,12 +3,13 @@ package net.bitflora.asteriskcraft.game;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
-import net.bitflora.asteriskcraft.building.HiveBlockEntity;
-import net.bitflora.asteriskcraft.building.NexusBlockEntity;
+import net.bitflora.asteriskcraft.building.BaseBlockEntity;
+import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
-import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
-import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
+import net.bitflora.asteriskcraft.entity.WorkerEntity;
+import net.minecraft.world.entity.Mob;
+import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
@@ -47,58 +48,48 @@ import java.util.function.IntPredicate;
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
 public final class GameBootstrap {
-    private static final int NEXUS_OFFSET = 6;
+    private static final int PLAYER_BASE_OFFSET = 6;
     private static final int STARTING_LOGS = 100;
     private static final int STARTING_COBBLESTONE = 100;
-    private static final int INITIAL_PROBES = 4;
-    // How far past the Nexus's own footprint to clear trees, so the starting base is never stamped
-    // into — or left standing under — a tree, just like the Hives.
-    private static final int NEXUS_CLEAR_MARGIN = 2;
+    private static final int INITIAL_WORKERS = 4;
+    // How far past the player base's own footprint to clear trees, so the starting base is never
+    // stamped into — or left standing under — a tree, just like the AI's.
+    private static final int PLAYER_BASE_CLEAR_MARGIN = 2;
 
-    // Each AI Hive is planted in its own random direction around the Nexus, at a random distance
-    // in this range. The max stays inside typical simulation distance so wave units and Drones
+    // Each AI base is planted in its own random direction around the player's, at a random distance
+    // in this range. The max stays inside typical simulation distance so wave units and workers
     // never freeze in unloaded chunks (V3 keeps chunk tickets out of scope; see docs/shaping.md).
-    private static final int HIVE_COUNT = 3;
-    private static final int HIVE_MIN_DISTANCE = 95;
-    private static final int HIVE_MAX_DISTANCE = 120;
+    private static final int AI_BASE_COUNT = 3;
+    private static final int AI_BASE_MIN_DISTANCE = 95;
+    private static final int AI_BASE_MAX_DISTANCE = 120;
     // WORLD_SURFACE reports the topmost solid block in a column, which can be far underground
     // if that column happens to be a cave/ravine breach — retry with a fresh angle/distance
     // rather than bury a Hive at the bottom of a sinkhole.
-    private static final int HIVE_PLACEMENT_ATTEMPTS = 8;
+    private static final int AI_BASE_PLACEMENT_ATTEMPTS = 8;
     private static final int SURFACE_CLEARANCE = 12;
-    // Hive spread is drawn from an RNG seeded off the world seed (so the same seed reproduces the same
-    // base), XORed with this fixed salt to decorrelate the spread from vanilla terrain features that
+    // Base spread is drawn from an RNG seeded off the world seed (so the same seed reproduces the same
+    // layout), XORed with this fixed salt to decorrelate the spread from vanilla terrain features that
     // also key off the seed.
-    private static final long HIVE_PLACEMENT_SALT = 0x5A3E_2B17L;
-    // Keep Hives from clustering: a candidate must be at least this many blocks from every Hive
-    // already placed this bootstrap.
-    private static final int HIVE_MIN_SEPARATION = 15;
+    private static final long AI_BASE_PLACEMENT_SALT = 0x5A3E_2B17L;
+    // Keep the AI's bases from clustering: a candidate must be at least this many blocks from every
+    // base already placed this bootstrap.
+    private static final int AI_BASE_MIN_SEPARATION = 15;
     // If a candidate would sit in open water, re-roll a fresh spot this many times before finally
     // settling for a watery one rather than looping forever.
     private static final int WATER_RETRY_LIMIT = 3;
-    // Total seeded into the shared Zerg army bank once, matching the old 128/128/48-per-Hive x3
-    // total (each Hive used to hold its own independent stock before they shared one pool).
-    private static final int STARTING_ZERG_LOGS = 128 * 3;
-    private static final int STARTING_ZERG_COBBLE = 128 * 3;
-    private static final int STARTING_ZERG_IRON = 48 * 3;
-    private static final int INITIAL_DRONES_PER_HIVE = 2;
-    // Static defence planted with each Hive, so an early rush into a Zerg base meets something with
-    // teeth even when its army is out on a wave.
-    private static final int SUNKEN_COLONIES_PER_HIVE = 1;
-    // Its anti-air counterpart, so a Scout flock can't simply fly over a Hive the way it could
-    // before. Neither colony covers what the other does.
-    private static final int SPORE_COLONIES_PER_HIVE = 1;
-    // Zerg "creep": every exposed natural-ground surface block within this radius of a Hive is
-    // overrun with mycelium.
-    private static final int HIVE_INFEST_RADIUS = 10;
+    private static final int INITIAL_WORKERS_PER_AI_BASE = 2;
+    // How far a race's ground cover ("creep" for the Zerg) reaches around a new AI base: every
+    // exposed natural-ground surface block within this radius is overrun. A race that lays none
+    // (RaceProfile.creep) skips the sweep entirely.
+    private static final int AI_BASE_COVER_RADIUS = 10;
 
     /**
-     * Radius of the unbroken stone ring laid around each Hive. Sits outside the scattered garden
-     * nodes (which reach out to 6) and inside the creep disc, so the ring is on ground the Hive
-     * has already cleared and infested.
+     * Radius of the unbroken stone ring laid around each AI base. Sits outside the scattered garden
+     * nodes (which reach out to 6) and inside the ground-cover disc, so the ring is on ground the
+     * base has already cleared.
      */
-    private static final int HIVE_STONE_RING_RADIUS = 8;
-    private static final Set<Block> INFESTABLE_GROUND = Set.of(
+    private static final int AI_BASE_STONE_RING_RADIUS = 8;
+    private static final Set<Block> COVERABLE_GROUND = Set.of(
             Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
     // How far down to scan past a tree's logs and undergrowth when locating the real ground beneath
     // it — comfortably taller than any vanilla tree (a jungle giant on a slope is the worst case) so
@@ -118,18 +109,21 @@ public final class GameBootstrap {
             return;
         }
         ServerLevel overworld = player.level().getServer().overworld();
+        MatchSetup setup = MatchSetup.of(overworld);
 
         // Set on every login (not just first-join bootstrap) so players who joined before
-        // enemy-vs-player combat existed also pick up their faction.
-        FactionAttachments.set(player, Faction.PROTOSS);
+        // enemy-vs-player combat existed also pick up their faction — and so a match whose sides
+        // were set differently is picked up on the next login rather than only at bootstrap.
+        FactionAttachments.set(player, setup.playerFaction());
 
         if (!overworld.getData(GameAttachments.BOOTSTRAPPED)) {
-            placeStartingBase(overworld, player);
+            placeStartingBase(overworld, player, setup);
         }
 
-        BlockPos nexus = overworld.getData(GameAttachments.NEXUS_POS);
-        player.sendSystemMessage(Component.translatable(
-                "message.asteriskcraft.nexus_location", nexus.getX(), nexus.getY(), nexus.getZ()));
+        for (BlockPos base : CoreCensus.standing(overworld, setup.playerFaction())) {
+            player.sendSystemMessage(Component.translatable(
+                    "message.asteriskcraft.base_location", base.getX(), base.getY(), base.getZ()));
+        }
     }
 
     /**
@@ -162,46 +156,45 @@ public final class GameBootstrap {
         }
     }
 
-    private static void placeStartingBase(ServerLevel level, ServerPlayer player) {
-        int x = player.blockPosition().getX() + NEXUS_OFFSET;
-        int z = player.blockPosition().getZ() + NEXUS_OFFSET;
-        // The Nexus's footprint comes from its structure template, so redesigning the building in
+    private static void placeStartingBase(ServerLevel level, ServerPlayer player, MatchSetup setup) {
+        RaceProfile profile = setup.playerProfile();
+        int x = player.blockPosition().getX() + PLAYER_BASE_OFFSET;
+        int z = player.blockPosition().getZ() + PLAYER_BASE_OFFSET;
+        // The base's footprint comes from its structure template, so redesigning the building in
         // Blockbench/a structure block automatically widens the ground work below.
-        Vec3i size = BuildingTemplates.size(level, BuildingTemplates.NEXUS);
+        Vec3i size = BuildingTemplates.size(level, profile.baseTemplate());
         if (size == null) {
             // A missing template is a broken install, not a crash: bail before touching the terrain
             // and leave the world un-bootstrapped, so a fixed jar still places the base on the next join.
-            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the starting Nexus");
+            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the starting base");
             return;
         }
         int footprint = BuildingTemplates.footprintRadius(size);
         // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
-        // which used to leave the Nexus perched high up in a tree) and clear the trees over the footprint.
-        clearTrees(level, x, z, footprint + NEXUS_CLEAR_MARGIN);
+        // which used to leave the base perched high up in a tree) and clear the trees over the footprint.
+        clearTrees(level, x, z, footprint + PLAYER_BASE_CLEAR_MARGIN);
         int y = platformHeight(level, x, z, footprint);
         BlockPos origin = new BlockPos(x, y, z);
 
-        // No support fill under the Nexus: its end-stone-brick platform is the base, and a quartz
-        // apron poking out from under it read as a mistake.
-        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, BuildingTemplates.NEXUS,
-                AsteriskCraft.NEXUS_CORE.get(), null);
+        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, profile.baseTemplate(),
+                profile.coreBlock().get(), support(profile));
         if (placed == null) {
-            AsteriskCraft.LOGGER.error("AsteriskCraft: the Nexus template holds no core block");
+            AsteriskCraft.LOGGER.error("AsteriskCraft: the starting base template holds no core block");
             return;
         }
-        // No warp scaffold: the starting Nexus is standing finished when the world begins (R1).
+        // No warp scaffold: the starting base is standing finished when the world begins (R1).
         BlockPos core = placed.core();
 
-        level.setData(GameAttachments.NEXUS_POS, core);
-        if (level.getBlockEntity(core) instanceof NexusBlockEntity nexus) {
-            // The starting Nexus is simply standing there when the world begins (R1) — it was never
+        if (level.getBlockEntity(core) instanceof BaseBlockEntity base) {
+            base.setFaction(setup.playerFaction());
+            // The starting base is simply standing there when the world begins (R1) — it was never
             // warped in from a kit, so it doesn't spend its first two minutes half-built and idle.
-            nexus.skipWarpIn();
-            seedNexus(nexus);
+            base.skipWarpIn();
+            seedPlayerBase(base);
         }
-        spawnStartingProbes(level, core);
+        spawnStartingWorkers(level, core, profile, setup.playerFaction());
 
-        placeZergBase(level, x, z);
+        placeAiBase(level, x, z, setup);
 
         level.setData(GameAttachments.BOOTSTRAPPED, true);
 
@@ -209,36 +202,51 @@ public final class GameBootstrap {
         player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
-        player.sendSystemMessage(Component.translatable("message.asteriskcraft.zerg_location"));
+        player.sendSystemMessage(Component.translatable("message.asteriskcraft.enemy_location", AI_BASE_COUNT));
 
-        AsteriskCraft.LOGGER.info("AsteriskCraft: placed Nexus core at {}", core);
+        AsteriskCraft.LOGGER.info("AsteriskCraft: placed starting base core at {}", core);
     }
 
     /**
-     * Stamps the AI Zerg's Hives (plus a small resource garden and starter Drones), each in its
-     * own random direction and distance from the Nexus, so the enemy presence surrounds the
-     * player instead of sitting in one predictable cluster.
+     * What a race's base fills gaps beneath its template with, or null to leave the ground as it
+     * lies — the Protoss stonework is its own plinth, and a foreign apron poking out from under it
+     * read as a mistake.
      */
-    private static void placeZergBase(ServerLevel level, int nexusX, int nexusZ) {
-        // Seed off the world seed so the same seed always reproduces the same Hive layout (the Nexus
-        // location is itself seed-derived), instead of drawing from the level's shared, non-reproducible RNG.
-        RandomSource random = RandomSource.create(level.getSeed() ^ HIVE_PLACEMENT_SALT);
-        Vec3i hiveSize = BuildingTemplates.size(level, BuildingTemplates.HIVE);
-        if (hiveSize == null) {
-            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the Zerg Hives");
+    private static @Nullable BlockState support(RaceProfile profile) {
+        return profile.support() == null ? null : profile.support().get();
+    }
+
+    /**
+     * Stamps the computer player's bases (plus a small resource garden and starter workers), each in
+     * its own random direction and distance from the player's, so the enemy presence surrounds them
+     * instead of sitting in one predictable cluster.
+     *
+     * <p>Everything race-specific here — which template is stamped, what ground cover is laid, what
+     * static defence is planted, which worker is spawned — comes off the AI's {@link RaceProfile},
+     * so this reads the same whichever race the computer drew.
+     */
+    private static void placeAiBase(ServerLevel level, int playerX, int playerZ, MatchSetup setup) {
+        RaceProfile profile = setup.aiProfile();
+        // Seed off the world seed so the same seed always reproduces the same layout (the player's
+        // base location is itself seed-derived), instead of drawing from the level's shared,
+        // non-reproducible RNG.
+        RandomSource random = RandomSource.create(level.getSeed() ^ AI_BASE_PLACEMENT_SALT);
+        Vec3i baseSize = BuildingTemplates.size(level, profile.baseTemplate());
+        if (baseSize == null) {
+            AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the {} bases", profile.race());
             return;
         }
-        int footprint = BuildingTemplates.footprintRadius(hiveSize);
+        int footprint = BuildingTemplates.footprintRadius(baseSize);
         List<BlockPos> cores = new ArrayList<>();
-        for (int i = 0; i < HIVE_COUNT; i++) {
+        for (int i = 0; i < AI_BASE_COUNT; i++) {
             BlockPos chosen = null;
             BlockPos fallback = null; // last candidate seen; used if nothing fully passes
             int waterRejects = 0;
-            for (int attempt = 0; attempt < HIVE_PLACEMENT_ATTEMPTS; attempt++) {
+            for (int attempt = 0; attempt < AI_BASE_PLACEMENT_ATTEMPTS; attempt++) {
                 float angle = random.nextFloat() * Mth.TWO_PI;
-                int distance = Mth.nextInt(random, HIVE_MIN_DISTANCE, HIVE_MAX_DISTANCE);
-                int x = nexusX + Math.round(Mth.cos(angle) * distance);
-                int z = nexusZ + Math.round(Mth.sin(angle) * distance);
+                int distance = Mth.nextInt(random, AI_BASE_MIN_DISTANCE, AI_BASE_MAX_DISTANCE);
+                int x = playerX + Math.round(Mth.cos(angle) * distance);
+                int z = playerZ + Math.round(Mth.sin(angle) * distance);
                 int y = platformHeight(level, x, z, footprint);
                 BlockPos candidate = new BlockPos(x, y, z);
                 fallback = candidate;
@@ -261,17 +269,17 @@ public final class GameBootstrap {
             if (chosen == null) {
                 chosen = fallback; // never null: fallback is set on the first iteration
             }
-            BlockPos core = placeHive(level, chosen.getX(), chosen.getY(), chosen.getZ());
+            BlockPos core = placeAiBaseAt(level, chosen.getX(), chosen.getY(), chosen.getZ(),
+                    profile, setup.aiFaction());
             if (core != null) {
                 cores.add(core);
             }
             seedResourceGarden(level, chosen.getX(), chosen.getZ());
             seedStoneRing(level, chosen.getX(), chosen.getZ());
         }
-        level.setData(GameAttachments.HIVE_POSITIONS, List.copyOf(cores));
-        seedZergArmyBank(level);
-        AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} Zerg Hives scattered around {},{}",
-                cores.size(), nexusX, nexusZ);
+        seedAiArmyBank(level, profile, setup.aiFaction());
+        AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} {} bases scattered around {},{}",
+                cores.size(), profile.race(), playerX, playerZ);
     }
 
     /**
@@ -373,15 +381,15 @@ public final class GameBootstrap {
     }
 
     /**
-     * True if {@code candidate} is at least {@link #HIVE_MIN_SEPARATION} blocks (horizontally) from
-     * every Hive placed so far this bootstrap, so the three Hives never cluster on top of each other.
+     * True if {@code candidate} is at least {@link #AI_BASE_MIN_SEPARATION} blocks (horizontally) from
+     * every base placed so far this bootstrap, so the AI bases never cluster on top of each other.
      * Package-private so {@code GameBootstrapTest} can exercise this pure spread rule.
      */
     static boolean farFromOthers(BlockPos candidate, List<BlockPos> cores) {
         for (BlockPos other : cores) {
             int dx = candidate.getX() - other.getX();
             int dz = candidate.getZ() - other.getZ();
-            if (dx * dx + dz * dz < HIVE_MIN_SEPARATION * HIVE_MIN_SEPARATION) {
+            if (dx * dx + dz * dz < AI_BASE_MIN_SEPARATION * AI_BASE_MIN_SEPARATION) {
                 return false;
             }
         }
@@ -477,84 +485,87 @@ public final class GameBootstrap {
                 y -> !level.getFluidState(new BlockPos(x, y, z)).isEmpty());
     }
 
-    /** True if this surface block is natural ground the Hive's creep should overrun with mycelium. */
-    static boolean isInfestableGround(BlockState state) {
-        return INFESTABLE_GROUND.contains(state.getBlock());
+    /** True if this surface block is natural ground a base's cover should overrun. */
+    static boolean isCoverableGround(BlockState state) {
+        return COVERABLE_GROUND.contains(state.getBlock());
     }
 
     /**
-     * Spreads Zerg "creep" over the natural ground surface within {@link #HIVE_INFEST_RADIUS} of a
-     * Hive: every exposed grass/stone/sand/red-sand/dirt/gravel surface block (air directly above)
-     * becomes mycelium. Called from {@link #placeHive} before the resource garden is seeded, so the
-     * garden's ore/log nodes — placed afterward — are not themselves overrun. Goes through
-     * {@link #groundHeight} rather than a raw heightmap so the creep reaches the forest floor; read
-     * off WORLD_SURFACE it targeted a leaf block, which isn't infestable, and a wooded Hive got no
-     * creep at all.
+     * Spreads a race's ground cover — Zerg "creep" — over the natural ground surface within
+     * {@link #AI_BASE_COVER_RADIUS} of a new AI base: every exposed grass/stone/sand/red-sand/dirt/
+     * gravel surface block (air directly above) becomes the race's cover block. A race that lays
+     * none ({@link RaceProfile#creep()} null) returns immediately, leaving the terrain untouched.
+     *
+     * <p>Called from {@link #placeAiBaseAt} before the resource garden is seeded, so the garden's
+     * ore/log nodes — placed afterward — are not themselves overrun. Goes through
+     * {@link #groundHeight} rather than a raw heightmap so the cover reaches the forest floor; read
+     * off WORLD_SURFACE it targeted a leaf block, which isn't coverable, and a wooded base got no
+     * cover at all.
      */
-    private static void infestGround(ServerLevel level, int cx, int cz) {
-        BlockState mycelium = Blocks.MYCELIUM.defaultBlockState();
-        for (int dx = -HIVE_INFEST_RADIUS; dx <= HIVE_INFEST_RADIUS; dx++) {
-            for (int dz = -HIVE_INFEST_RADIUS; dz <= HIVE_INFEST_RADIUS; dz++) {
-                if (dx * dx + dz * dz > HIVE_INFEST_RADIUS * HIVE_INFEST_RADIUS) {
+    private static void coverGround(ServerLevel level, int cx, int cz, RaceProfile profile) {
+        if (profile.creep() == null) {
+            return;
+        }
+        BlockState cover = profile.creep().get();
+        for (int dx = -AI_BASE_COVER_RADIUS; dx <= AI_BASE_COVER_RADIUS; dx++) {
+            for (int dz = -AI_BASE_COVER_RADIUS; dz <= AI_BASE_COVER_RADIUS; dz++) {
+                if (dx * dx + dz * dz > AI_BASE_COVER_RADIUS * AI_BASE_COVER_RADIUS) {
                     continue;
                 }
                 int x = cx + dx;
                 int z = cz + dz;
                 int y = groundHeight(level, x, z);
                 BlockPos pos = new BlockPos(x, y, z);
-                if (isInfestableGround(level.getBlockState(pos)) && level.getBlockState(pos.above()).isAir()) {
-                    level.setBlock(pos, mycelium, Block.UPDATE_ALL);
+                if (isCoverableGround(level.getBlockState(pos)) && level.getBlockState(pos.above()).isAir()) {
+                    level.setBlock(pos, cover, Block.UPDATE_ALL);
                 }
             }
         }
     }
 
-    private static @Nullable BlockPos placeHive(ServerLevel level, int x, int y, int z) {
+    private static @Nullable BlockPos placeAiBaseAt(ServerLevel level, int x, int y, int z,
+            RaceProfile profile, Faction faction) {
         BlockPos origin = new BlockPos(x, y, z);
-        clearTrees(level, x, z, HIVE_INFEST_RADIUS);
-        // Creep first, mound second: infestGround rewrites exposed surface blocks, and the Hive's
-        // own template has dirt speckled through its mycelium that the sweep would otherwise eat.
-        infestGround(level, x, z);
-        // The mound keeps a mycelium footing under it — same material as the creep it sits in, so
-        // unlike the Protoss stonework there is nothing foreign to see. This matters because
-        // averageGround settles the mound at its footprint's mean height: the downhill half of a
-        // slope still falls away beneath it and would otherwise overhang open air.
-        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, BuildingTemplates.HIVE,
-                AsteriskCraft.HIVE_CORE.get(), Blocks.MYCELIUM.defaultBlockState());
+        clearTrees(level, x, z, AI_BASE_COVER_RADIUS);
+        // Ground cover first, building second: coverGround rewrites exposed surface blocks, and the
+        // Hive's own template has dirt speckled through its mycelium that the sweep would otherwise
+        // eat. A race that lays no cover skips this.
+        coverGround(level, x, z, profile);
+        // The support fill matters here because averageGround settles a pre-placed base at its
+        // footprint's mean height: the downhill half of a slope still falls away beneath it and
+        // would otherwise overhang open air.
+        BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin, profile.baseTemplate(),
+                profile.coreBlock().get(), support(profile));
         if (placed == null) {
             return null;
         }
-        // No warp scaffold either: a Hive is pre-placed, with no warp phase to fill in over.
+        // No warp scaffold either: an AI base is pre-placed, with no warp phase to fill in over.
         BlockPos core = placed.core();
-        if (level.getBlockEntity(core) instanceof HiveBlockEntity hive) {
-            hive.setFaction(Faction.ZERG);
-            for (int i = 0; i < INITIAL_DRONES_PER_HIVE; i++) {
-                DroneEntity drone = UnitSpawns.spawn(level, core, AsteriskCraft.DRONE.get(), Faction.ZERG, false);
-                if (drone != null) {
-                    drone.setHomePos(core);
+        if (level.getBlockEntity(core) instanceof BaseBlockEntity base) {
+            base.setFaction(faction);
+            spawnStartingWorkers(level, core, profile, faction, INITIAL_WORKERS_PER_AI_BASE);
+            // Static defence planted with each base, so an early rush meets something with teeth
+            // even when the army is out on a wave. Which units, and how many, is the race's own.
+            for (RaceProfile.BaseDefence defence : profile.baseDefences()) {
+                for (int i = 0; i < defence.count(); i++) {
+                    UnitSpawns.spawn(level, core, defence.type().get(), faction, false);
                 }
-            }
-            for (int i = 0; i < SUNKEN_COLONIES_PER_HIVE; i++) {
-                UnitSpawns.spawn(level, core, AsteriskCraft.SUNKEN_COLONY.get(), Faction.ZERG, false);
-            }
-            for (int i = 0; i < SPORE_COLONIES_PER_HIVE; i++) {
-                UnitSpawns.spawn(level, core, AsteriskCraft.SPORE_COLONY.get(), Faction.ZERG, false);
             }
         }
         return core;
     }
 
     /**
-     * Seeds the shared Zerg army bank once (not per-Hive — all three Hives are linked chests
-     * onto the same pool) with enough resources to bankroll the first Drones and the director's
-     * early waves.
+     * Seeds the computer player's shared army bank once (not per-base — every base is a linked
+     * chest onto the same pool) with enough resources to bankroll its first workers and the
+     * director's early waves. What that is comes off the race's own profile.
      */
-    private static void seedZergArmyBank(ServerLevel level) {
-        NonNullList<ItemStack> bank = ArmyBank.of(level, Faction.ZERG);
+    private static void seedAiArmyBank(ServerLevel level, RaceProfile profile, Faction faction) {
+        NonNullList<ItemStack> bank = ArmyBank.of(level, faction);
         int slot = 0;
-        slot = seedStacks(bank, slot, Items.OAK_LOG, STARTING_ZERG_LOGS);
-        slot = seedStacks(bank, slot, Items.COBBLESTONE, STARTING_ZERG_COBBLE);
-        seedStacks(bank, slot, Items.IRON_INGOT, STARTING_ZERG_IRON);
+        for (RaceProfile.StartingStack stack : profile.startingBank()) {
+            slot = seedStacks(bank, slot, stack.item().get(), stack.amount());
+        }
     }
 
     /**
@@ -575,9 +586,9 @@ public final class GameBootstrap {
     }
 
     /**
-     * Exposes a handful of surface harvestable blocks near a Hive so its Drones can keep mining.
-     * Seeded at {@link #groundHeight} so the nodes land on the floor within reach of a Drone rather
-     * than up in a canopy.
+     * Exposes a handful of surface harvestable blocks near an AI base so its workers can keep
+     * mining. Seeded at {@link #groundHeight} so the nodes land on the floor within reach of a
+     * worker rather than up in a canopy.
      */
     private static void seedResourceGarden(ServerLevel level, int cx, int cz) {
         BlockState[] nodes = {
@@ -594,8 +605,8 @@ public final class GameBootstrap {
     }
 
     /**
-     * Lays an unbroken ring of stone around a Hive at {@link #HIVE_STONE_RING_RADIUS}, so its
-     * Drones have a mineable seam that lasts rather than exhausting the handful of scattered
+     * Lays an unbroken ring of stone around an AI base at {@link #AI_BASE_STONE_RING_RADIUS}, so
+     * its workers have a mineable seam that lasts rather than exhausting the handful of scattered
      * {@link #seedResourceGarden} nodes and then standing idle.
      *
      * <p>A column joins the ring when its distance from the centre <i>rounds</i> to the radius,
@@ -605,8 +616,8 @@ public final class GameBootstrap {
      */
     private static void seedStoneRing(ServerLevel level, int cx, int cz) {
         BlockState stone = Blocks.STONE.defaultBlockState();
-        for (int dx = -HIVE_STONE_RING_RADIUS; dx <= HIVE_STONE_RING_RADIUS; dx++) {
-            for (int dz = -HIVE_STONE_RING_RADIUS; dz <= HIVE_STONE_RING_RADIUS; dz++) {
+        for (int dx = -AI_BASE_STONE_RING_RADIUS; dx <= AI_BASE_STONE_RING_RADIUS; dx++) {
+            for (int dz = -AI_BASE_STONE_RING_RADIUS; dz <= AI_BASE_STONE_RING_RADIUS; dz++) {
                 if (!isOnStoneRing(dx, dz)) {
                     continue;
                 }
@@ -618,30 +629,38 @@ public final class GameBootstrap {
         }
     }
 
-    /** True if this offset from a Hive's centre belongs to the stone ring. Pure, so it is unit-testable. */
+    /** True if this offset from a base's centre belongs to the stone ring. Pure, so it is unit-testable. */
     static boolean isOnStoneRing(int dx, int dz) {
-        return Math.round(Math.sqrt(dx * dx + dz * dz)) == HIVE_STONE_RING_RADIUS;
+        return Math.round(Math.sqrt(dx * dx + dz * dz)) == AI_BASE_STONE_RING_RADIUS;
     }
 
     /**
-     * Warps in the player's starting Probes next to the freshly placed Nexus, so a new world
-     * begins with a small worker line already gathering instead of an idle base. Mirrors
-     * {@code NexusBlockEntity.spawnProbe}: each Probe is tagged Protoss and homed on the core.
+     * Warps in a base's starting workers, so a new world begins with a small worker line already
+     * gathering instead of an idle base. Mirrors {@code BaseBlockEntity.spawnWorker}: each worker is
+     * tagged with its side and homed on the core it came from.
      */
-    private static void spawnStartingProbes(ServerLevel level, BlockPos core) {
-        for (int i = 0; i < INITIAL_PROBES; i++) {
-            ProbeEntity probe = UnitSpawns.spawn(level, core, AsteriskCraft.PROBE.get(), Faction.PROTOSS, false);
-            if (probe != null) {
-                probe.setHomePos(core);
+    private static void spawnStartingWorkers(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
+        spawnStartingWorkers(level, core, profile, faction, INITIAL_WORKERS);
+    }
+
+    private static void spawnStartingWorkers(ServerLevel level, BlockPos core, RaceProfile profile,
+            Faction faction, int count) {
+        for (int i = 0; i < count; i++) {
+            Mob unit = UnitSpawns.spawn(level, core, profile.worker().type(), faction, false);
+            if (unit instanceof WorkerEntity worker) {
+                worker.setHomePos(core);
             }
         }
     }
 
-    /** Seeds the Nexus's own input slots with enough resources to bankroll the first Probes. */
-    private static void seedNexus(NexusBlockEntity nexus) {
-        nexus.setItem(0, new ItemStack(Items.OAK_LOG, 64));
-        nexus.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
-        nexus.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
-        nexus.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
+    /**
+     * Seeds the player's army bank — reached through their base, which is a linked chest onto it —
+     * with enough resources to bankroll their first workers.
+     */
+    private static void seedPlayerBase(BaseBlockEntity base) {
+        base.setItem(0, new ItemStack(Items.OAK_LOG, 64));
+        base.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
+        base.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
+        base.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
     }
 }

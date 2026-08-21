@@ -6,9 +6,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 
 /**
- * Registers the {@link BuildScriptReloadListener} on the server's datapack reload pipeline, so the
- * enemy build script is (re)loaded on world load and every {@code /reload}. Game-bus subscriber,
- * mirroring the existing {@code ZergDirector}/{@code ZergRegenEventHandler} pattern.
+ * Registers the {@link BuildScriptReloadListener} on the server's datapack reload pipeline, so every
+ * race's build script is (re)loaded on world load and every {@code /reload}. Game-bus subscriber,
+ * mirroring the existing {@code AiDirector}/{@code RegenEventHandler} pattern.
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
 public final class BuildScriptEvents {
@@ -17,6 +17,6 @@ public final class BuildScriptEvents {
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddServerReloadListenersEvent event) {
-        event.addListener(AsteriskCraft.id("zerg_build_script"), new BuildScriptReloadListener());
+        event.addListener(AsteriskCraft.id("build_scripts"), new BuildScriptReloadListener());
     }
 }

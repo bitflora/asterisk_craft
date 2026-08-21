@@ -40,7 +40,7 @@ import java.util.List;
  * warp-in countdown after the kit places the structure. Costs are paid atomically out of the
  * shared Protoss army bank (surfaced through {@link ProductionMenu}).
  *
- * <p>Acts as a "linked chest" onto {@link ArmyBank#PROTOSS_BANK}: {@link NexusBlockEntity}
+ * <p>Acts as a "linked chest" onto its faction's {@link ArmyBank}: {@link BaseBlockEntity}
  * reads and writes the same underlying data, so every Protoss production building draws from
  * one shared pool. See {@link ArmyLinkedContainer}.
  *
@@ -172,7 +172,7 @@ public class GatewayBlockEntity extends BlockEntity
     public void damageBuilding(int amount, ServerLevel level, BlockPos pos) {
         this.defense.damage(amount, level, pos);
         this.setChanged();
-        this.alert.ping(level, "message.asteriskcraft.gateway.under_attack");
+        this.alert.ping(level, buildingFaction(), "message.asteriskcraft.gateway.under_attack");
     }
 
     // --- ProductionBuilding ---

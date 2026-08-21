@@ -36,7 +36,7 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
  * hit it.
  *
  * <p>Runs at {@link EventPriority#HIGHEST} deliberately: {@link ShieldEventHandler} and
- * {@link ZergRegenEventHandler} listen on the same event, and cancelling here keeps them from acting
+ * {@link RegenEventHandler} listen on the same event, and cancelling here keeps them from acting
  * on a hit that never lands. They fire normally — with the full amount — on the re-dealt one.
  *
  * <p>Matching on the spike's <em>class</em> rather than on "is the owner a Sunken Colony" keeps the

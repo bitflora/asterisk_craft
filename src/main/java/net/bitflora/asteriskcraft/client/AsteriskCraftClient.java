@@ -102,8 +102,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.LURKER_SPINE.get(), EvokerFangsRenderer::new);
         // Nexus/Hive shoot a vanilla beacon beam upward as a locator; reuses BeaconRenderer since
         // both block entities implement BeaconBeamOwner. See docs/neoforge-api-notes.md.
-        event.registerBlockEntityRenderer(AsteriskCraft.NEXUS_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());
-        event.registerBlockEntityRenderer(AsteriskCraft.HIVE_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());
+        event.registerBlockEntityRenderer(AsteriskCraft.BASE_BLOCK_ENTITY.get(), context -> new BeaconRenderer<>());
     }
 
     @SubscribeEvent

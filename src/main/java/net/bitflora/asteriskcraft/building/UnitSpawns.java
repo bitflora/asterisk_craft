@@ -16,8 +16,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Shared, faction-generic "produce a unit at a building" spawn recipe: find a safely-footed spot
  * near the building, warp the unit in, tag its faction, and play the teleport cue. Every place a
- * unit is created at a building routes through here — the Nexus (Probes), the Gateway
- * (Zealots/Dragoons), the Hive/{@code ZergDirector} (Drones and wave units), and the world
+ * unit is created at a building routes through here — a base (its race's worker), the Gateway
+ * (Zealots/Dragoons), {@code AiDirector} (the computer's workers and wave units), and the world
  * bootstrap's starting workers — so the recipe lives in exactly one spot. Callers set any
  * unit-specific state (e.g. a worker's home core) on the returned mob.
  */

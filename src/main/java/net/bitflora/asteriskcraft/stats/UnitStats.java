@@ -15,7 +15,7 @@ import static net.bitflora.asteriskcraft.stats.UnitCost.line;
  *
  * <p>Attributes get registered from these entries via {@link UnitAttributes#apply}; costs get paid
  * via {@link CostPayment}. See each entity's {@code createAttributes()} for how it consumes its
- * entry, and {@code building/ProductionKind} / {@code director/script/ZergUnitCatalog} for how the
+ * entry, and {@code building/ProductionKind} / {@code race/UnitRoster} for how the
  * costs reach the GUI and the enemy build script.
  */
 public final class UnitStats {
@@ -67,7 +67,7 @@ public final class UnitStats {
             .cost(UnitCost.all(line(STONE, 75), line(WOOD, 50), line(IRON, 2))).buildTicks(20 * 50)
             .build();
 
-    /** Kit-bought at the Nexus for {@code NexusBlockEntity.BUILDING_COST}, not trained directly — hence NONE. */
+    /** Kit-bought at a base for {@code BaseBlockEntity.BUILDING_COST}, not trained directly — hence NONE. */
     public static final UnitStat PHOTON_CANNON = UnitStat.builder("photon_cannon")
             .health(50.0).shield(50).rooted()
             .attackDamage(10.0).ranged(14.0f, 20)
@@ -81,7 +81,7 @@ public final class UnitStats {
     // --- Zerg ---
 
     /**
-     * Transcribed from {@code ProbeEntity} verbatim, including {@code shield(10)} — a Drone is never
+     * Transcribed from {@code UnitStats.PROBE} verbatim, including {@code shield(10)} — a Drone is never
      * Protoss today, so {@code ShieldAttachments}' faction gate zeroes it in play regardless, but
      * this pass is behaviour-preserving. Follow-up: drop to 0 once a Drone truly can't be Protoss.
      */

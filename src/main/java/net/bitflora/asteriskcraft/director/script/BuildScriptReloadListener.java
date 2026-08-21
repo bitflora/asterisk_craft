@@ -1,6 +1,9 @@
 package net.bitflora.asteriskcraft.director.script;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.race.RaceProfile;
+import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -10,24 +13,35 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Loads the enemy's build script from any datapack at {@code data/&lt;ns&gt;/build_scripts/zerg.txt}.
- * The canonical path is {@code asteriskcraft:build_scripts/zerg.txt}; a datapack overrides the mod's
- * default simply by shipping its own copy (highest-priority pack wins). Parsing never throws — a
- * malformed script logs its errors and the previous good script is kept, so a typo can't brick the
- * AI or crash the server.
+ * Loads every race's build script from any datapack at {@code data/&lt;ns&gt;/build_scripts/&lt;race&gt;.txt}
+ * — the path each {@link RaceProfile} declares. A datapack overrides a race's script simply by
+ * shipping its own copy (highest-priority pack wins). Parsing never throws: a malformed script logs
+ * its errors and the previous good script is kept, so a typo can't brick the AI or crash the server.
+ *
+ * <p>All races are loaded, not just the one currently playing the computer, because a reload
+ * listener runs long before a match knows who is playing what — and loading them all is what makes
+ * the script for a newly added race work with no further plumbing.
  */
-public final class BuildScriptReloadListener extends SimplePreparableReloadListener<BuildScript> {
-    /** The single script the Zerg director runs. */
-    public static final Identifier SCRIPT_PATH = AsteriskCraft.id("build_scripts/zerg.txt");
+public final class BuildScriptReloadListener extends SimplePreparableReloadListener<Map<Race, BuildScript>> {
 
     @Override
-    protected BuildScript prepare(ResourceManager manager, ProfilerFiller profiler) {
+    protected Map<Race, BuildScript> prepare(ResourceManager manager, ProfilerFiller profiler) {
+        Map<Race, BuildScript> loaded = new EnumMap<>(Race.class);
+        for (RaceProfile profile : Races.all()) {
+            loaded.put(profile.race(), read(manager, profile.buildScript()));
+        }
+        return loaded;
+    }
+
+    private static BuildScript read(ResourceManager manager, Identifier path) {
         // getResourceStack returns matching resources low→high priority; the last one wins, giving
         // datapack-override semantics for free.
-        List<Resource> stack = manager.getResourceStack(SCRIPT_PATH);
+        List<Resource> stack = manager.getResourceStack(path);
         if (stack.isEmpty()) {
             return BuildScript.EMPTY;
         }
@@ -40,28 +54,32 @@ public final class BuildScriptReloadListener extends SimplePreparableReloadListe
             }
             return BuildScriptParser.parse(lines);
         } catch (IOException e) {
-            AsteriskCraft.LOGGER.error("Failed to read build script {}", SCRIPT_PATH, e);
+            AsteriskCraft.LOGGER.error("Failed to read build script {}", path, e);
             return BuildScript.EMPTY;
         }
     }
 
     @Override
-    protected void apply(BuildScript script, ResourceManager manager, ProfilerFiller profiler) {
-        for (String error : script.errors()) {
-            AsteriskCraft.LOGGER.warn("Build script {}: {}", SCRIPT_PATH, error);
-        }
-        warnUnknownUnits(script);
+    protected void apply(Map<Race, BuildScript> scripts, ResourceManager manager, ProfilerFiller profiler) {
+        scripts.forEach((race, script) -> {
+            Identifier path = Races.of(race).buildScript();
+            for (String error : script.errors()) {
+                AsteriskCraft.LOGGER.warn("Build script {}: {}", path, error);
+            }
+            warnUnknownUnits(race, path, script);
 
-        if (script.isEmpty()) {
-            AsteriskCraft.LOGGER.warn("Build script {} produced no commands; keeping the previous script", SCRIPT_PATH);
-            return;
-        }
-        BuildScriptManager.install(script);
-        AsteriskCraft.LOGGER.info("Loaded Zerg build script ({} commands) from {}", script.size(), SCRIPT_PATH);
+            if (script.isEmpty()) {
+                AsteriskCraft.LOGGER.warn("Build script {} produced no commands; keeping the previous script", path);
+                return;
+            }
+            BuildScriptManager.install(race, script);
+            AsteriskCraft.LOGGER.info("Loaded {} build script ({} commands) from {}",
+                    race.getSerializedName(), script.size(), path);
+        });
     }
 
-    /** Logs a warning for any unit name the catalog doesn't recognise (it's dropped at runtime). */
-    private static void warnUnknownUnits(BuildScript script) {
+    /** Logs a warning for any unit name this race's roster doesn't recognise (it's dropped at runtime). */
+    private static void warnUnknownUnits(Race race, Identifier path, BuildScript script) {
         for (BuildCommand command : script.commands()) {
             UnitList units = switch (command) {
                 case BuildCommand.Defence defence -> defence.units();
@@ -72,8 +90,8 @@ public final class BuildScriptReloadListener extends SimplePreparableReloadListe
                 continue;
             }
             for (UnitReq req : units.reqs()) {
-                if (ZergUnitCatalog.resolve(req.unitName()).isEmpty()) {
-                    AsteriskCraft.LOGGER.warn("Build script {}: unknown unit '{}' will be skipped", SCRIPT_PATH, req.unitName());
+                if (Races.of(race).roster().resolve(req.unitName()).isEmpty()) {
+                    AsteriskCraft.LOGGER.warn("Build script {}: unknown unit '{}' will be skipped", path, req.unitName());
                 }
             }
         }

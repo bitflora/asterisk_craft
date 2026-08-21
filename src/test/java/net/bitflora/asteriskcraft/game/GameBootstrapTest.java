@@ -99,24 +99,24 @@ class GameBootstrapTest {
                 new BlockPos(0, 64, 0), new BlockPos(100, 64, 0), new BlockPos(0, 64, 100));
         // Far from the first two, but only 12 blocks from the third -> rejected.
         assertFalse(GameBootstrap.farFromOthers(new BlockPos(0, 64, 88), placed),
-                "must be rejected if too close to ANY placed Hive");
+                "must be rejected if too close to ANY placed base");
     }
 
     @Test
-    void infestableGroundCoversNaturalSurfaceTypes() {
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.GRASS_BLOCK.defaultBlockState()));
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.STONE.defaultBlockState()));
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.SAND.defaultBlockState()));
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.RED_SAND.defaultBlockState()));
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.DIRT.defaultBlockState()));
-        assertTrue(GameBootstrap.isInfestableGround(Blocks.GRAVEL.defaultBlockState()));
+    void coverableGroundCoversNaturalSurfaceTypes() {
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.GRASS_BLOCK.defaultBlockState()));
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.STONE.defaultBlockState()));
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.SAND.defaultBlockState()));
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.RED_SAND.defaultBlockState()));
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.DIRT.defaultBlockState()));
+        assertTrue(GameBootstrap.isCoverableGround(Blocks.GRAVEL.defaultBlockState()));
     }
 
     @Test
-    void infestationSkipsNonGroundAndAlreadyMycelium() {
-        assertFalse(GameBootstrap.isInfestableGround(Blocks.MYCELIUM.defaultBlockState()));
-        assertFalse(GameBootstrap.isInfestableGround(Blocks.WATER.defaultBlockState()));
-        assertFalse(GameBootstrap.isInfestableGround(Blocks.OAK_LOG.defaultBlockState()));
+    void groundCoverSkipsNonGroundAndAlreadyCovered() {
+        assertFalse(GameBootstrap.isCoverableGround(Blocks.MYCELIUM.defaultBlockState()));
+        assertFalse(GameBootstrap.isCoverableGround(Blocks.WATER.defaultBlockState()));
+        assertFalse(GameBootstrap.isCoverableGround(Blocks.OAK_LOG.defaultBlockState()));
     }
 
     @Test

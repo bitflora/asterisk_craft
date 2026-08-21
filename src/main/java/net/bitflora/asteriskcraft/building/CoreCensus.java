@@ -19,10 +19,10 @@ import java.util.function.Supplier;
 
 /**
  * A running tally of every {@link FactionCore} standing in a level, so any code can ask "how many
- * cores does this faction still have?" without knowing what a Nexus or a Hive is. Needed because
- * the game's own position bookkeeping doesn't answer that: {@code GameAttachments.NEXUS_POS} is a
- * single position written once at bootstrap, so an expansion Nexus warped in from a
- * {@code nexus_kit} is invisible to it.
+ * bases does this faction still have?" — and where they are — without knowing what a Nexus or a
+ * Hive is. It is the mod's only answer to that question: the bootstrap used to write one position
+ * for the player's base and a list for the computer's, which was both asymmetric and blind to any
+ * base warped in from a kit afterwards.
  *
  * <p>Cores enrol themselves from their server tick rather than at their placement sites, which
  * makes the census independent of how a core came to exist (bootstrap, kit warp-in, creative
@@ -80,8 +80,8 @@ public final class CoreCensus {
 
     /**
      * Where every still-standing core of {@code faction} is. This is what lets code pick <i>a</i>
-     * core rather than assume there is only one — the Zerg director rolls its next wave's target
-     * out of this list, so an expansion Nexus is attacked like any other.
+     * core rather than assume there is only one — the AI director rolls its next wave's target out
+     * of this list, so an expansion base is attacked like any other.
      *
      * <p>Also prunes entries whose block is gone — but only where the chunk is already loaded, so
      * a Nexus sitting in an unloaded chunk still counts instead of being quietly forgotten. That
@@ -108,8 +108,8 @@ public final class CoreCensus {
     /**
      * The standing core of {@code faction} closest to {@code from}, or empty if it has none left.
      *
-     * <p>Distinct from what {@link net.bitflora.asteriskcraft.director.ZergDirector} does with
-     * {@link #standing}: a wave picks its target at <em>random</em>, deliberately, so the swarm
+     * <p>Distinct from what {@link net.bitflora.asteriskcraft.director.AiDirector} does with
+     * {@link #standing}: a wave picks its target at <em>random</em>, deliberately, so the computer
      * spreads its attention across a player's expansions. A unit raised in the field has no such
      * choice to make — it is one body with one detonation and nothing to spread — so it marches on
      * whatever base is actually nearest, which is also the only reading of "aim it at the player's

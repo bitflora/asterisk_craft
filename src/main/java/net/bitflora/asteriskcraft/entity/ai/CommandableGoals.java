@@ -33,7 +33,7 @@ public final class CommandableGoals {
      * <p>Safe to call for the flyers too — {@code ScoutEntity}/{@code MutaliskEntity} already set
      * this to the same 64 in their {@code createNavigation}.
      *
-     * <p>Separate from {@link #install} because {@code ProbeEntity} adds its own
+     * <p>Separate from {@link #install} because {@code WorkerEntity} adds its own
      * {@link CommandedMoveGoal} rather than going through the full commandable set, but still takes
      * orders at the same range.
      */

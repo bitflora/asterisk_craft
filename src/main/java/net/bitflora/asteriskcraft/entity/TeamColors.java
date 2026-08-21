@@ -13,7 +13,7 @@ import net.minecraft.world.item.component.DyedItemColor;
  * (e.g. the Nexus/Hive beacon beam sections). {@link #dyeArmor} dyes a leather chestplate onto a
  * unit, but every unit now has a bespoke {@code MobRenderer}/model (no reused vanilla
  * Zombie/Skeleton renderer), and those custom models don't render the armor slot — so {@code dyeArmor}
- * (and the {@code dyeArmor} flags threaded through {@code UnitSpawns}/{@code ZergUnitCatalog}) is
+ * (and the {@code dyeArmor} flag threaded through {@code UnitSpawns}) is
  * currently a no-op, kept as the seam for the V5 "team-color visuals" feature that will wire real
  * team color into the renderers.
  */

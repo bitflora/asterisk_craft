@@ -13,13 +13,13 @@ import java.util.List;
  *
  * <p><strong>Alternative order is load-bearing</strong> where a building gives one button per
  * alternative: the Nexus's Probe buttons are Wood then Stone, i.e. alternatives 0 and 1 in that
- * order (see {@code NexusBlockEntity#trainOption} and {@code ProductionKind.NEXUS}).
+ * order (see {@code ProductionKind.Action.TrainWorker} and {@code ProductionKind.PROTOSS_BASE}).
  * {@code stats.UnitStatsTest} pins it.
  */
 public record UnitCost(List<List<ResourceAmount>> alternatives) {
 
     /** Not directly purchasable: a Photon Cannon comes from a kit bought at the Nexus
-     *  ({@code NexusBlockEntity.BUILDING_COST}); a Sunken Colony is pre-placed by GameBootstrap. */
+     *  ({@code BaseBlockEntity.BUILDING_COST}); a Sunken Colony is pre-placed by GameBootstrap. */
     public static final UnitCost NONE = new UnitCost(List.of());
 
     public static ResourceAmount line(Resource resource, int amount) {

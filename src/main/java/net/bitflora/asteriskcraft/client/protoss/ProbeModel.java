@@ -120,7 +120,7 @@ public class ProbeModel extends EntityModel<ProbeRenderState> {
         if (p <= 0.0f) {
             return;
         }
-        // Mining stroke. ProbeEntity.HarvestGoal swings every tick it is in range of a node and
+        // Mining stroke. WorkerEntity.HarvestGoal swings every tick it is in range of a node and
         // LivingEntity.swing restarts from the half-way mark, so this cycles continuously for as long
         // as the Probe works.
         //

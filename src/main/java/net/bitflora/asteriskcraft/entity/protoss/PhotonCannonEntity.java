@@ -48,7 +48,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * <p>Its combat numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#PHOTON_CANNON} —
  * not here. It has no direct cost of its own ({@link net.bitflora.asteriskcraft.stats.UnitStat#cost()}
  * is {@code UnitCost.NONE}): it's warped in from a kit bought at the Nexus for
- * {@code NexusBlockEntity.BUILDING_COST}.
+ * {@code BaseBlockEntity.BUILDING_COST}.
  */
 public class PhotonCannonEntity extends Mob implements Shielded, Detector, Rooted {
     // Far quicker than a Gateway or Nexus: a cannon is what you throw up when a wave is already

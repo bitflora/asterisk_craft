@@ -3,6 +3,9 @@ package net.bitflora.asteriskcraft.building;
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.race.RaceProfile;
+import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -11,33 +14,47 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * The per-army shared resource pool that every production building belonging to one faction
- * draws from: {@link NexusBlockEntity} and {@link GatewayBlockEntity} (Protoss) act like linked
- * chests onto {@link #PROTOSS_BANK}; every {@link HiveBlockEntity} (Zerg) onto {@link #ZERG_BANK}.
+ * The per-army shared resource pool that every production building belonging to one faction draws
+ * from: each of a race's bases and unit factories acts like a linked chest onto its race's bank.
  * Stored as a level attachment (not on any one building) so the pool survives independently of
  * which specific building placed or removed it — see {@link ArmyLinkedContainer}.
+ *
+ * <p>One bank per {@link Race}, registered by walking {@link Races} rather than declared by hand,
+ * so adding a race brings its bank with it. Its size is the race's own
+ * {@link RaceProfile#bankSlots()} — the swarm's is far larger, since it pays for everything out of
+ * one pool with no per-item cost restrictions.
  */
 public final class ArmyBank {
-    /** 3x a single building's original 9 slots. */
-    public static final int PROTOSS_SLOTS = 27;
-    /** 3x a single Hive's original 27 slots. */
-    public static final int ZERG_SLOTS = 81;
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
 
-    public static final Supplier<AttachmentType<NonNullList<ItemStack>>> PROTOSS_BANK = ATTACHMENT_TYPES.register(
-            "protoss_army_bank", () -> AttachmentType.builder(() -> newBank(PROTOSS_SLOTS))
-                    .serialize(codec(PROTOSS_SLOTS).fieldOf("items")).build());
-
-    public static final Supplier<AttachmentType<NonNullList<ItemStack>>> ZERG_BANK = ATTACHMENT_TYPES.register(
-            "zerg_army_bank", () -> AttachmentType.builder(() -> newBank(ZERG_SLOTS))
-                    .serialize(codec(ZERG_SLOTS).fieldOf("items")).build());
+    private static final Map<Race, Supplier<AttachmentType<NonNullList<ItemStack>>>> BANKS = registerBanks();
 
     private ArmyBank() {
+    }
+
+    private static Map<Race, Supplier<AttachmentType<NonNullList<ItemStack>>>> registerBanks() {
+        Map<Race, Supplier<AttachmentType<NonNullList<ItemStack>>>> banks = new EnumMap<>(Race.class);
+        for (RaceProfile profile : Races.all()) {
+            int slots = profile.bankSlots();
+            banks.put(profile.race(), ATTACHMENT_TYPES.register(
+                    profile.race().getSerializedName() + "_army_bank",
+                    () -> AttachmentType.builder(() -> newBank(slots))
+                            .serialize(codec(slots).fieldOf("items")).build()));
+        }
+        return banks;
+    }
+
+    /** How many slots this faction's bank holds; the Protoss fallback covers NEUTRAL. */
+    public static int slotsFor(Faction faction) {
+        RaceProfile profile = Races.of(faction);
+        return profile == null ? Races.PROTOSS.bankSlots() : profile.bankSlots();
     }
 
     private static NonNullList<ItemStack> newBank(int slots) {
@@ -61,14 +78,20 @@ public final class ArmyBank {
      * Resolves the shared item list for a faction's army. Falls back to a fresh, disconnected
      * list if {@code level} isn't a {@link ServerLevel} yet — defensive only, since a building's
      * {@code Container} methods are only ever exercised once it's placed in a real world.
+     *
+     * <p>NEUTRAL has no race and so no bank of its own; it reads the Protoss one, exactly as it did
+     * when this was a two-armed switch. Nothing NEUTRAL owns a production building, so this is a
+     * total-function formality rather than a behaviour.
+     *
+     * <p>The returned list is the attachment's own cached instance, mutated in place — that
+     * aliasing is what makes every building a real linked chest with no cache of its own (see
+     * docs/neoforge-api-notes.md).
      */
     public static NonNullList<ItemStack> of(Level level, Faction faction) {
         if (!(level instanceof ServerLevel serverLevel)) {
-            return newBank(faction == Faction.ZERG ? ZERG_SLOTS : PROTOSS_SLOTS);
+            return newBank(slotsFor(faction));
         }
-        return switch (faction) {
-            case ZERG -> serverLevel.getData(ZERG_BANK.get());
-            case PROTOSS, NEUTRAL -> serverLevel.getData(PROTOSS_BANK.get());
-        };
+        Race race = faction.race();
+        return serverLevel.getData(BANKS.get(race == null ? Race.PROTOSS : race).get());
     }
 }

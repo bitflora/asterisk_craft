@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * The side-effect seam the {@link ScriptInterpreter} drives — every interaction with the live
  * world goes through this interface so the VM itself stays pure and unit-testable against a fake.
- * The real implementation is {@code ZergDirector}.
+ * The real implementation is {@code AiDirector}.
  */
 public interface DirectorWorld {
 
@@ -58,7 +58,11 @@ public interface DirectorWorld {
     /**
      * The enemy core a finished wave marches on. Re-picked at each wave's launch, so successive
      * waves spread across the enemy's bases instead of all walking into the same defended one.
+     *
+     * @return null when the enemy has no core standing — the wave simply holds where it is, and the
+     *         match is about to be decided anyway
      */
+    @Nullable
     BlockPos pickAttackTarget();
 
     /** The world random, used to roll ranged quantities when a training command starts. */
