@@ -8,7 +8,6 @@ import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 import java.util.List;
@@ -43,50 +42,50 @@ import java.util.function.Supplier;
 public enum ProductionKind {
     PROTOSS_BASE(() -> AsteriskCraft.NEXUS_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
+                    Icon.ofIcon("probe"),
                     CostText.tooltip(UnitStats.PROBE.cost(), 0), 0,
                     new Action.TrainWorker(0)),
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/probe.png"), 115, 111),
+                    Icon.ofIcon("probe"),
                     CostText.tooltip(UnitStats.PROBE.cost(), 1), 0,
                     new Action.TrainWorker(1)),
             new OptionView(
-                    Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
+                    Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
                     CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 1,
                     new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.WOOD,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
             new OptionView(
-                    Icon.ofItem(new ItemStack(AsteriskCraft.GATEWAY_KIT.get())),
+                    Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
                     CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 1,
                     new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.STONE,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
             new OptionView(
-                    Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
+                    Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
                     CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 2,
                     new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.WOOD,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
-                    Icon.ofItem(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get())),
+                    Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
                     CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 2,
                     new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.STONE,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
-                    Icon.ofItem(new ItemStack(AsteriskCraft.NEXUS_KIT.get())),
+                    Icon.ofItem(AsteriskCraft.NEXUS_KIT),
                     CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 3,
                     new Action.GiveKit(AsteriskCraft.NEXUS_KIT::get, Resource.STONE,
                             BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.base_kit_ready")))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/zealot.png"), 116, 121),
+                    Icon.ofIcon("zealot"),
                     CostText.tooltip(UnitStats.ZEALOT.cost(), 0), 0, Action.FACTORY),
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dragoon.png"), 113, 112),
+                    Icon.ofIcon("dragoon"),
                     CostText.tooltip(UnitStats.DRAGOON.cost(), 0), 1, Action.FACTORY),
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/scout.png"), 112, 111),
+                    Icon.ofIcon("scout"),
                     CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2, Action.FACTORY),
             new OptionView(
-                    Icon.ofTexture(AsteriskCraft.id("textures/gui/icons/dark_templar.png"), 117, 114),
+                    Icon.ofIcon("dark_templar"),
                     CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 3, Action.FACTORY)));
 
     /**
@@ -126,22 +125,32 @@ public enum ProductionKind {
 
     /**
      * A button's icon: either a real registered item's render (used for the Gateway/Photon
-     * Cannon kits, which are actual items) or a hand-picked command-card style texture (used
-     * for units that have no item form of their own — Probe, Zealot, Dragoon, Scout).
+     * Cannon kits, which are actual items) or a command-card texture from
+     * {@code textures/gui/icons/} (used for units that have no item form of their own — Probe,
+     * Zealot, Dragoon, Scout, Dark Templar).
+     *
+     * <p>Those textures are generated by {@code tools/gen_command_icons.py} and are all
+     * {@code ProductionScreen.ICON_SIZE} square, which is why {@link #ofIcon} names a unit
+     * rather than carrying a path and a source resolution.
+     *
+     * <p>An item icon holds a {@link Supplier}, not a resolved {@code ItemStack}, for the same
+     * reason {@link Action.GiveKit} beside it does: this enum's constants are built at class-init,
+     * and an {@code ItemStack} cannot be constructed before data components are bound.
      */
     public sealed interface Icon {
-        record FromItem(ItemStack stack) implements Icon {
+        record FromItem(Supplier<? extends Item> item) implements Icon {
         }
 
-        record FromTexture(Identifier location, int width, int height) implements Icon {
+        record FromTexture(Identifier location) implements Icon {
         }
 
-        static Icon ofItem(ItemStack stack) {
-            return new FromItem(stack);
+        static Icon ofItem(Supplier<? extends Item> item) {
+            return new FromItem(item);
         }
 
-        static Icon ofTexture(Identifier location, int width, int height) {
-            return new FromTexture(location, width, height);
+        /** The command-card icon for {@code name}, e.g. {@code "zealot"}. */
+        static Icon ofIcon(String name) {
+            return new FromTexture(AsteriskCraft.id("textures/gui/icons/" + name + ".png"));
         }
     }
 

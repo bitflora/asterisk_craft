@@ -11,10 +11,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Screen for the shared {@link ProductionMenu}. Draws the panel and slot backgrounds with
@@ -113,16 +115,16 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
 
     /**
      * Draws a button's {@link ProductionKind.Icon}, centered horizontally on {@code centerX}
-     * with its top at {@code top}: a real item render for kit items, or a scaled blit of a
-     * hand-picked texture (arbitrary source resolution — {@code width}/{@code height} are the
-     * source PNG's own pixel size, only used to compute UVs) for units with no item form.
+     * with its top at {@code top}: a real item render for kit items, or a 1:1 blit of a
+     * command-card texture for units with no item form. Those textures are authored at exactly
+     * {@link #ICON_SIZE} (see {@code tools/gen_command_icons.py}), so nothing is scaled here.
      */
     private static void drawIcon(GuiGraphicsExtractor graphics, ProductionKind.Icon icon, int centerX, int top) {
         int x = centerX - ICON_SIZE / 2;
         switch (icon) {
-            case ProductionKind.Icon.FromItem(ItemStack stack) -> graphics.item(stack, x, top);
-            case ProductionKind.Icon.FromTexture(Identifier location, int width, int height) ->
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, top, 0f, 0f, ICON_SIZE, ICON_SIZE, width, height, width, height);
+            case ProductionKind.Icon.FromItem(Supplier<? extends Item> item) -> graphics.item(new ItemStack(item.get()), x, top);
+            case ProductionKind.Icon.FromTexture(Identifier location) ->
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, top, 0f, 0f, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
         }
     }
 
