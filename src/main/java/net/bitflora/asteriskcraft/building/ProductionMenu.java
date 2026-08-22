@@ -27,8 +27,9 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_BUILD_TOTAL = 2;    // ticks a unit takes (for the fraction)
     public static final int DATA_WARP = 3;           // warp-in ticks remaining (0 = ready)
     public static final int DATA_QUEUE_BASE = 4;     // queued count per option
-    // Nexus: Probe/Gateway/Photon Cannon (Wood + Stone buttons each) + Nexus Kit (one button).
-    public static final int MAX_OPTIONS = 7;
+    // Nexus: Probe/Pylon/Gateway/Photon Cannon (Wood + Stone buttons each) + Nexus Kit (one button).
+    // The screen reads a queued count for every option, so this has to cover the widest card there is.
+    public static final int MAX_OPTIONS = 9;
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.

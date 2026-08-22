@@ -21,20 +21,26 @@ import java.util.function.Supplier;
  * immediately, leaving the core block entity to run its own warp-in countdown behind a
  * {@link WarpScaffold} of glass that fills in as it runs.
  * Reusable by later kits (Photon Cannon, etc.) that share this place-then-warm-up shape.
+ *
+ * <p>Whether a kit needs a Pylon in range is a flag here rather than a case inside
+ * {@link PsiField}: the rule is "this building needs power", and a building that is exempt
+ * (a Nexus, a Pylon itself) simply never asks. Nothing in {@code PsiField} names a building.
  */
-public class BuildingKitItem extends Item {
+public class BuildingKitItem extends Item implements PsiDependent {
     private final Identifier template;
     // A supplier, not the Block itself: kits are registered alongside the blocks they place, so
     // the block isn't resolvable yet at construction time.
     private final Supplier<? extends Block> coreBlock;
     private final BuildingTemplates.Footprint footprint;
+    private final boolean requiresPylon;
 
     public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock,
-            BuildingTemplates.Footprint footprint) {
+            BuildingTemplates.Footprint footprint, boolean requiresPylon) {
         super(properties);
         this.template = template;
         this.coreBlock = coreBlock;
         this.footprint = footprint;
+        this.requiresPylon = requiresPylon;
     }
 
     /**
@@ -44,6 +50,12 @@ public class BuildingKitItem extends Item {
      */
     public BuildingTemplates.Footprint footprint() {
         return this.footprint;
+    }
+
+    /** Whether this kit needs a Pylon in range, for the same outline to colour the reason in. */
+    @Override
+    public boolean requiresPylon() {
+        return this.requiresPylon;
     }
 
     @Override
@@ -60,6 +72,10 @@ public class BuildingKitItem extends Item {
         BlockPos origin = context.getClickedPos().relative(context.getClickedFace());
         if (!BuildingTemplates.isSiteClear(serverLevel, origin, this.template, this.coreBlock.get())) {
             overlay(player, Component.translatable("message.asteriskcraft.kit.blocked"));
+            return InteractionResult.FAIL;
+        }
+        if (this.requiresPylon && !PsiField.covered(serverLevel, origin, ControlledFaction.of(player))) {
+            overlay(player, Component.translatable("message.asteriskcraft.kit.no_pylon", PsiField.RADIUS));
             return InteractionResult.FAIL;
         }
 

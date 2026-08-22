@@ -68,6 +68,7 @@ TRAINED = ["probe", "zealot", "dragoon", "scout", "dark_templar"]
 # Building kit items -> the building's icon. These double as the base command card's buttons for
 # them, which are item renders (ProductionKind.Icon.ofItem) rather than GUI textures.
 KITS = {
+    "pylon_kit": "pylon",
     "gateway_kit": "gateway",
     "nexus_kit": "nexus",
     "photon_cannon_kit": "photon_cannon",

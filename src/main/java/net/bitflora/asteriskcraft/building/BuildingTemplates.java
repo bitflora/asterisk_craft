@@ -39,6 +39,7 @@ public final class BuildingTemplates {
     public static final Identifier NEXUS = AsteriskCraft.id("nexus");
     public static final Identifier GATEWAY = AsteriskCraft.id("gateway");
     public static final Identifier HIVE = AsteriskCraft.id("hive");
+    public static final Identifier PYLON = AsteriskCraft.id("pylon");
 
     /**
      * A template's bounding box and where its core sits inside it, declared up front so the
@@ -59,6 +60,7 @@ public final class BuildingTemplates {
 
     public static final Footprint NEXUS_FOOTPRINT = new Footprint(new Vec3i(9, 4, 9), new BlockPos(4, 3, 4));
     public static final Footprint GATEWAY_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
+    public static final Footprint PYLON_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
 
     /** Where a stamped template landed: its core block, its min corner, and its size. */
     public record Placed(BlockPos core, BlockPos min, Vec3i size) {

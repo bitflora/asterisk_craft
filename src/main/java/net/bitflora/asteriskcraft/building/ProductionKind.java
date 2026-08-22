@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  *
  * <p>Options are laid out column-major: each {@link OptionView} names the unit column it
  * belongs to (see {@link #columns}), stacked top-to-bottom in list order within that column.
- * Columns don't need equal height — the Protoss base gives Probe/Gateway/Photon Cannon a Wood
+ * Columns don't need equal height — the Protoss base gives Probe/Pylon/Gateway/Photon Cannon a Wood
  * button above a Stone button (two separate buttons instead of one that pays with a mix of both)
  * but only a single button for the Nexus Kit. Buttons show only their icon — no name label — the
  * icon identifies the unit, and the hover tooltip gives its cost (including which resource a
@@ -49,29 +49,41 @@ public enum ProductionKind {
                     Icon.ofIcon("probe"),
                     CostText.tooltip(UnitStats.PROBE.cost(), 1), 0,
                     new Action.TrainWorker(1)),
+            // The Pylon reads first among the buildings because everything to its right needs one
+            // standing before its kit will go down — see PsiField.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.PYLON_KIT),
+                    CostText.tooltip(BaseBlockEntity.PYLON_COST, Resource.WOOD), 1,
+                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, Resource.WOOD,
+                            BaseBlockEntity.PYLON_COST, "message.asteriskcraft.base.pylon_ready")),
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.PYLON_KIT),
+                    CostText.tooltip(BaseBlockEntity.PYLON_COST, Resource.STONE), 1,
+                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, Resource.STONE,
+                            BaseBlockEntity.PYLON_COST, "message.asteriskcraft.base.pylon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 1,
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 2,
                     new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.WOOD,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 1,
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 2,
                     new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.STONE,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 2,
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 3,
                     new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.WOOD,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 2,
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 3,
                     new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.STONE,
                             BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.NEXUS_KIT),
-                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 3,
+                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 4,
                     new Action.GiveKit(AsteriskCraft.NEXUS_KIT::get, Resource.STONE,
                             BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.base_kit_ready")))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), Races.PROTOSS.bankSlots(), List.of(

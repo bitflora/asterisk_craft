@@ -12,6 +12,8 @@ import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
+import net.bitflora.asteriskcraft.building.PylonBlock;
+import net.bitflora.asteriskcraft.building.PylonBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
@@ -109,6 +111,13 @@ public class AsteriskCraft {
             GatewayBlock::new,
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
+    // Lit only once it has finished warping in: PylonBlock.ONLINE is both the light switch and the
+    // synced fact PsiField reads, so a client's placement outline agrees with the server's refusal.
+    public static final DeferredBlock<PylonBlock> PYLON_CORE = BLOCKS.registerBlock("pylon_core",
+            PylonBlock::new,
+            p -> p.mapColor(MapColor.COLOR_LIGHT_BLUE).strength(15.0f, 1200.0f)
+                    .lightLevel(s -> s.getValue(PylonBlock.ONLINE) ? 15 : 0));
+
     public static final DeferredBlock<BaseBlock> HIVE_CORE = BLOCKS.registerBlock("hive_core",
             props -> new BaseBlock(Race.ZERG, props),
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
@@ -116,22 +125,29 @@ public class AsteriskCraft {
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
+    public static final DeferredItem<BlockItem> PYLON_CORE_ITEM = ITEMS.registerSimpleBlockItem("pylon_core", PYLON_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE,
-                    BuildingTemplates.GATEWAY_FOOTPRINT));
+                    BuildingTemplates.GATEWAY_FOOTPRINT, true));
+
+    // Bought at the Nexus like the expansion kit, and exempt from its own rule: a Pylon is what
+    // powers the ground, so it can't need powered ground itself.
+    public static final DeferredItem<BuildingKitItem> PYLON_KIT = ITEMS.registerItem("pylon_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.PYLON, PYLON_CORE,
+                    BuildingTemplates.PYLON_FOOTPRINT, false));
 
     // Bought from the Nexus's own production menu (paid from the shared army bank) rather than
     // crafted, unlike the other kits — see BaseBlockEntity#trainOption. An expansion Nexus, so
     // it's deliberately not offered as a cheap personal-inventory crafting-table recipe.
     public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE,
-                    BuildingTemplates.NEXUS_FOOTPRINT));
+                    BuildingTemplates.NEXUS_FOOTPRINT, false));
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
     public static final DeferredItem<FactionSpawnEggItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
-            props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, FactionSpawnEggItem.Side.ALLY));
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, FactionSpawnEggItem.Side.ALLY, true));
 
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
@@ -152,6 +168,9 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GatewayBlockEntity>> GATEWAY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("gateway", () -> new BlockEntityType<>(GatewayBlockEntity::new, GATEWAY_CORE.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PylonBlockEntity>> PYLON_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("pylon", () -> new BlockEntityType<>(PylonBlockEntity::new, PYLON_CORE.get()));
 
     // --- Menus ---
 
@@ -499,6 +518,8 @@ public class AsteriskCraft {
             .displayItems((parameters, output) -> {
                 output.accept(NEXUS_CORE_ITEM.get());
                 output.accept(GATEWAY_CORE_ITEM.get());
+                output.accept(PYLON_CORE_ITEM.get());
+                output.accept(PYLON_KIT.get());
                 output.accept(GATEWAY_KIT.get());
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(NEXUS_KIT.get());

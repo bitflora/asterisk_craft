@@ -51,6 +51,11 @@ class BuildingTemplatesTest {
         assertSingleCore("hive", "asteriskcraft:hive_core");
     }
 
+    @Test
+    void pylonTemplateHasOneCore() {
+        assertSingleCore("pylon", "asteriskcraft:pylon_core");
+    }
+
     // --- declared footprints (the client's placement outline) vs. the templates themselves ---
     // A client can't load a template — they live under data/ and only a server's
     // StructureTemplateManager reads them — so each kit declares its building's box up front. These
@@ -65,6 +70,11 @@ class BuildingTemplatesTest {
     @Test
     void gatewayFootprintMatchesTemplate() {
         assertFootprint("gateway", "asteriskcraft:gateway_core", BuildingTemplates.GATEWAY_FOOTPRINT);
+    }
+
+    @Test
+    void pylonFootprintMatchesTemplate() {
+        assertFootprint("pylon", "asteriskcraft:pylon_core", BuildingTemplates.PYLON_FOOTPRINT);
     }
 
     private static void assertFootprint(String template, String coreBlockId, BuildingTemplates.Footprint footprint) {

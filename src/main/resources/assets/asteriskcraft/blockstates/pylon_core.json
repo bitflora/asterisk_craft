@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "online=false": { "model": "asteriskcraft:block/pylon_core_offline" },
+    "online=true": { "model": "asteriskcraft:block/pylon_core" }
+  }
+}

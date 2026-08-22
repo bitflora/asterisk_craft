@@ -1,11 +1,15 @@
 package net.bitflora.asteriskcraft.entity;
 
+import net.bitflora.asteriskcraft.building.PsiDependent;
+import net.bitflora.asteriskcraft.building.PsiField;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -39,8 +43,13 @@ import java.util.function.Supplier;
  * an "ally" egg and an "enemy" egg, and which actual faction each of those means is a fact about
  * the match ({@code game.MatchSetup}), not about the item — so a match where the human plays Zerg
  * hands out the same eggs and they still spawn things on the right sides.
+ *
+ * <p>The Photon Cannon is a building that happens to be an entity, so its "kit" is one of these
+ * rather than a {@code building/BuildingKitItem} — which makes this the second of the mod's two
+ * placement call sites, and the reason for {@code requiresPylon}. Both sites ask
+ * {@code building/PsiField} and nothing else.
  */
-public class FactionSpawnEggItem extends Item {
+public class FactionSpawnEggItem extends Item implements PsiDependent {
 
     /** Whose side an egg's mob joins, resolved against the match when the egg is used. */
     public enum Side {
@@ -57,11 +66,28 @@ public class FactionSpawnEggItem extends Item {
 
     private final Supplier<? extends EntityType<? extends Mob>> entityType;
     private final Side side;
+    private final boolean requiresPylon;
 
     public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType, Side side) {
+        this(properties, entityType, side, false);
+    }
+
+    /**
+     * @param requiresPylon whether this egg places a <em>building</em> that needs a Pylon in range.
+     *                      True only for the Photon Cannon kit; a spawn egg for an actual unit is
+     *                      never gated.
+     */
+    public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType,
+            Side side, boolean requiresPylon) {
         super(properties);
         this.entityType = entityType;
         this.side = side;
+        this.requiresPylon = requiresPylon;
+    }
+
+    @Override
+    public boolean requiresPylon() {
+        return this.requiresPylon;
     }
 
     @Override
@@ -104,10 +130,19 @@ public class FactionSpawnEggItem extends Item {
 
     private InteractionResult spawnMob(@Nullable LivingEntity user, ItemStack stack, ServerLevel level,
                                         BlockPos pos, boolean tryMoveDown, boolean movedUp) {
+        // The faction the mob is about to join is the one that has to own the Pylon powering it.
+        Faction faction = this.side.resolve(level);
+        if (this.requiresPylon && !PsiField.covered(level, pos, faction)) {
+            if (user instanceof ServerPlayer player) {
+                player.sendSystemMessage(
+                        Component.translatable("message.asteriskcraft.kit.no_pylon", PsiField.RADIUS), true);
+            }
+            return InteractionResult.FAIL;
+        }
         EntityType<? extends Mob> type = entityType.get();
         Mob mob = type.spawn(level, stack, user, pos, EntitySpawnReason.SPAWN_ITEM_USE, tryMoveDown, movedUp);
         if (mob != null) {
-            FactionAttachments.set(mob, this.side.resolve(level));
+            FactionAttachments.set(mob, faction);
             stack.consume(1, user);
             level.gameEvent(user, GameEvent.ENTITY_PLACE, pos);
         }

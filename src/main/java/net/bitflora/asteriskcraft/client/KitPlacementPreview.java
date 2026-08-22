@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
+import net.bitflora.asteriskcraft.building.PsiField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -30,20 +31,43 @@ import org.jetbrains.annotations.Nullable;
  * Its dimensions come from the kit's declared {@link BuildingTemplates.Footprint} rather than from the
  * template itself, which a client has no way to load (see that record).
  *
+ * <p>There is a third answer, and it is why this is a {@link Verdict} rather than a boolean: a site
+ * can be perfectly clear and still be refused for having no Pylon in range ({@link PsiField}), which
+ * would be invisible without its own colour. Where that power actually reaches is painted on the
+ * ground by {@link PsiFieldOverlay}, so a player hunting for a spot doesn't have to find the edge by
+ * sweeping the crosshair around.
+ *
  * <p>Purely a preview: the server re-checks the real template on placement and is the authority. This
- * only has to agree with it, which {@code BuildingTemplatesTest} is what keeps true.
+ * only has to agree with it, which {@code BuildingTemplatesTest} is what keeps true. The one place it
+ * is deliberately the more permissive of the two is Pylon <em>ownership</em> — see
+ * {@link PsiField#covered(net.minecraft.world.level.BlockGetter, BlockPos)}.
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
 public final class KitPlacementPreview {
-    private static final int CLEAR_COLOR = 0xFF55FF99;
-    private static final int BLOCKED_COLOR = 0xFFFF5555;
     private static final float LINE_WIDTH = 3.0f;
 
+    /** Why the outline is the colour it is. */
+    private enum Verdict {
+        /** Nothing in the way and, if the kit needs one, a Pylon in range. */
+        CLEAR(0xFF55FF99),
+        /** Something is standing in the volume. */
+        BLOCKED(0xFFFF5555),
+        /** The volume is free, but no Pylon reaches it. */
+        UNPOWERED(0xFFFFCC55);
+
+        private final int color;
+
+        Verdict(int color) {
+            this.color = color;
+        }
+    }
+
     /**
-     * Whether the site was clear, recomputed once a tick rather than once a frame: the check walks
-     * the whole volume (up to ~700 block reads for a Nexus) and the answer can only change on a tick.
+     * The last verdict, recomputed once a tick rather than once a frame: the checks walk the whole
+     * volume (up to ~700 block reads for a Nexus) plus the Pylon radius, and the answer can only
+     * change on a tick.
      */
-    private static boolean lastClear;
+    private static Verdict lastVerdict = Verdict.BLOCKED;
     private static @Nullable BlockPos lastMin;
     private static int lastCheckedTick = -1;
 
@@ -58,31 +82,31 @@ public final class KitPlacementPreview {
         if (player == null || level == null) {
             return;
         }
-        BuildingTemplates.Footprint footprint = heldKitFootprint(player);
-        if (footprint == null) {
+        BuildingKitItem kit = heldKit(player);
+        if (kit == null) {
             return;
         }
+        BuildingTemplates.Footprint footprint = kit.footprint();
         BlockPos origin = targetedOrigin(minecraft.hitResult);
         if (origin == null) {
             return;
         }
 
         BlockPos min = footprint.minCorner(origin);
-        boolean clear = isClear(level, min, footprint.size());
         Vec3 camera = event.getLevelRenderState().cameraRenderState.pos;
         Vec3i size = footprint.size();
-        int color = clear ? CLEAR_COLOR : BLOCKED_COLOR;
+        int color = verdict(level, kit, origin, min).color;
         event.getSubmitNodeCollector().submitCustomGeometry(event.getPoseStack(), RenderTypes.lines(),
                 (pose, buffer) -> submitBox(pose, buffer,
                         (float) (min.getX() - camera.x), (float) (min.getY() - camera.y), (float) (min.getZ() - camera.z),
                         size.getX(), size.getY(), size.getZ(), color));
     }
 
-    /** The footprint of a kit in either hand, or null if the player isn't holding one. */
-    private static BuildingTemplates.@Nullable Footprint heldKitFootprint(LocalPlayer player) {
+    /** The kit in either hand, or null if the player isn't holding one. */
+    private static @Nullable BuildingKitItem heldKit(LocalPlayer player) {
         for (InteractionHand hand : InteractionHand.values()) {
             if (player.getItemInHand(hand).getItem() instanceof BuildingKitItem kit) {
-                return kit.footprint();
+                return kit;
             }
         }
         return null;
@@ -96,14 +120,24 @@ public final class KitPlacementPreview {
         return null;
     }
 
-    private static boolean isClear(ClientLevel level, BlockPos min, Vec3i size) {
+    private static Verdict verdict(ClientLevel level, BuildingKitItem kit, BlockPos origin, BlockPos min) {
         int tick = (int) level.getGameTime();
         if (tick != lastCheckedTick || !min.equals(lastMin)) {
             lastCheckedTick = tick;
             lastMin = min;
-            lastClear = BuildingTemplates.isAreaClear(level, min, size);
+            lastVerdict = compute(level, kit, origin, min);
         }
-        return lastClear;
+        return lastVerdict;
+    }
+
+    private static Verdict compute(ClientLevel level, BuildingKitItem kit, BlockPos origin, BlockPos min) {
+        if (!BuildingTemplates.isAreaClear(level, min, kit.footprint().size())) {
+            return Verdict.BLOCKED;
+        }
+        if (kit.requiresPylon() && !PsiField.covered(level, origin)) {
+            return Verdict.UNPOWERED;
+        }
+        return Verdict.CLEAR;
     }
 
     /** The twelve edges of the box spanning {@code (x,y,z)} to {@code (x+sx, y+sy, z+sz)}. */

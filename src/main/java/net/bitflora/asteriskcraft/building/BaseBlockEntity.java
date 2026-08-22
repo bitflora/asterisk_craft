@@ -70,6 +70,8 @@ public class BaseBlockEntity extends BlockEntity
     public static final int BUILDING_COST = 150;
     /** Cobblestone-only cost for a second/expansion base — deliberately pricier and not wood-alternative. */
     public static final int BASE_KIT_COST = 400;
+    /** All-wood or all-cobblestone, and cheaper than what it unlocks: a Pylon is a prerequisite, not a prize. */
+    public static final int PYLON_COST = 100;
     public static final int MAX_QUEUE = 5;
 
     private final RaceProfile profile;

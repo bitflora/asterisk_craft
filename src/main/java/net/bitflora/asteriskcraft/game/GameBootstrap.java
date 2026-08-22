@@ -207,6 +207,8 @@ public final class GameBootstrap {
 
         // The Command Crystal enables unit select/order mode while held (R5).
         player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
+        // One Pylon, and the two kits that need one in range before they will go down (PsiField).
+        player.getInventory().add(new ItemStack(AsteriskCraft.PYLON_KIT.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.GATEWAY_KIT.get()));
         player.getInventory().add(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
         player.sendSystemMessage(Component.translatable("message.asteriskcraft.enemy_location", AI_BASE_COUNT));
