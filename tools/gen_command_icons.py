@@ -63,7 +63,12 @@ RED_RAMP = [
 RENAMED = {"infested_villager": "infested_terran"}
 
 # Units with a train button on some command card, and so a GUI icon (building/ProductionKind).
-TRAINED = ["probe", "zealot", "dragoon", "scout", "dark_templar"]
+TRAINED = [
+    "probe", "zealot", "dragoon", "scout", "dark_templar",
+    # The Hive's card (ProductionKind.ZERG_BASE) morphs every Zerg unit itself - the swarm has no
+    # factory building - so all of them need a train button once a human can play Zerg.
+    "drone", "zergling", "hydralisk", "mutalisk", "lurker", "ultralisk",
+]
 
 # Building kit items -> the building's icon. These double as the base command card's buttons for
 # them, which are item renders (ProductionKind.Icon.ofItem) rather than GUI textures.
@@ -71,6 +76,7 @@ KITS = {
     "pylon_kit": "pylon",
     "gateway_kit": "gateway",
     "nexus_kit": "nexus",
+    "hive_kit": "hive",
     "photon_cannon_kit": "photon_cannon",
 }
 

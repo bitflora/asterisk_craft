@@ -27,8 +27,9 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_BUILD_TOTAL = 2;    // ticks a unit takes (for the fraction)
     public static final int DATA_WARP = 3;           // warp-in ticks remaining (0 = ready)
     public static final int DATA_QUEUE_BASE = 4;     // queued count per option
-    // Nexus: Probe/Pylon/Gateway/Photon Cannon (Wood + Stone buttons each) + Nexus Kit (one button).
-    // The screen reads a queued count for every option, so this has to cover the widest card there is.
+    // The screen reads a queued count for every option, so this has to cover the widest card there
+    // is. Both bases sit at nine: the Nexus spends its on Wood/Stone pairs, and the Hive - which has
+    // no factory building to send unit production to - on one button per unit it can morph.
     public static final int MAX_OPTIONS = 9;
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 

@@ -44,6 +44,7 @@ import net.bitflora.asteriskcraft.entity.zerg.UltraliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.ZerglingEntity;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.game.AsteriskCraftGameRules;
 import net.bitflora.asteriskcraft.game.GameAttachments;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -143,6 +144,13 @@ public class AsteriskCraft {
     public static final DeferredItem<BuildingKitItem> NEXUS_KIT = ITEMS.registerItem("nexus_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.NEXUS, NEXUS_CORE,
                     BuildingTemplates.NEXUS_FOOTPRINT, false));
+
+    // The swarm's expansion kit, bought from the Hive's own command card exactly as the Nexus kit
+    // is bought from the Nexus's. Exempt from the Pylon rule, which is a Protoss mechanic the Zerg
+    // have no equivalent of — see PsiField, which names no building.
+    public static final DeferredItem<BuildingKitItem> HIVE_KIT = ITEMS.registerItem("hive_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.HIVE, HIVE_CORE,
+                    BuildingTemplates.HIVE_FOOTPRINT, false));
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
@@ -523,6 +531,7 @@ public class AsteriskCraft {
                 output.accept(GATEWAY_KIT.get());
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(NEXUS_KIT.get());
+                output.accept(HIVE_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
@@ -571,6 +580,7 @@ public class AsteriskCraft {
         RegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
         CoreCensus.ATTACHMENT_TYPES.register(modEventBus);
+        AsteriskCraftGameRules.GAME_RULES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(this::registerPayloads);

@@ -49,6 +49,21 @@ public enum Faction implements StringRepresentable {
         return this.race;
     }
 
+    /**
+     * The side that plays {@code race}, or null if no side does. The inverse of {@link #race()},
+     * and the one place a race is turned back into a side — {@code game.MatchSetup.forPlayerRace}
+     * is what needs it, because the race is what a player picks and the side is what everything
+     * downstream works in.
+     */
+    public static @Nullable Faction of(Race race) {
+        for (Faction faction : values()) {
+            if (faction.race == race) {
+                return faction;
+            }
+        }
+        return null;
+    }
+
     public boolean isEnemy(Faction other) {
         return this != NEUTRAL && other != NEUTRAL && this != other;
     }
@@ -59,12 +74,15 @@ public enum Faction implements StringRepresentable {
      *
      * <p>The table itself is {@link Race#attacksWild}: the Protoss defend themselves against wild
      * hostiles and leave the settled world alone; the Zerg are the mirror image, ignoring monsters
-     * (they are not what a swarm is hunting) and overrunning villagers and golems. NEUTRAL has no
-     * race at all, which is what keeps "an unfactioned unit starts no fights" true without a
-     * separate guard.
+     * (they are not what a swarm is hunting) and overrunning villagers and golems — except when a
+     * human is commanding the swarm, when it hunts both. NEUTRAL has no race at all, which is what
+     * keeps "an unfactioned unit starts no fights" true without a separate guard.
+     *
+     * @param commanded whether this side is the one a human is playing, from
+     *                  {@link FactionAttachments#isCommanded}
      */
-    public boolean attacksWild(WildKind kind) {
-        return this.race != null && this.race.attacksWild(kind);
+    public boolean attacksWild(WildKind kind, boolean commanded) {
+        return this.race != null && this.race.attacksWild(kind, commanded);
     }
 
     /** Whether this side's units carry a shield pool — a fact about its {@link Race}. */

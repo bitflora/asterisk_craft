@@ -7,14 +7,13 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 /**
  * Which race an army is playing, as opposed to {@link Faction}, which is which <em>side</em> it is
- * on. The two are one-to-one today (the player is Protoss, the AI is Zerg) and {@link Faction#race}
- * is the bridge, but they are separate concepts: whether a unit has shields is a fact about its
- * race, whether it will shoot at you is a fact about its side.
+ * on. The two are one-to-one today and {@link Faction#race} is the bridge, but they are separate
+ * concepts: whether a unit has shields is a fact about its race, whether it will shoot at you is a
+ * fact about its side. Either race can be the human's — {@code game.MatchSetup} decides.
  *
  * <p>The cheap racial traits live here as a per-race table, the same way
  * {@link Faction#attacksWild} holds the targeting one — a bare enum with no dependencies, so a
@@ -23,10 +22,26 @@ import java.util.Set;
  * is too heavy for a leaf package and lives in {@code race.RaceProfile} instead.
  */
 public enum Race implements StringRepresentable {
-    /** Regenerating shields in front of HP; no HP regen; leaves the settled world alone. */
-    PROTOSS("protoss", true, false, false, WildKind.HOSTILE),
-    /** No shields; HP itself regenerates out of combat; kills raise villagers as Infested. */
-    ZERG("zerg", false, true, true, WildKind.CIVILIAN);
+    /**
+     * Regenerating shields in front of HP; no HP regen; leaves the settled world alone. The
+     * Protoss defend themselves against the wild hostiles whether or not a human is commanding
+     * them, so both of their wild-target sets are the same.
+     */
+    PROTOSS("protoss", true, false, false,
+            Set.of(WildKind.HOSTILE),
+            Set.of(WildKind.HOSTILE)),
+    /**
+     * No shields; HP itself regenerates out of combat; kills raise villagers as Infested.
+     *
+     * <p>The swarm's doctrine is to overrun the settled world and ignore monsters — monsters are
+     * not what a swarm is hunting, and a scripted opponent parked across the map is better off not
+     * wandering after them. Under <em>human</em> command that reads as a bug rather than a
+     * doctrine: you are standing in this army, and it would let a creeper walk into your Hive. So
+     * a commanded swarm adds the wild hostiles to what it already hunts.
+     */
+    ZERG("zerg", false, true, true,
+            Set.of(WildKind.CIVILIAN),
+            Set.of(WildKind.CIVILIAN, WildKind.HOSTILE));
 
     public static final Codec<Race> CODEC = StringRepresentable.fromEnum(Race::values);
     public static final StreamCodec<ByteBuf, Race> STREAM_CODEC =
@@ -37,15 +52,20 @@ public enum Race implements StringRepresentable {
     private final boolean regen;
     private final boolean infests;
     private final Set<WildKind> wildTargets;
+    private final Set<WildKind> commandedWildTargets;
 
-    Race(String name, boolean shields, boolean regen, boolean infests, WildKind... wildTargets) {
+    Race(String name, boolean shields, boolean regen, boolean infests,
+         Set<WildKind> wildTargets, Set<WildKind> commandedWildTargets) {
         this.name = name;
         this.shields = shields;
         this.regen = regen;
         this.infests = infests;
-        this.wildTargets = wildTargets.length == 0
-                ? EnumSet.noneOf(WildKind.class)
-                : EnumSet.copyOf(List.of(wildTargets));
+        this.wildTargets = copy(wildTargets);
+        this.commandedWildTargets = copy(commandedWildTargets);
+    }
+
+    private static Set<WildKind> copy(Set<WildKind> kinds) {
+        return kinds.isEmpty() ? EnumSet.noneOf(WildKind.class) : EnumSet.copyOf(kinds);
     }
 
     @Override
@@ -71,8 +91,15 @@ public enum Race implements StringRepresentable {
     /**
      * Which parts of the unfactioned world this race picks a fight with — reached through
      * {@link Faction#attacksWild}, which is the only caller and adds the NEUTRAL handling.
+     *
+     * <p>Two sets rather than one because what an army hunts depends on whether a human is
+     * commanding it (see {@link #ZERG}). {@code commanded} comes from
+     * {@link FactionAttachments#isCommanded}, which is the leaf-package projection of
+     * {@code game.MatchSetup.playerFaction()}. This is still a table, not a branch: nothing in
+     * targeting code names a race, and changing what a race hunts — commanded or not — is an edit
+     * to the two lines above.
      */
-    public boolean attacksWild(WildKind kind) {
-        return this.wildTargets.contains(kind);
+    public boolean attacksWild(WildKind kind, boolean commanded) {
+        return (commanded ? this.commandedWildTargets : this.wildTargets).contains(kind);
     }
 }

@@ -59,6 +59,9 @@ public final class BuildingTemplates {
     }
 
     public static final Footprint NEXUS_FOOTPRINT = new Footprint(new Vec3i(9, 4, 9), new BlockPos(4, 3, 4));
+    // Not a square: the Hive's export was framed a block wider on one side, and the core is not at
+    // its middle. That is exactly why the anchor is the core column rather than a hardcoded centre.
+    public static final Footprint HIVE_FOOTPRINT = new Footprint(new Vec3i(8, 7, 7), new BlockPos(4, 2, 3));
     public static final Footprint GATEWAY_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
     public static final Footprint PYLON_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
 

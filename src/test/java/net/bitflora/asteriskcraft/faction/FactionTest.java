@@ -67,12 +67,17 @@ class FactionTest {
 
     /** A wild zombie or slime: NEUTRAL, and declares itself hostile via vanilla's Enemy marker. */
     private static boolean vsWildHostile(Faction self) {
-        return FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.HOSTILE);
+        return FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.HOSTILE, false);
     }
 
     /** A villager, wandering trader or iron golem: NEUTRAL and part of the settled world. */
     private static boolean vsCivilian(Faction self) {
-        return FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.CIVILIAN);
+        return FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.CIVILIAN, false);
+    }
+
+    /** The same question asked of the side a human is actually commanding. */
+    private static boolean commandedVs(Faction self, WildKind kind) {
+        return FactionAttachments.isHostile(self, Faction.NEUTRAL, kind, true);
     }
 
     @Test
@@ -89,11 +94,44 @@ class FactionTest {
     }
 
     @Test
+    void aCommandedSwarmAlsoHuntsWildHostiles() {
+        // The swarm's "ignore monsters" doctrine is right for a scripted opponent parked across the
+        // map and wrong for the army a person is standing in — it would let a creeper walk into
+        // your Hive. Commanding it adds the wild hostiles without taking the villages away.
+        assertTrue(commandedVs(Faction.ZERG, WildKind.HOSTILE),
+                "the swarm under human command must defend itself against a creeper");
+        assertTrue(commandedVs(Faction.ZERG, WildKind.CIVILIAN),
+                "and must still overrun the settled world");
+    }
+
+    @Test
+    void commandIsNotWhatMakesTheProtossFightMonsters() {
+        // The Protoss answer is the same either way, which is what keeps this a per-race table
+        // rather than a rule about humans bolted onto the choke point.
+        assertEquals(vsWildHostile(Faction.PROTOSS), commandedVs(Faction.PROTOSS, WildKind.HOSTILE));
+        assertEquals(vsCivilian(Faction.PROTOSS), commandedVs(Faction.PROTOSS, WildKind.CIVILIAN));
+    }
+
+    @Test
+    void commandNeverWidensPastTheWildCarveOut() {
+        // Whoever is holding the reins, a peaceful neutral is still nobody's target and NEUTRAL
+        // still starts no fights — command may only ever widen which wild kinds a race hunts.
+        for (Faction self : new Faction[] {Faction.PROTOSS, Faction.ZERG}) {
+            assertFalse(commandedVs(self, WildKind.PASSIVE),
+                    self + " under command must still never turn on the player or a cow");
+        }
+        for (WildKind kind : WildKind.values()) {
+            assertFalse(commandedVs(Faction.NEUTRAL, kind),
+                    "NEUTRAL has no race, so there is nothing for command to widen");
+        }
+    }
+
+    @Test
     void unitsStillIgnorePeacefulNeutrals() {
         // The player, wild animals and dropped boats are NEUTRAL and neither hostile nor civilian.
         // This is the invariant neither race's carve-out may break.
         for (Faction self : new Faction[] {Faction.PROTOSS, Faction.ZERG}) {
-            assertFalse(FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.PASSIVE),
+            assertFalse(FactionAttachments.isHostile(self, Faction.NEUTRAL, WildKind.PASSIVE, false),
                     self + " units must never turn on the player or a cow");
         }
     }
@@ -103,9 +141,9 @@ class FactionTest {
         // Zealots, Zerglings, Dragoons and Hydralisks are all Monster subclasses, so they all
         // implement Enemy. If the carve-out were a bare instanceof check they would attack their
         // own side.
-        assertFalse(FactionAttachments.isHostile(Faction.PROTOSS, Faction.PROTOSS, WildKind.HOSTILE),
+        assertFalse(FactionAttachments.isHostile(Faction.PROTOSS, Faction.PROTOSS, WildKind.HOSTILE, false),
                 "a Zealot must never target another Zealot for implementing Enemy");
-        assertTrue(FactionAttachments.isHostile(Faction.PROTOSS, Faction.ZERG, WildKind.HOSTILE),
+        assertTrue(FactionAttachments.isHostile(Faction.PROTOSS, Faction.ZERG, WildKind.HOSTILE, false),
                 "cross-faction hostility still applies to faction-tagged hostiles");
     }
 
@@ -113,7 +151,7 @@ class FactionTest {
     void crossFactionHostilityIgnoresWhatTheCandidateWouldBeIfNeutral() {
         // The Zerg ignore wild monsters, but a Zealot is an enemy first and a Monster subclass
         // second: the classification may only ever gate the NEUTRAL branch.
-        assertTrue(FactionAttachments.isHostile(Faction.ZERG, Faction.PROTOSS, WildKind.HOSTILE),
+        assertTrue(FactionAttachments.isHostile(Faction.ZERG, Faction.PROTOSS, WildKind.HOSTILE, false),
                 "a Zergling must still fight a Zealot, which classifies as HOSTILE by class");
     }
 
@@ -121,7 +159,7 @@ class FactionTest {
     void neutralFightsNoOne() {
         // An unfactioned unit keeps the original invariant: it starts no fights at all.
         for (WildKind kind : WildKind.values()) {
-            assertFalse(FactionAttachments.isHostile(Faction.NEUTRAL, Faction.NEUTRAL, kind),
+            assertFalse(FactionAttachments.isHostile(Faction.NEUTRAL, Faction.NEUTRAL, kind, false),
                     "NEUTRAL fights no one, " + kind + " included");
         }
     }

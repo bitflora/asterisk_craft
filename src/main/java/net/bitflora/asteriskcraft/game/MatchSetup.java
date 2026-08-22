@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.game;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.world.level.Level;
@@ -41,6 +42,27 @@ public record MatchSetup(Faction playerFaction, Faction aiFaction) {
             Faction.CODEC.fieldOf("player").forGetter(MatchSetup::playerFaction),
             Faction.CODEC.fieldOf("ai").forGetter(MatchSetup::aiFaction)
     ).apply(inst, MatchSetup::new));
+
+    /**
+     * The match a human playing {@code playerRace} produces: they take the side that plays it, and
+     * the computer takes the other. This is what {@code GameBootstrap} writes from the
+     * {@code player_race} game rule, and the only place the opponent is derived.
+     *
+     * <p>With two races the opponent is unambiguous. A third would make "the other one" a choice
+     * rather than a fact, and should grow a second rule here rather than a rule elsewhere.
+     */
+    public static MatchSetup forPlayerRace(Race playerRace) {
+        Faction player = Faction.of(playerRace);
+        if (player == null) {
+            throw new IllegalArgumentException("no side plays " + playerRace);
+        }
+        for (Faction opponent : Faction.values()) {
+            if (opponent != Faction.NEUTRAL && opponent != player) {
+                return new MatchSetup(player, opponent);
+            }
+        }
+        throw new IllegalStateException("no opponent available for " + playerRace);
+    }
 
     /**
      * This world's match setup. Read off the overworld wherever {@code level} sits, so a unit in

@@ -21,8 +21,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
+import java.util.function.Supplier;
 
 /**
  * Places the player's Nexus (seeded with starting resources) the first time someone joins a
@@ -50,8 +51,6 @@ import java.util.function.IntPredicate;
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
 public final class GameBootstrap {
     private static final int PLAYER_BASE_OFFSET = 6;
-    private static final int STARTING_LOGS = 100;
-    private static final int STARTING_COBBLESTONE = 100;
     private static final int INITIAL_WORKERS = 4;
     // How far past the player base's own footprint to clear trees, so the starting base is never
     // stamped into — or left standing under — a tree, just like the AI's.
@@ -111,12 +110,24 @@ public final class GameBootstrap {
             return;
         }
         ServerLevel overworld = player.level().getServer().overworld();
+        if (!overworld.getData(GameAttachments.BOOTSTRAPPED)) {
+            // Frozen at bootstrap rather than read live: everything downstream — where the AI's
+            // bases were stamped, which bank the director spends, which core losing ends the match
+            // — has to keep agreeing with it, so editing the rule mid-match must not swap the sides
+            // out from under a world whose bases are already standing.
+            overworld.setData(GameAttachments.MATCH_SETUP,
+                    MatchSetup.forPlayerRace(AsteriskCraftGameRules.playerRace(overworld)));
+        }
         MatchSetup setup = MatchSetup.of(overworld);
 
         // Set on every login (not just first-join bootstrap) so players who joined before
         // enemy-vs-player combat existed also pick up their faction — and so a match whose sides
         // were set differently is picked up on the next login rather than only at bootstrap.
         FactionAttachments.set(player, setup.playerFaction());
+        // The leaf-package projection of the same fact, for the one rule that needs it without
+        // being allowed to see this package: what an army hunts in the wild depends on whether a
+        // person is standing in it. See FactionAttachments.COMMANDED.
+        FactionAttachments.setCommanded(overworld, setup.playerFaction());
 
         if (!overworld.getData(GameAttachments.BOOTSTRAPPED)) {
             placeStartingBase(overworld, player, setup);
@@ -195,7 +206,7 @@ public final class GameBootstrap {
             // The starting base is simply standing there when the world begins (R1) — it was never
             // warped in from a kit, so it doesn't spend its first two minutes half-built and idle.
             base.skipWarpIn();
-            seedPlayerBase(base);
+            seedArmyBank(level, setup.playerFaction(), profile.playerBank());
         }
         spawnStartingWorkers(level, core, profile, setup.playerFaction());
         // No iron: the single iron column is the computer player's one edge.
@@ -205,12 +216,13 @@ public final class GameBootstrap {
 
         level.setData(GameAttachments.BOOTSTRAPPED, true);
 
-        // The Command Crystal enables unit select/order mode while held (R5).
+        // The Command Crystal enables unit select/order mode while held (R5) — race-generic, so
+        // every player gets one whichever side they drew. What else they open with is their race's
+        // (RaceProfile.playerKit).
         player.getInventory().add(new ItemStack(AsteriskCraft.CURSOR.get()));
-        // One Pylon, and the Cannon kit that needs one in range before it will go down (PsiField).
-        // No Gateway kit: the base's command card sells those, so the player pays for the first one.
-        player.getInventory().add(new ItemStack(AsteriskCraft.PYLON_KIT.get()));
-        player.getInventory().add(new ItemStack(AsteriskCraft.PHOTON_CANNON_KIT.get()));
+        for (Supplier<Item> kit : profile.playerKit()) {
+            player.getInventory().add(new ItemStack(kit.get()));
+        }
         player.sendSystemMessage(Component.translatable("message.asteriskcraft.enemy_location", AI_BASE_COUNT));
 
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed starting base core at {}", core);
@@ -285,7 +297,7 @@ public final class GameBootstrap {
             }
             seedMineralField(level, chosen.getX(), chosen.getZ(), true);
         }
-        seedAiArmyBank(level, profile, setup.aiFaction());
+        seedArmyBank(level, setup.aiFaction(), profile.startingBank());
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} {} bases scattered around {},{}",
                 cores.size(), profile.race(), playerX, playerZ);
     }
@@ -585,6 +597,10 @@ public final class GameBootstrap {
         BlockPos core = placed.core();
         if (level.getBlockEntity(core) instanceof BaseBlockEntity base) {
             base.setFaction(faction);
+            // Pre-placed, so it is standing finished before the world starts — same as the
+            // player's. Without this a race whose base declares a real warp duration (the Protoss
+            // Nexus: two minutes) would open the match at half its HP and shields.
+            base.skipWarpIn();
             spawnStartingWorkers(level, core, profile, faction, INITIAL_WORKERS_PER_AI_BASE);
             // Static defence planted with each base, so an early rush meets something with teeth
             // even when the army is out on a wave. Which units, and how many, is the race's own.
@@ -598,14 +614,14 @@ public final class GameBootstrap {
     }
 
     /**
-     * Seeds the computer player's shared army bank once (not per-base — every base is a linked
-     * chest onto the same pool) with enough resources to bankroll its first workers and the
-     * director's early waves. What that is comes off the race's own profile.
+     * Seeds one side's shared army bank once — not per-base, since every base of an army is a
+     * linked chest onto the same pool. Both sides come through here; what each is stocked with is
+     * its own profile's ({@code startingBank} for the computer, {@code playerBank} for the human).
      */
-    private static void seedAiArmyBank(ServerLevel level, RaceProfile profile, Faction faction) {
+    private static void seedArmyBank(ServerLevel level, Faction faction, List<RaceProfile.StartingStack> stock) {
         NonNullList<ItemStack> bank = ArmyBank.of(level, faction);
         int slot = 0;
-        for (RaceProfile.StartingStack stack : profile.startingBank()) {
+        for (RaceProfile.StartingStack stack : stock) {
             slot = seedStacks(bank, slot, stack.item().get(), stack.amount());
         }
     }
@@ -669,16 +685,5 @@ public final class GameBootstrap {
                 worker.setHomePos(core);
             }
         }
-    }
-
-    /**
-     * Seeds the player's army bank — reached through their base, which is a linked chest onto it —
-     * with enough resources to bankroll their first workers.
-     */
-    private static void seedPlayerBase(BaseBlockEntity base) {
-        base.setItem(0, new ItemStack(Items.OAK_LOG, 64));
-        base.setItem(1, new ItemStack(Items.OAK_LOG, STARTING_LOGS - 64));
-        base.setItem(2, new ItemStack(Items.COBBLESTONE, 64));
-        base.setItem(3, new ItemStack(Items.COBBLESTONE, STARTING_COBBLESTONE - 64));
     }
 }

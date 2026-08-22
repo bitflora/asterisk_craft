@@ -20,16 +20,20 @@ public final class PhotonCannonTargeting {
 
     /**
      * A candidate is fair game if it's alive and hostile to the cannon. Hostility itself is the
-     * shared rule in {@link FactionAttachments#isHostile(Faction, Faction, WildKind)} — including
-     * the neutral-world carve-out, which started here but is what <em>every</em> combat unit needs,
-     * so it lives with the faction code now rather than being the cannon's private policy. This
-     * method remains as the cannon's "alive and targetable" wrapper.
+     * shared rule in {@link FactionAttachments#isHostile(Faction, Faction, WildKind, boolean)} —
+     * including the neutral-world carve-out, which started here but is what <em>every</em> combat
+     * unit needs, so it lives with the faction code now rather than being the cannon's private
+     * policy. This method remains as the cannon's "alive and targetable" wrapper.
      *
      * @param targetKind what the candidate is if it turns out to be unfactioned — the caller's
      *                   {@link WildKind#of} classification, kept out of this pure rule.
+     * @param cannonCommanded whether the cannon's side is the one a human is playing, which is what
+     *                        widens the wild carve-out — see
+     *                        {@link FactionAttachments#isCommanded}.
      */
-    public static boolean isTargetable(Faction cannon, Faction target, boolean alive, WildKind targetKind) {
-        return alive && FactionAttachments.isHostile(cannon, target, targetKind);
+    public static boolean isTargetable(Faction cannon, Faction target, boolean alive, WildKind targetKind,
+                                       boolean cannonCommanded) {
+        return alive && FactionAttachments.isHostile(cannon, target, targetKind, cannonCommanded);
     }
 
     /** Returns the candidate with the smallest distance (empty if the list is empty). */

@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.building;
 
+import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
@@ -11,6 +12,7 @@ import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
 import net.bitflora.asteriskcraft.race.UnitRoster;
 import net.bitflora.asteriskcraft.stats.CostPayment;
+import net.bitflora.asteriskcraft.stats.CostText;
 import net.bitflora.asteriskcraft.stats.Resource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -36,6 +38,9 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,8 +57,12 @@ import java.util.Optional;
  * have meant a Nexus the director could drive. Here both are the same building, and whether it
  * shows a command card is a question about <em>who is holding it</em> — {@link BaseBlock} asks
  * {@code ControlledFaction} — over a race that has one to show. A race whose
- * {@link RaceProfile#production()} is empty simply never queues, which is exactly the Hive's
- * long-standing behaviour, driven centrally by {@code director.AiDirector} instead.
+ * {@link RaceProfile#production()} is empty simply never queues; the computer never opens a card at
+ * all, since {@code director.AiDirector} drives its production centrally either way.
+ *
+ * <p>The queue is a mixed one, of roster ids rather than of workers. That is what a race with no
+ * separate factory building needs: the Hive morphs its combat units itself, so a Mutalisk and a
+ * Drone sit in the same line and each takes its own build time.
  *
  * <p>Everything race-varying is read from the {@link RaceProfile} its block declares: staying power
  * ({@link BuildingDefense}), bank size, which worker it trains, and its command card. Nothing here
@@ -73,6 +82,10 @@ public class BaseBlockEntity extends BlockEntity
     /** All-wood or all-cobblestone, and cheaper than what it unlocks: a Pylon is a prerequisite, not a prize. */
     public static final int PYLON_COST = 100;
     public static final int MAX_QUEUE = 5;
+    /** Pay with whichever cost alternative the army can afford - see {@link #queueUnit}. */
+    private static final int ANY_COST = -1;
+
+    private static final Codec<List<String>> QUEUE_CODEC = Codec.STRING.listOf();
 
     private final RaceProfile profile;
     private final BuildingDefense defense;
@@ -86,7 +99,16 @@ public class BaseBlockEntity extends BlockEntity
      * playing its race, which is the only answer that stays right once the human can pick one.
      */
     private @Nullable Faction faction;
-    private int queued = 0;
+    /**
+     * What is in production, oldest first, as roster ids ({@code stats.UnitStat#id()}).
+     *
+     * <p>Ids rather than option indices because this is saved: a card reordered in a later version
+     * would otherwise turn a saved queue into whatever now sits at those positions. It is also what
+     * lets one queue hold a mix - the Hive's card morphs combat units as well as training Drones,
+     * and a Mutalisk behind a Zergling has to take a Mutalisk's build time.
+     */
+    private final Deque<String> queue = new ArrayDeque<>();
+    /** Counts down the head of the queue; 0 whenever nothing is in production. */
     private int buildTicksRemaining;
     /** Whether this base has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
     private boolean enrolled = false;
@@ -94,12 +116,15 @@ public class BaseBlockEntity extends BlockEntity
     private final ContainerData dataAccess = new ContainerData() {
         @Override
         public int get(int index) {
+            if (index >= ProductionMenu.DATA_QUEUE_BASE) {
+                return queuedCountFor(index - ProductionMenu.DATA_QUEUE_BASE);
+            }
+            String head = queue.peek();
             return switch (index) {
-                case ProductionMenu.DATA_BUILDING_INDEX -> queued > 0 ? 0 : -1;
-                case ProductionMenu.DATA_BUILD_PROGRESS -> queued > 0 ? buildTicks() - buildTicksRemaining : 0;
-                case ProductionMenu.DATA_BUILD_TOTAL -> buildTicks();
+                case ProductionMenu.DATA_BUILDING_INDEX -> head == null ? -1 : optionIndexFor(head);
+                case ProductionMenu.DATA_BUILD_PROGRESS -> head == null ? 0 : buildTicksOf(head) - buildTicksRemaining;
+                case ProductionMenu.DATA_BUILD_TOTAL -> head == null ? 0 : buildTicksOf(head);
                 case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
-                case ProductionMenu.DATA_QUEUE_BASE, ProductionMenu.DATA_QUEUE_BASE + 1 -> queued;
                 default -> 0;
             };
         }
@@ -120,7 +145,7 @@ public class BaseBlockEntity extends BlockEntity
         this.profile = Races.of(raceOf(state));
         this.defense = new BuildingDefense(
                 this.profile.baseHealth(), this.profile.baseShield(), this.profile.baseWarpTicks());
-        this.buildTicksRemaining = buildTicks();
+        this.buildTicksRemaining = 0;
     }
 
     /** The race a base block declares, defaulting defensively for a state that isn't one. */
@@ -128,9 +153,57 @@ public class BaseBlockEntity extends BlockEntity
         return state.getBlock() instanceof BaseBlock base ? base.race() : Race.PROTOSS;
     }
 
-    /** A base only ever builds its race's worker, so its one build time comes off the balance table. */
-    private int buildTicks() {
-        return this.profile.worker().buildTicks();
+    /** The build time of a queued roster id, off the balance table; 0 for one this race can't build. */
+    private int buildTicksOf(String rosterId) {
+        return this.profile.roster().resolve(rosterId).map(UnitRoster.UnitDef::buildTicks).orElse(0);
+    }
+
+    /**
+     * The button that produces {@code rosterId}, for the screen's "this is what is building"
+     * marker. A worker has two buttons (one per cost alternative) and the first stands for both -
+     * they produce the same unit, so there is nothing to tell apart once it is queued.
+     */
+    private int optionIndexFor(String rosterId) {
+        List<ProductionKind.OptionView> options = kind().options();
+        for (int i = 0; i < options.size(); i++) {
+            if (rosterId.equals(producedBy(options.get(i).action()))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** How many queued units a button has waiting; both of a worker's buttons report the same. */
+    private int queuedCountFor(int optionIndex) {
+        List<ProductionKind.OptionView> options = kind().options();
+        if (optionIndex < 0 || optionIndex >= options.size()) {
+            return 0;
+        }
+        String rosterId = producedBy(options.get(optionIndex).action());
+        if (rosterId == null) {
+            return 0;
+        }
+        int count = 0;
+        for (String queuedId : this.queue) {
+            if (rosterId.equals(queuedId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Which unit a button produces, or null for one that produces none (a kit). A worker button
+     * names no unit on the card - <em>which</em> worker is the base's race's, not the option's - so
+     * this is where that indirection is resolved.
+     */
+    private @Nullable String producedBy(ProductionKind.Action action) {
+        return switch (action) {
+            case ProductionKind.Action.TrainWorker ignored -> this.profile.worker().id();
+            case ProductionKind.Action.TrainUnit(String rosterId) -> rosterId;
+            case ProductionKind.Action.GiveKit ignored -> null;
+            case ProductionKind.Action.Factory ignored -> null;
+        };
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, BaseBlockEntity base) {
@@ -146,17 +219,19 @@ public class BaseBlockEntity extends BlockEntity
         if (!base.skyGate.update(level, pos, base::cancelQueueOnDormant)) {
             return; // dormant: no clear path to the sky, production is frozen
         }
-        if (base.queued <= 0) {
+        if (base.queue.isEmpty()) {
             return;
         }
         if (--base.buildTicksRemaining > 0) {
             base.setChanged();
             return;
         }
-        base.queued--;
-        base.buildTicksRemaining = base.buildTicks();
+        String finished = base.queue.poll();
+        // The next unit's own build time, not this one's: the queue is mixed, and an Ultralisk
+        // behind a Zergling must take an Ultralisk's time.
+        base.buildTicksRemaining = base.queue.isEmpty() ? 0 : base.buildTicksOf(base.queue.peek());
         base.setChanged();
-        base.spawnWorker((ServerLevel) level, pos);
+        base.spawnUnit((ServerLevel) level, pos, finished);
     }
 
     /** True when the base has a clear path to the sky and can produce; false while buried (dormant). */
@@ -166,9 +241,9 @@ public class BaseBlockEntity extends BlockEntity
 
     /** Clears any in-progress production when the base goes dormant (loses its sky). */
     private void cancelQueueOnDormant() {
-        if (this.queued > 0) {
-            this.queued = 0;
-            this.buildTicksRemaining = buildTicks();
+        if (!this.queue.isEmpty()) {
+            this.queue.clear();
+            this.buildTicksRemaining = 0;
             this.setChanged();
         }
     }
@@ -228,7 +303,10 @@ public class BaseBlockEntity extends BlockEntity
             return;
         }
         switch (options.get(optionIndex).action()) {
-            case ProductionKind.Action.TrainWorker(int alternative) -> trainWorker(player, alternative);
+            case ProductionKind.Action.TrainWorker(int alternative) ->
+                    queueUnit(player, this.profile.worker(), alternative);
+            case ProductionKind.Action.TrainUnit(String rosterId) ->
+                    this.profile.roster().resolve(rosterId).ifPresent(def -> queueUnit(player, def, ANY_COST));
             case ProductionKind.Action.GiveKit(var kit, Resource resource, int cost, String readyKey) ->
                     warpInKit(player, kit.get(), resource, cost, readyKey);
             case ProductionKind.Action.Factory ignored -> {
@@ -237,26 +315,48 @@ public class BaseBlockEntity extends BlockEntity
         }
     }
 
-    private void trainWorker(Player player, int alternative) {
-        if (this.queued >= MAX_QUEUE) {
+    /**
+     * Queues one unit, paying either a named cost alternative (a worker's Wood button or its Stone
+     * one) or {@link #ANY_COST} for whichever the army can currently afford - which is what a
+     * combat unit's single button wants, and matches how the Gateway pays.
+     */
+    private void queueUnit(Player player, UnitRoster.UnitDef def, int alternative) {
+        if (this.queue.size() >= MAX_QUEUE) {
             overlay(player, Component.translatable("message.asteriskcraft.base.queue_full"));
             return;
         }
-        UnitRoster.UnitDef worker = this.profile.worker();
-        if (!CostPayment.pay(this, worker.cost(), alternative)) {
-            Resource resource = worker.cost().alternatives().get(alternative).get(0).resource();
-            int amount = worker.cost().amountOf(alternative, resource);
-            overlay(player, Component.translatable("message.asteriskcraft.base.cannot_afford",
-                    amount, resourceName(resource)));
+        boolean paid = alternative == ANY_COST
+                ? CostPayment.payAny(this, def.cost())
+                : CostPayment.pay(this, def.cost(), alternative);
+        if (!paid) {
+            overlay(player, cannotAfford(def, alternative));
             return;
         }
-        this.queued++;
+        boolean wasIdle = this.queue.isEmpty();
+        this.queue.add(def.id());
+        if (wasIdle) {
+            this.buildTicksRemaining = def.buildTicks();
+        }
         this.setChanged();
         if (this.level != null) {
             this.level.playSound(null, this.worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.6f, 1.4f);
         }
         overlay(player, Component.translatable("message.asteriskcraft.base.queued",
-                worker.type().getDescription(), this.queued));
+                def.type().getDescription(), this.queue.size()));
+    }
+
+    /**
+     * Why the purchase failed. A named alternative can say exactly what it wanted; a unit paid for
+     * with whichever resource is to hand can only quote the bill, the way the Gateway does.
+     */
+    private static Component cannotAfford(UnitRoster.UnitDef def, int alternative) {
+        if (alternative == ANY_COST) {
+            return Component.translatable("message.asteriskcraft.base.cannot_afford_unit",
+                    def.type().getDescription(), CostText.costOnly(def.cost(), 0));
+        }
+        Resource resource = def.cost().alternatives().get(alternative).get(0).resource();
+        return Component.translatable("message.asteriskcraft.base.cannot_afford",
+                def.cost().amountOf(alternative, resource), resourceName(resource));
     }
 
     /** Warp-in kits are instant: pay the chosen resource's share and hand the player the kit item. */
@@ -290,11 +390,13 @@ public class BaseBlockEntity extends BlockEntity
         return Component.translatable("gui.asteriskcraft.resource." + resource.getSerializedName());
     }
 
-    private void spawnWorker(ServerLevel level, BlockPos pos) {
-        Mob unit = UnitSpawns.spawn(level, pos, this.profile.worker().type(), buildingFaction(), false);
-        if (unit instanceof WorkerEntity worker) {
-            worker.setHomePos(pos);
-        }
+    private void spawnUnit(ServerLevel level, BlockPos pos, String rosterId) {
+        this.profile.roster().resolve(rosterId).ifPresent(def -> {
+            Mob unit = UnitSpawns.spawn(level, pos, def.type(), buildingFaction(), false);
+            if (unit instanceof WorkerEntity worker) {
+                worker.setHomePos(pos);
+            }
+        });
     }
 
     // --- SiegeTarget / FactionCore ---
@@ -407,9 +509,19 @@ public class BaseBlockEntity extends BlockEntity
         if (this.faction != null) {
             output.store("Faction", Faction.CODEC, this.faction);
         }
-        output.putInt("Queued", this.queued);
+        output.store("Queue", QUEUE_CODEC, List.copyOf(this.queue));
         output.putInt("BuildTicks", this.buildTicksRemaining);
         this.defense.save(output);
+    }
+
+    /**
+     * A queue saved before a base could build anything but its worker: a bare count under
+     * {@code Queued}. Read back as that many workers, so a world made then keeps what it had in
+     * production instead of losing it.
+     */
+    private List<String> legacyQueue(ValueInput input) {
+        return Collections.nCopies(Math.min(input.getIntOr("Queued", 0), MAX_QUEUE),
+                this.profile.worker().id());
     }
 
     @Override
@@ -417,8 +529,12 @@ public class BaseBlockEntity extends BlockEntity
         super.loadAdditional(input);
         Optional<Faction> saved = input.read("Faction", Faction.CODEC);
         this.faction = saved.orElse(null);
-        this.queued = input.getIntOr("Queued", 0);
-        this.buildTicksRemaining = input.getIntOr("BuildTicks", buildTicks());
+        this.queue.clear();
+        this.queue.addAll(input.read("Queue", QUEUE_CODEC).orElseGet(() -> legacyQueue(input)));
+        // Read after the queue: with per-unit build times, the fallback for a save without one is
+        // the head unit's own, which there is no way to know before the queue is in hand.
+        this.buildTicksRemaining = input.getIntOr("BuildTicks",
+                this.queue.isEmpty() ? 0 : buildTicksOf(this.queue.peek()));
         this.defense.load(input);
     }
 }

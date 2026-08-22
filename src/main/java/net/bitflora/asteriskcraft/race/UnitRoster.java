@@ -29,8 +29,14 @@ import java.util.function.Supplier;
  */
 public final class UnitRoster {
 
-    /** A producible unit: its entity type, its cost and build time, and whether it is the worker. */
-    public record UnitDef(EntityType<? extends Mob> type, UnitCost cost, int buildTicks, boolean isWorker) {
+    /**
+     * A producible unit: its roster id, its entity type, its cost and build time, and whether it is
+     * the worker. The id is carried so a production queue can be saved by name rather than by
+     * position — see {@code building.BaseBlockEntity}, whose saved queue must survive a command
+     * card being reordered.
+     */
+    public record UnitDef(String id, EntityType<? extends Mob> type, UnitCost cost, int buildTicks,
+                          boolean isWorker) {
     }
 
     private record Entry(UnitStat stat, Supplier<? extends EntityType<? extends Mob>> type, boolean isWorker) {
@@ -84,7 +90,8 @@ public final class UnitRoster {
         Map<String, UnitDef> map = new LinkedHashMap<>();
         for (Entry entry : this.entries) {
             UnitStat stat = entry.stat();
-            map.put(stat.id(), new UnitDef(entry.type().get(), stat.cost(), stat.buildTicks(), entry.isWorker()));
+            map.put(stat.id(),
+                    new UnitDef(stat.id(), entry.type().get(), stat.cost(), stat.buildTicks(), entry.isWorker()));
         }
         return Map.copyOf(map);
     }

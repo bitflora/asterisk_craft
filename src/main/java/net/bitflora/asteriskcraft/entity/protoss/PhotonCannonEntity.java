@@ -95,7 +95,8 @@ public class PhotonCannonEntity extends Mob implements Shielded, Detector, Roote
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
                 (target, level) -> PhotonCannonTargeting.isTargetable(
                         FactionAttachments.get(this), FactionAttachments.get(target),
-                        target.isAlive(), WildKind.of(target))
+                        target.isAlive(), WildKind.of(target),
+                        FactionAttachments.isCommanded(this.level(), FactionAttachments.get(this)))
                         // The cannon is the one targeting site that doesn't route through
                         // FactionAttachments.isHostile(Entity, Entity) — it consumes the pure
                         // faction overload instead — so it applies the cloak gate itself. Being a

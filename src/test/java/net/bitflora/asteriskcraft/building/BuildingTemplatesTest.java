@@ -73,6 +73,11 @@ class BuildingTemplatesTest {
     }
 
     @Test
+    void hiveFootprintMatchesTemplate() {
+        assertFootprint("hive", "asteriskcraft:hive_core", BuildingTemplates.HIVE_FOOTPRINT);
+    }
+
+    @Test
     void pylonFootprintMatchesTemplate() {
         assertFootprint("pylon", "asteriskcraft:pylon_core", BuildingTemplates.PYLON_FOOTPRINT);
     }

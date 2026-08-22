@@ -1,10 +1,12 @@
 package net.bitflora.asteriskcraft.race;
 
+import net.bitflora.asteriskcraft.building.ProductionKind;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -43,6 +45,39 @@ class RacesTest {
                     race + " seeds an empty starting stack");
             assertTrue(profile.baseDefences().stream().allMatch(defence -> defence.count() > 0),
                     race + " plants a static defence zero times");
+        }
+    }
+
+    @Test
+    void everyRaceIsPlayableByAHuman() {
+        // Either race can be the one a person picks at world creation, so neither may be configured
+        // as an opponent only. A race with no command card hands the player four workers and no way
+        // to train a fifth; one with an empty bank leaves them unable to pay for the first thing
+        // they try to build.
+        for (RaceProfile profile : Races.all()) {
+            String race = profile.race().toString();
+            assertTrue(profile.production().isPresent(),
+                    race + " has no base command card, so a human could not produce anything");
+            assertFalse(profile.playerBank().isEmpty(), race + " starts a player with an empty bank");
+            assertTrue(profile.playerBank().stream().allMatch(stack -> stack.amount() > 0),
+                    race + " seeds an empty stack into a player's bank");
+            assertNotNull(profile.playerKit(), race + " declares no starting kit");
+        }
+    }
+
+    @Test
+    void everyCommandCardOnlyNamesUnitsItsOwnRaceCanBuild() {
+        // A card names its units by roster id, resolved at the moment a button is pressed - so a
+        // typo, or a unit moved to another race, is otherwise a button that silently does nothing.
+        for (RaceProfile profile : Races.all()) {
+            ProductionKind card = profile.production().orElseThrow();
+            for (ProductionKind.OptionView option : card.options()) {
+                if (option.action() instanceof ProductionKind.Action.TrainUnit(String rosterId)) {
+                    assertTrue(profile.roster().resolve(rosterId).isPresent(),
+                            profile.race() + "'s command card trains " + rosterId
+                                    + ", which is not on its roster");
+                }
+            }
         }
     }
 

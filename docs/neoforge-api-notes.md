@@ -273,3 +273,37 @@ and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/clie
 - **`Creeper`'s fuse is worth copying but `Creeper` is not worth extending.** The shape: a synced `EntityDataAccessor<Integer>` holding the swell *direction* (`-1`/`+1`) with the count itself kept server-side, `maxSwell = 30`, and `getSwelling(partialTicks) = Mth.lerp(a, oldSwell, swell) / (maxSwell - 2)` for the renderer. The baggage a subclass would inherit: powered/charged state, `thunderHit` lightning conversion, `CREEPER_IGNITERS` flint-and-steel `mobInteract`, `spawnLingeringCloud`, and a `causeFallDamage` override that advances the fuse. Note also that `Creeper.doHurtTarget` **returns `true` without dealing any damage** — a bomb's attack is the blast, and returning false would have `MeleeAttackGoal` back off and re-approach forever.
 - **`Entity.tick()` runs on the client too, and that is how the fuse stays in sync**: only the direction is synced, and both sides integrate their own counter from it. This is safe for sounds because **`Level.playSound(null, ...)` no-ops on the client** — `ClientLevel.playSeededSound` ends in `if (except == this.minecraft.player)`, which is false when `except` is null, so shared tick code calling `entity.playSound(...)` plays exactly once, from the server broadcast. Do **not** "fix" this with an `isClientSide` guard; that would silence it for everyone.
 - **`getWhiteOverlayProgress(S state)` takes only the render state in 26.1.2** — there is no `partialTicks` argument (training data suggesting otherwise is stale). It is the hook for the creeper's white flash; `scale(S, PoseStack)` is where its swell bulge lives. Both are `protected` on `LivingEntityRenderer`.
+
+## Concrete API facts (game rules and the world-creation screen — verified while adding race selection)
+
+- **Game rules are a registry in 26.1**, not a fixed list: `Registries.GAME_RULE` /
+  `BuiltInRegistries.GAME_RULE` hold `net.minecraft.world.level.gamerules.GameRule<T>`, and a mod
+  registers one with an ordinary `DeferredRegister<GameRule<?>>`. `GameRule`'s constructor is
+  public, so registering through `DeferredRegister` (rather than `GameRules.registerInteger`, which
+  goes through `Registry.register` with a bare string) is what puts the id in your own namespace.
+  A modded rule then shows up in **Create World → More → Game Rules** with no screen code, and is
+  saved in level data. The display name is `Util.makeDescriptionId("gamerule", id)` —
+  `gamerule.<namespace>.<path>`.
+- **`getGameRules()` is on `ServerLevel`, not on `Level`.** Take a `ServerLevel` in any helper that
+  reads one.
+- `GameRuleType` is `INT`/`BOOL` only, and is an FML `IExtensibleEnum` — a custom type (and with it
+  a prettier widget via NeoForge's `RegisterGameRuleEntryFactoryEvent`, which explicitly rejects the
+  two vanilla types) needs an enum-extension JSON. NeoForge also has
+  `RegisterGameRuleCategoryEvent` for a custom `GameRuleCategory`; `GameRuleCategory.register` is
+  deprecated in favour of it. An `INT` rule falls back to vanilla's edit-box entry for free, which
+  is enough when the real picker lives elsewhere.
+- **There is no NeoForge hook into `CreateWorldScreen`.** Grepping the whole NeoForge source for
+  `CreateWorldScreen`, `WorldCreationUiState` and `WorldCreationContext` returns nothing, and the
+  screen's `GameTab`/`WorldTab`/`MoreTab` are private inner classes, so a widget cannot be added to
+  a tab. What does work is `ScreenEvent.Init.Post` (NeoForge game bus, client only): its
+  `addListener` registers the widget and marks it renderable/narratable if it implements those. A
+  listener added that way belongs to the screen rather than to a tab, so it stays visible across all
+  three — position it in the footer band, which is the one strip the tab content area does not own.
+  `init()` re-runs on resize, so the event fires again; compute positions from the live screen each
+  time and keep no static widget reference.
+- `CreateWorldScreen.getUiState()` is public, and `WorldCreationUiState.getGameRules()` returns the
+  live `GameRules` that is carried into the level being created — so writing a rule there from an
+  injected widget is how a world-creation choice reaches the world with no packet and no client
+  static.
+- `CycleButton.builder(Function<T, Component>, T defaultValue)` takes the initial value as the
+  builder argument in this version; there is no `withInitialValue`.

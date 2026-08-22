@@ -56,6 +56,20 @@ public final class Races {
     private static final int ZERG_STARTING_COBBLE = 128 * 3;
     private static final int ZERG_STARTING_IRON = 48 * 3;
 
+    /**
+     * What a <em>human's</em> bank opens with, whichever race they drew. Deliberately a fraction of
+     * the computer's stockpile and deliberately the same for both races: the AI is handed enough to
+     * bankroll a scripted opening it cannot deviate from, while a player starts with about one
+     * building's worth and mines their way up from there. Symmetric on purpose — the two sides
+     * differ in what they build, not in what they are given to build it with.
+     */
+    private static final int PLAYER_STARTING_LOGS = 100;
+    private static final int PLAYER_STARTING_COBBLE = 100;
+
+    private static final List<StartingStack> PLAYER_BANK = List.of(
+            new StartingStack(() -> Items.OAK_LOG, PLAYER_STARTING_LOGS),
+            new StartingStack(() -> Items.COBBLESTONE, PLAYER_STARTING_COBBLE));
+
     public static final RaceProfile PROTOSS = new RaceProfile(
             Race.PROTOSS,
             AsteriskCraft.NEXUS_CORE::get,
@@ -80,7 +94,12 @@ public final class Races {
             null,
             List.of(new BaseDefence(AsteriskCraft.PHOTON_CANNON, 1)),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
-                    new StartingStack(() -> Items.COBBLESTONE, 128 * 3)));
+                    new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
+            PLAYER_BANK,
+            // One Pylon, and the Cannon kit that needs one in range before it will go down
+            // (PsiField). No Gateway kit: the base's command card sells those, so the player pays
+            // for their first one.
+            List.of(AsteriskCraft.PYLON_KIT::get, AsteriskCraft.PHOTON_CANNON_KIT::get));
 
     public static final RaceProfile ZERG = new RaceProfile(
             Race.ZERG,
@@ -98,9 +117,9 @@ public final class Races {
                     .unit(UnitStats.ULTRALISK, AsteriskCraft.ULTRALISK)
                     .unit(UnitStats.LURKER, AsteriskCraft.LURKER)
                     .build(),
-            // No command card yet: the Hive has never had a GUI, since the swarm has only ever been
-            // the computer player. This is the seam a player-Zerg build would fill.
-            null,
+            // The Hive is the swarm's whole production building — there is no Zerg factory to
+            // build, so its card morphs combat units directly as well as training Drones.
+            () -> ProductionKind.ZERG_BASE,
             AsteriskCraft.id("build_scripts/zerg.txt"),
             () -> Blocks.MYCELIUM.defaultBlockState(),
             // The mound keeps a mycelium footing under it — same material as the creep it sits in,
@@ -110,7 +129,12 @@ public final class Races {
                     new BaseDefence(AsteriskCraft.SPORE_COLONY, 1)),
             List.of(new StartingStack(() -> Items.OAK_LOG, ZERG_STARTING_LOGS),
                     new StartingStack(() -> Items.COBBLESTONE, ZERG_STARTING_COBBLE),
-                    new StartingStack(() -> Items.IRON_INGOT, ZERG_STARTING_IRON)));
+                    new StartingStack(() -> Items.IRON_INGOT, ZERG_STARTING_IRON)),
+            PLAYER_BANK,
+            // The swarm's opener is one Sunken Colony to root by the Hive. No Spore: the first
+            // thing that can hurt you comes on the ground, and the card sells the answer to the
+            // rest.
+            List.of(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get));
 
     private static final Map<Race, RaceProfile> BY_RACE = new EnumMap<>(Map.of(
             Race.PROTOSS, PROTOSS,

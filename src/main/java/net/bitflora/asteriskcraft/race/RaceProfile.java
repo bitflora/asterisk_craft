@@ -48,6 +48,12 @@ import java.util.function.Supplier;
  *                       ground as it lies (the Protoss stonework is its own plinth)
  * @param baseDefences   static defence planted with each base at world generation
  * @param startingBank   what this race's shared bank is seeded with when it is the computer player
+ * @param playerBank     what this race's shared bank is seeded with when it is the <em>human's</em>
+ *                       — a fraction of {@link #startingBank}, because a player mines their own way
+ *                       up while the computer is handed a stockpile to bankroll its script
+ * @param playerKit      what goes into the human's inventory at world start. The Command Crystal is
+ *                       not in here: it is race-generic and every player gets one. These are the
+ *                       race-flavoured openers — a Pylon and a Cannon kit, a Sunken Colony egg
  */
 public record RaceProfile(
         Race race,
@@ -63,7 +69,9 @@ public record RaceProfile(
         @Nullable Supplier<BlockState> creep,
         @Nullable Supplier<BlockState> support,
         List<BaseDefence> baseDefences,
-        List<StartingStack> startingBank) {
+        List<StartingStack> startingBank,
+        List<StartingStack> playerBank,
+        List<Supplier<Item>> playerKit) {
 
     /** A static-defence unit planted with each base at world generation, and how many of it. */
     public record BaseDefence(Supplier<? extends EntityType<? extends Mob>> type, int count) {

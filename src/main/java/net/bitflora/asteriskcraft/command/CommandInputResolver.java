@@ -187,7 +187,8 @@ public final class CommandInputResolver {
             return null;
         }
         if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()
-                && FactionAttachments.isHostile(owner, FactionAttachments.get(target), WildKind.of(target))) {
+                && FactionAttachments.isHostile(owner, FactionAttachments.get(target), WildKind.of(target),
+                        FactionAttachments.isCommanded(level, owner))) {
             return target;
         }
         return null;

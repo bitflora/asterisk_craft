@@ -35,6 +35,7 @@
   "item.asteriskcraft.gateway_kit": "Gateway Kit",
   "item.asteriskcraft.photon_cannon_kit": "Photon Cannon Kit",
   "item.asteriskcraft.nexus_kit": "Nexus Kit",
+  "item.asteriskcraft.hive_kit": "Hive Kit",
   "item.asteriskcraft.cursor": "Cursor",
   "item.asteriskcraft.tab_icon": "*Craft",
   "item.asteriskcraft.probe_spawn_egg_ally": "Allied Probe Spawn Egg",
@@ -94,6 +95,7 @@
   "message.asteriskcraft.base.queued": "%1$s warping in... (%2$s in queue)",
   "message.asteriskcraft.base.queue_full": "Production queue is full",
   "message.asteriskcraft.base.cannot_afford": "Not enough resources: need %1$s %2$s (load it into your base)",
+  "message.asteriskcraft.base.cannot_afford_unit": "Not enough resources: a %1$s costs %2$s (load them into your base)",
   "message.asteriskcraft.base.dormant": "The %s is dormant — clear the sky above it to resume production",
   "message.asteriskcraft.base.warping": "The %s is still warping in",
   "message.asteriskcraft.base.cannot_afford_building": "Not enough resources: need %1$s %2$s (load it into your base)",
@@ -101,6 +103,9 @@
   "message.asteriskcraft.base.gateway_ready": "Gateway Kit ready — place it where you want to build",
   "message.asteriskcraft.base.photon_cannon_ready": "Photon Cannon Kit ready — place it where you want to build",
   "message.asteriskcraft.base.base_kit_ready": "Nexus Kit ready — place it where you want to build",
+  "message.asteriskcraft.base.hive_kit_ready": "Hive Kit ready — place it where you want to build",
+  "message.asteriskcraft.base.sunken_colony_ready": "Sunken Colony ready — place it where you want it to root",
+  "message.asteriskcraft.base.spore_colony_ready": "Spore Colony ready — place it where you want it to root",
   "message.asteriskcraft.gateway.queued": "Unit warping in... (%s in queue)",
   "message.asteriskcraft.gateway.queue_full": "Production queue is full",
   "message.asteriskcraft.gateway.cannot_afford": "Not enough resources: a %1$s costs %2$s (load them into the Gateway)",
@@ -157,5 +162,9 @@
   "subtitles.entity.asteriskcraft.dark_templar.death": "Dark Templar dies",
   "subtitles.entity.asteriskcraft.dark_templar.attack": "Dark Templar strikes",
   "config.jade.plugin_asteriskcraft.protoss_shield": "Protoss Shield",
-  "config.jade.plugin_asteriskcraft.building_defense": "Building Health & Shields"
+  "config.jade.plugin_asteriskcraft.building_defense": "Building Health & Shields",
+  "gamerule.asteriskcraft.player_race": "Race",
+  "gamerule.asteriskcraft.player_race.description": "Which race you command. The computer plays the other one.",
+  "race.asteriskcraft.protoss": "Protoss",
+  "race.asteriskcraft.zerg": "Zerg"
 }

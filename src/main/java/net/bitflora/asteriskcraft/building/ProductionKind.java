@@ -98,7 +98,64 @@ public enum ProductionKind {
                     CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2, Action.FACTORY),
             new OptionView(
                     Icon.ofIcon("dark_templar"),
-                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 3, Action.FACTORY)));
+                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 3, Action.FACTORY))),
+    /**
+     * The Hive's card. Wider than the Protoss base's because the swarm has no factory building:
+     * a Hive morphs its combat units itself, so everything an army needs is on this one card.
+     *
+     * <p>Two deliberate asymmetries with {@link #PROTOSS_BASE}. Every button is a single one rather
+     * than a Wood/Stone pair — the swarm pays for everything out of one pool — which is also what
+     * keeps this grid inside the panel's six-column budget. And its input slot count is a flat 27,
+     * three rows, rather than the Zerg bank's full {@code Races.ZERG.bankSlots()} of 81:
+     * {@link ProductionMenu} lays its height out around three rows, nine would run straight through
+     * the button row and the player inventory, and the bank fills from the front with only three
+     * item types ever in it — so three rows is the working set, not a truncation of it. (Written as
+     * a literal because an enum constant may not forward-reference a static field of its own enum.)
+     */
+    ZERG_BASE(() -> AsteriskCraft.HIVE_CORE.get(), 27, List.of(
+            // One button, not the Nexus's pair: every Zerg cost is a single "any resource"
+            // alternative (UnitCost.of(ANY, ...)), so there is no Wood-or-Stone choice to offer.
+            new OptionView(
+                    Icon.ofIcon("drone"),
+                    CostText.tooltip(UnitStats.DRONE.cost(), 0), 0,
+                    new Action.TrainWorker(0)),
+            new OptionView(
+                    Icon.ofIcon("zergling"),
+                    CostText.tooltip(UnitStats.ZERGLING.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.ZERGLING.id())),
+            new OptionView(
+                    Icon.ofIcon("ultralisk"),
+                    CostText.tooltip(UnitStats.ULTRALISK.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.ULTRALISK.id())),
+            new OptionView(
+                    Icon.ofIcon("hydralisk"),
+                    CostText.tooltip(UnitStats.HYDRALISK.cost(), 0), 2,
+                    new Action.TrainUnit(UnitStats.HYDRALISK.id())),
+            new OptionView(
+                    Icon.ofIcon("lurker"),
+                    CostText.tooltip(UnitStats.LURKER.cost(), 0), 2,
+                    new Action.TrainUnit(UnitStats.LURKER.id())),
+            new OptionView(
+                    Icon.ofIcon("mutalisk"),
+                    CostText.tooltip(UnitStats.MUTALISK.cost(), 0), 3,
+                    new Action.TrainUnit(UnitStats.MUTALISK.id())),
+            // The colonies are entities rather than block layouts, so they are bought exactly the
+            // way the Photon Cannon is: an ally-side spawn item handed over for a building's price.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 4,
+                    new Action.GiveKit(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get, Resource.STONE,
+                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.sunken_colony_ready")),
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.SPORE_COLONY_SPAWN_EGG_ALLY),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 4,
+                    new Action.GiveKit(AsteriskCraft.SPORE_COLONY_SPAWN_EGG_ALLY::get, Resource.STONE,
+                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.spore_colony_ready")),
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.HIVE_KIT),
+                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 5,
+                    new Action.GiveKit(AsteriskCraft.HIVE_KIT::get, Resource.STONE,
+                            BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.hive_kit_ready"))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),
@@ -119,6 +176,18 @@ public enum ProductionKind {
          * one entry covers every race that copies this layout.
          */
         record TrainWorker(int alternative) implements Action {
+        }
+
+        /**
+         * Queue one combat unit of the base's own race, named by its
+         * {@code stats.UnitStat#id()} — the same spelling a build script uses, so a card and a
+         * script name a unit the same way. Paid with {@code CostPayment.payAny}, so one button
+         * covers whichever resource the army has; the Wood/Stone split is a worker-only affordance.
+         *
+         * <p>A race whose roster does not answer to this id simply has a dead button, which is a
+         * mis-authored table rather than a runtime case.
+         */
+        record TrainUnit(String rosterId) implements Action {
         }
 
         /** Hand the player a building kit item for {@code cost} of one resource. */
