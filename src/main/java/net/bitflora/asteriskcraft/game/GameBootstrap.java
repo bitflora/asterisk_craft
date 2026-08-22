@@ -85,11 +85,12 @@ public final class GameBootstrap {
     private static final int AI_BASE_COVER_RADIUS = 10;
 
     /**
-     * Radius of the unbroken stone ring laid around each AI base. Sits outside the scattered garden
-     * nodes (which reach out to 6) and inside the ground-cover disc, so the ring is on ground the
-     * base has already cleared.
+     * Salt for the per-base mineral-field RNG. Seeded off the world seed and the base's own
+     * coordinates (rather than drawn from {@link #placeAiBase}'s placement RNG, which would shift
+     * every base for a given seed), so one seed reproduces one layout while no two bases share a
+     * facing.
      */
-    private static final int AI_BASE_STONE_RING_RADIUS = 8;
+    private static final long MINERAL_FIELD_SALT = 0x1D4E_9C63L;
     private static final Set<Block> COVERABLE_GROUND = Set.of(
             Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
     // How far down to scan past a tree's logs and undergrowth when locating the real ground beneath
@@ -173,7 +174,10 @@ public final class GameBootstrap {
         int footprint = BuildingTemplates.footprintRadius(size);
         // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
         // which used to leave the base perched high up in a tree) and clear the trees over the footprint.
-        clearTrees(level, x, z, footprint + PLAYER_BASE_CLEAR_MARGIN);
+        // The clear has to reach past the mineral field as well, or the player's columns get stamped
+        // through tree trunks the narrower footprint sweep left standing. That lands on the same
+        // radius the AI's own clear uses.
+        clearTrees(level, x, z, Math.max(footprint + PLAYER_BASE_CLEAR_MARGIN, MineralField.OUTER_RADIUS + 1));
         int y = platformHeight(level, x, z, footprint);
         BlockPos origin = new BlockPos(x, y, z);
 
@@ -194,6 +198,8 @@ public final class GameBootstrap {
             seedPlayerBase(base);
         }
         spawnStartingWorkers(level, core, profile, setup.playerFaction());
+        // No iron: the single iron column is the computer player's one edge.
+        seedMineralField(level, x, z, false);
 
         placeAiBase(level, x, z, setup);
 
@@ -218,7 +224,7 @@ public final class GameBootstrap {
     }
 
     /**
-     * Stamps the computer player's bases (plus a small resource garden and starter workers), each in
+     * Stamps the computer player's bases (plus a mineral field and starter workers), each in
      * its own random direction and distance from the player's, so the enemy presence surrounds them
      * instead of sitting in one predictable cluster.
      *
@@ -275,8 +281,7 @@ public final class GameBootstrap {
             if (core != null) {
                 cores.add(core);
             }
-            seedResourceGarden(level, chosen.getX(), chosen.getZ());
-            seedStoneRing(level, chosen.getX(), chosen.getZ());
+            seedMineralField(level, chosen.getX(), chosen.getZ(), true);
         }
         seedAiArmyBank(level, profile, setup.aiFaction());
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} {} bases scattered around {},{}",
@@ -531,8 +536,8 @@ public final class GameBootstrap {
      * gravel surface block (air directly above) becomes the race's cover block. A race that lays
      * none ({@link RaceProfile#creep()} null) returns immediately, leaving the terrain untouched.
      *
-     * <p>Called from {@link #placeAiBaseAt} before the resource garden is seeded, so the garden's
-     * ore/log nodes — placed afterward — are not themselves overrun. Goes through
+     * <p>Called from {@link #placeAiBaseAt} before the mineral field is laid, so the field's wood
+     * and stone — placed afterward — is not itself overrun. Goes through
      * {@link #groundHeight} rather than a raw heightmap so the cover reaches the forest floor; read
      * off WORLD_SURFACE it targeted a leaf block, which isn't coverable, and a wooded base got no
      * cover at all.
@@ -621,52 +626,28 @@ public final class GameBootstrap {
     }
 
     /**
-     * Exposes a handful of surface harvestable blocks near an AI base so its workers can keep
-     * mining. Seeded at {@link #groundHeight} so the nodes land on the floor within reach of a
-     * worker rather than up in a canopy.
-     */
-    private static void seedResourceGarden(ServerLevel level, int cx, int cz) {
-        BlockState[] nodes = {
-                Blocks.STONE.defaultBlockState(), Blocks.STONE.defaultBlockState(), Blocks.STONE.defaultBlockState(),
-                Blocks.OAK_LOG.defaultBlockState(), Blocks.OAK_LOG.defaultBlockState(), Blocks.OAK_LOG.defaultBlockState(),
-                Blocks.IRON_ORE.defaultBlockState(), Blocks.IRON_ORE.defaultBlockState(), Blocks.IRON_ORE.defaultBlockState()};
-        int[][] offsets = {{5, 0}, {6, 2}, {5, -2}, {-5, 0}, {-6, 2}, {-5, -2}, {0, 5}, {2, 6}, {-2, 5}};
-        for (int i = 0; i < offsets.length; i++) {
-            int x = cx + offsets[i][0];
-            int z = cz + offsets[i][1];
-            int y = groundHeight(level, x, z);
-            level.setBlock(new BlockPos(x, y, z), nodes[i], Block.UPDATE_ALL);
-        }
-    }
-
-    /**
-     * Lays an unbroken ring of stone around an AI base at {@link #AI_BASE_STONE_RING_RADIUS}, so
-     * its workers have a mineable seam that lasts rather than exhausting the handful of scattered
-     * {@link #seedResourceGarden} nodes and then standing idle.
+     * Lays a base's {@link MineralField}: a third of a circle at radius 8-9, filled with short
+     * columns of wood and stone, so a worker line has a seam that lasts rather than a handful of
+     * scattered nodes to exhaust. Every bootstrap-placed base gets one; only the computer player's
+     * carries the extra iron column.
      *
-     * <p>A column joins the ring when its distance from the centre <i>rounds</i> to the radius,
-     * which is what makes the circle continuous: a strict {@code dist == radius} test leaves gaps
-     * wherever the circle passes between block centres. Placed at {@link #groundHeight} like the
-     * garden nodes, so the ring follows the terrain instead of hanging over a slope.
+     * <p>The shape is planned pure (see {@link MineralField#plan}) and only stamped here. Columns
+     * stand <i>on</i> the ground rather than in place of it — a one-block column is a patch you walk
+     * up to, not a recoloured floor tile — and each is seated at {@link #groundHeight} so the field
+     * follows the terrain and reaches the floor under a canopy instead of hanging in it.
      */
-    private static void seedStoneRing(ServerLevel level, int cx, int cz) {
-        BlockState stone = Blocks.STONE.defaultBlockState();
-        for (int dx = -AI_BASE_STONE_RING_RADIUS; dx <= AI_BASE_STONE_RING_RADIUS; dx++) {
-            for (int dz = -AI_BASE_STONE_RING_RADIUS; dz <= AI_BASE_STONE_RING_RADIUS; dz++) {
-                if (!isOnStoneRing(dx, dz)) {
-                    continue;
-                }
-                int x = cx + dx;
-                int z = cz + dz;
-                int y = groundHeight(level, x, z);
-                level.setBlock(new BlockPos(x, y, z), stone, Block.UPDATE_ALL);
+    private static void seedMineralField(ServerLevel level, int cx, int cz, boolean includeIron) {
+        RandomSource random = RandomSource.create(
+                level.getSeed() ^ MINERAL_FIELD_SALT ^ new BlockPos(cx, 0, cz).asLong());
+        float facing = random.nextFloat() * 360.0f;
+        for (MineralField.Column column : MineralField.plan(facing, random, includeIron)) {
+            int x = cx + column.dx();
+            int z = cz + column.dz();
+            int ground = groundHeight(level, x, z);
+            for (int dy = 1; dy <= column.height(); dy++) {
+                level.setBlock(new BlockPos(x, ground + dy, z), column.block(), Block.UPDATE_ALL);
             }
         }
-    }
-
-    /** True if this offset from a base's centre belongs to the stone ring. Pure, so it is unit-testable. */
-    static boolean isOnStoneRing(int dx, int dz) {
-        return Math.round(Math.sqrt(dx * dx + dz * dz)) == AI_BASE_STONE_RING_RADIUS;
     }
 
     /**
