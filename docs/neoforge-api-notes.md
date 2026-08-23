@@ -297,10 +297,19 @@ and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/clie
   screen's `GameTab`/`WorldTab`/`MoreTab` are private inner classes, so a widget cannot be added to
   a tab. What does work is `ScreenEvent.Init.Post` (NeoForge game bus, client only): its
   `addListener` registers the widget and marks it renderable/narratable if it implements those. A
-  listener added that way belongs to the screen rather than to a tab, so it stays visible across all
-  three — position it in the footer band, which is the one strip the tab content area does not own.
-  `init()` re-runs on resize, so the event fires again; compute positions from the live screen each
-  time and keep no static widget reference.
+  listener added that way belongs to the screen rather than to a tab, so **it does not come and go
+  with the tabs**: `TabManager` is constructed with add/remove consumers (`this::addRenderableWidget`
+  / `this::removeWidget`), so a tab's own widgets are removed from the screen on every switch and
+  yours is not. Testing whether some widget of the tab you want to sit in is still in
+  `screen.children()` is therefore a reliable "is that tab open". Apply it from
+  `ScreenEvent.Render.Pre` — `AbstractWidget.extractRenderState` is `final` and returns immediately
+  for an invisible widget, so a widget cannot restore its own visibility from inside itself.
+  `init()` re-runs on resize, so `Init.Post` fires again and any cached widget reference must be
+  replaced (and guarded by the screen instance it came from).
+- To line a widget up with an existing one, find it by the **translation key inside its message**,
+  not by the message itself: a `CycleButton`'s message is `options.generic_value(name, value)`, so
+  the key you know sits one level down in `TranslatableContents.getArgs()`, and comparing rendered
+  text would only work in English.
 - `CreateWorldScreen.getUiState()` is public, and `WorldCreationUiState.getGameRules()` returns the
   live `GameRules` that is carried into the level being created — so writing a rule there from an
   injected widget is how a world-creation choice reaches the world with no packet and no client
