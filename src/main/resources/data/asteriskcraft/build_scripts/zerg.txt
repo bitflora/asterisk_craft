@@ -12,7 +12,12 @@
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Zergling, 1 Hydralisk". Qty may be a range "3-5".
 #   Units: Zergling (melee), Hydralisk (ranged), Mutalisk (air), Ultralisk (heavy melee),
-#          Lurker (burrowing ambusher, ground only), Drone (worker).
+#          Lurker (burrowing ambusher, ground only), Overlord (air, no attack — a flying
+#          detector), Drone (worker).
+#
+# Overlord is legal here but deliberately unused below: every Hive is handed one at world start
+# (see RaceProfile.baseEscort), and the Spore Colony beside it detects too, so buying more would
+# only slow the economy down. Add one to a Wave if you want detection travelling with the army.
 #
 # The AI waits until it can afford each unit, so a wave only leaves once fully trained. Each unit
 # also takes its own build time — an Ultralisk alone is a minute — so adding one lengthens a wave.

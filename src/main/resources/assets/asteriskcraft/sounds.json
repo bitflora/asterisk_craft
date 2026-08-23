@@ -202,6 +202,16 @@
     "subtitle": "subtitles.entity.asteriskcraft.mutalisk.attack",
     "sounds": ["asteriskcraft:mob/mutalisk/mutalisk-attack"]
   },
+  "entity.overlord.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.overlord.ambient",
+    "sounds": ["asteriskcraft:mob/overlord/overlord-live1"]
+  },
+  "entity.overlord.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.overlord.death",
+    "sounds": ["asteriskcraft:mob/overlord/overlord-death"]
+  },
   "entity.photon_cannon.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.photon_cannon.attack",

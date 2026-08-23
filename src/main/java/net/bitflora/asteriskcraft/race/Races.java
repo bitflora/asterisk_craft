@@ -93,6 +93,9 @@ public final class Races {
             // foreign should be stamped under Protoss stonework.
             null,
             List.of(new BaseDefence(AsteriskCraft.PHOTON_CANNON, 1)),
+            // No escort: the Protoss detector is the Photon Cannon, which is already in the line
+            // above, and nothing else about a Nexus wants a unit hovering over it at world start.
+            List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
             PLAYER_BANK,
@@ -114,6 +117,7 @@ public final class Races {
                     .unit(UnitStats.ZERGLING, AsteriskCraft.ZERGLING)
                     .unit(UnitStats.HYDRALISK, AsteriskCraft.HYDRALISK)
                     .unit(UnitStats.MUTALISK, AsteriskCraft.MUTALISK)
+                    .unit(UnitStats.OVERLORD, AsteriskCraft.OVERLORD)
                     .unit(UnitStats.ULTRALISK, AsteriskCraft.ULTRALISK)
                     .unit(UnitStats.LURKER, AsteriskCraft.LURKER)
                     .build(),
@@ -127,6 +131,10 @@ public final class Races {
             () -> Blocks.MYCELIUM.defaultBlockState(),
             List.of(new BaseDefence(AsteriskCraft.SUNKEN_COLONY, 1),
                     new BaseDefence(AsteriskCraft.SPORE_COLONY, 1)),
+            // One Overlord per Hive, on both sides. The Spore Colony above it detects too, but it is
+            // rooted to this spot — the Overlord is what carries detection out with an army, which
+            // is the whole answer to a Dark Templar met in the field.
+            List.of(new BaseDefence(AsteriskCraft.OVERLORD, 1)),
             List.of(new StartingStack(() -> Items.OAK_LOG, ZERG_STARTING_LOGS),
                     new StartingStack(() -> Items.COBBLESTONE, ZERG_STARTING_COBBLE),
                     new StartingStack(() -> Items.IRON_INGOT, ZERG_STARTING_IRON)),

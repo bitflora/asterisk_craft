@@ -86,6 +86,7 @@ UNITS = {
     "hydralisk": ("zerg", "HydraliskModel"),
     "lurker": ("zerg", "LurkerModel"),
     "mutalisk": ("zerg", "MutaliskModel"),
+    "overlord": ("zerg", "OverlordModel"),
     "drone": ("zerg", "DroneModel"),
     "sunken_colony": ("zerg", "SunkenColonyModel"),
     "spore_colony": ("zerg", "SporeColonyModel"),

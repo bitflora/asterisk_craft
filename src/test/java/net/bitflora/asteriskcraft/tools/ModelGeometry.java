@@ -18,6 +18,7 @@ import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
+import net.bitflora.asteriskcraft.client.zerg.OverlordModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerModel;
@@ -150,6 +151,7 @@ final class ModelGeometry {
         map.put("hydralisk", HydraliskModel::createBodyLayer);
         map.put("lurker", LurkerModel::createBodyLayer);
         map.put("mutalisk", MutaliskModel::createBodyLayer);
+        map.put("overlord", OverlordModel::createBodyLayer);
         map.put("drone", DroneModel::createBodyLayer);
         map.put("sunken_colony", SunkenColonyModel::createBodyLayer);
         map.put("spore_colony", SporeColonyModel::createBodyLayer);

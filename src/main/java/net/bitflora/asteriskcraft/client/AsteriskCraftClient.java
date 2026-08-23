@@ -23,6 +23,8 @@ import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
 import net.bitflora.asteriskcraft.client.zerg.LurkerRenderer;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskModel;
 import net.bitflora.asteriskcraft.client.zerg.MutaliskRenderer;
+import net.bitflora.asteriskcraft.client.zerg.OverlordModel;
+import net.bitflora.asteriskcraft.client.zerg.OverlordRenderer;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyRenderer;
@@ -55,6 +57,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation HYDRALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("hydralisk"), "main");
     public static final ModelLayerLocation LURKER_LAYER = new ModelLayerLocation(AsteriskCraft.id("lurker"), "main");
     public static final ModelLayerLocation MUTALISK_LAYER = new ModelLayerLocation(AsteriskCraft.id("mutalisk"), "main");
+    public static final ModelLayerLocation OVERLORD_LAYER = new ModelLayerLocation(AsteriskCraft.id("overlord"), "main");
     public static final ModelLayerLocation DRONE_LAYER = new ModelLayerLocation(AsteriskCraft.id("drone"), "main");
     public static final ModelLayerLocation PHOTON_CANNON_LAYER = new ModelLayerLocation(AsteriskCraft.id("photon_cannon"), "main");
     public static final ModelLayerLocation SUNKEN_COLONY_LAYER = new ModelLayerLocation(AsteriskCraft.id("sunken_colony"), "main");
@@ -73,6 +76,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(HYDRALISK_LAYER, HydraliskModel::createBodyLayer);
         event.registerLayerDefinition(LURKER_LAYER, LurkerModel::createBodyLayer);
         event.registerLayerDefinition(MUTALISK_LAYER, MutaliskModel::createBodyLayer);
+        event.registerLayerDefinition(OVERLORD_LAYER, OverlordModel::createBodyLayer);
         event.registerLayerDefinition(DRONE_LAYER, DroneModel::createBodyLayer);
         event.registerLayerDefinition(PHOTON_CANNON_LAYER, PhotonCannonModel::createBodyLayer);
         event.registerLayerDefinition(SUNKEN_COLONY_LAYER, SunkenColonyModel::createBodyLayer);
@@ -93,6 +97,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.HYDRALISK.get(), HydraliskRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.LURKER.get(), LurkerRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.MUTALISK.get(), MutaliskRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.OVERLORD.get(), OverlordRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.PHOTON_CANNON.get(), PhotonCannonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SUNKEN_COLONY.get(), SunkenColonyRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SPORE_COLONY.get(), SporeColonyRenderer::new);

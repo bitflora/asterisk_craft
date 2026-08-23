@@ -111,6 +111,28 @@ public final class UnitStats {
             .build();
 
     /**
+     * The swarm's eye in the sky, and the mod's first <em>mobile</em> detector: everything that
+     * detects before it — the Photon Cannon, the Spore Colony — is rooted, so detection could only
+     * ever cover ground an army had already built on. An Overlord carries the same 16-block bubble
+     * wherever it drifts, which is what lets the swarm push into a Dark Templar rather than wait for
+     * one to wander into a colony.
+     *
+     * <p>It has no attack at all — the only unit besides the two workers that doesn't, which is the
+     * rule {@code UnitStatsTest.onlyNonCombatUnitsLackAttackDamage} states. That is what it pays for
+     * its detection with: it is slow, huge and entirely dependent on an escort.
+     */
+    public static final UnitStat OVERLORD = UnitStat.builder("overlord")
+            .health(100.0).armor(0.0).speed(0.15)
+            // Slower and higher than the Mutalisk's 0.6/6: a drifting sac, not a raider. The extra
+            // block of altitude is what keeps it above the fight it is spotting for.
+            .flight(0.35, 7, 64.0f)
+            // The same envelope as the mod's other two detectors, so a race's mobile detector and
+            // its rooted one see equally far and a player learns one radius, not two.
+            .detector(16.0, 20, 60)
+            .cost(UnitCost.of(ANY, 100)).buildTicks(20 * 40)
+            .build();
+
+    /**
      * The Zerg heavy: the only unit on either side that a Zealot ball can't simply out-trade, and the
      * reason to keep Dragoons or a Cannon around. Its minute-long build time is what keeps it rare —
      * a wave carrying one takes a minute longer to assemble than the same wave without.
@@ -202,8 +224,8 @@ public final class UnitStats {
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
     public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, ULTRALISK, LURKER, SUNKEN_COLONY, SPORE_COLONY,
-                    INFESTED_VILLAGER);
+            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, OVERLORD, ULTRALISK, LURKER, SUNKEN_COLONY,
+                    SPORE_COLONY, INFESTED_VILLAGER);
 
     private UnitStats() {
     }

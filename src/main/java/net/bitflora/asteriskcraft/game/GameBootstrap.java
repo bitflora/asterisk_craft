@@ -222,6 +222,11 @@ public final class GameBootstrap {
             seedArmyBank(level, setup.playerFaction(), profile.playerBank());
         }
         spawnStartingWorkers(level, core, profile, setup.playerFaction());
+        // Unlike baseDefences just above in placeAiBaseAt, the escort is spawned for the human's
+        // base too — "every Hive comes with an Overlord" is a rule about the race, not about who is
+        // holding it, and a player who had to buy their first detector while the computer was given
+        // one would be playing a different match.
+        spawnBaseEscort(level, core, profile, setup.playerFaction());
         // No iron: the single iron column is the computer player's one edge.
         seedMineralField(level, x, z, false);
 
@@ -654,6 +659,7 @@ public final class GameBootstrap {
                     UnitSpawns.spawn(level, core, defence.type().get(), faction, false);
                 }
             }
+            spawnBaseEscort(level, core, profile, faction);
         }
         return core;
     }
@@ -720,6 +726,20 @@ public final class GameBootstrap {
      */
     private static void spawnStartingWorkers(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
         spawnStartingWorkers(level, core, profile, faction, INITIAL_WORKERS);
+    }
+
+    /**
+     * The mobile units a race's base opens the match with, spawned beside every starting base on
+     * <em>both</em> sides — which is exactly what separates this from the {@code baseDefences} loop
+     * in {@link #placeAiBaseAt}, where the human deliberately gets nothing. Bootstrap only: an
+     * expansion base warped in from a kit brings no escort.
+     */
+    private static void spawnBaseEscort(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
+        for (RaceProfile.BaseDefence escort : profile.baseEscort()) {
+            for (int i = 0; i < escort.count(); i++) {
+                UnitSpawns.spawn(level, core, escort.type().get(), faction, false);
+            }
+        }
     }
 
     private static void spawnStartingWorkers(ServerLevel level, BlockPos core, RaceProfile profile,

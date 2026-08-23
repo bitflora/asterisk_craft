@@ -44,6 +44,7 @@ public final class UnitLabels {
             Map.entry("zergling", "Z"),
             Map.entry("hydralisk", "H"),
             Map.entry("mutalisk", "M"),
+            Map.entry("overlord", "O"),
             Map.entry("ultralisk", "U"),
             Map.entry("lurker", "L"),
             // Sunken Colony takes K, since S is the Scout's and both rosters are checked separately

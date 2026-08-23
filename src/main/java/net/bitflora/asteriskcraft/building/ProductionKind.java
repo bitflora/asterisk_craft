@@ -139,6 +139,12 @@ public enum ProductionKind {
                     Icon.ofIcon("mutalisk"),
                     CostText.tooltip(UnitStats.MUTALISK.cost(), 0), 3,
                     new Action.TrainUnit(UnitStats.MUTALISK.id())),
+            // The air column's second button: the swarm's detector, and the one unit on this card
+            // that cannot fight at all.
+            new OptionView(
+                    Icon.ofIcon("overlord"),
+                    CostText.tooltip(UnitStats.OVERLORD.cost(), 0), 3,
+                    new Action.TrainUnit(UnitStats.OVERLORD.id())),
             // The colonies are entities rather than block layouts, so they are bought exactly the
             // way the Photon Cannon is: an ally-side spawn item handed over for a building's price.
             new OptionView(

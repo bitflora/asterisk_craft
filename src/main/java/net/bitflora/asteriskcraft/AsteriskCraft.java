@@ -37,6 +37,7 @@ import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
 import net.bitflora.asteriskcraft.entity.zerg.LurkerEntity;
 import net.bitflora.asteriskcraft.entity.zerg.LurkerSpineEntity;
 import net.bitflora.asteriskcraft.entity.zerg.MutaliskEntity;
+import net.bitflora.asteriskcraft.entity.zerg.OverlordEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SporeColonyEntity;
 import net.bitflora.asteriskcraft.entity.zerg.SunkenSpikeEntity;
@@ -292,6 +293,17 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("mutalisk"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<OverlordEntity>> OVERLORD =
+            ENTITY_TYPES.register("overlord", () -> EntityType.Builder.of(OverlordEntity::new, MobCategory.MONSTER)
+                    // By far the largest hitbox in the mod, and Ghast-sized on purpose: the silhouette
+                    // is a bloated floating sac, and unlike the Ultralisk's this one is not an
+                    // overhang — the body really is this big. Watch SpawnSpots when it is produced
+                    // beside an already-crowded Hive; it clears a unit's whole spawn AABB.
+                    .sized(4.0f, 4.0f)
+                    // Larger than the ground units': it cruises 7 blocks up, so it enters view sooner.
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("overlord"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<LurkerEntity>> LURKER =
             ENTITY_TYPES.register("lurker", () -> EntityType.Builder.of(LurkerEntity::new, MobCategory.MONSTER)
                     // Spider-broad in the art but deliberately under 1.0 here, so it stays a single
@@ -405,6 +417,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, MUTALISK, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> MUTALISK_SPAWN_EGG_ENEMY = ITEMS.registerItem("mutalisk_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, MUTALISK, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> OVERLORD_SPAWN_EGG_ALLY = ITEMS.registerItem("overlord_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, OVERLORD, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> OVERLORD_SPAWN_EGG_ENEMY = ITEMS.registerItem("overlord_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, OVERLORD, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> LURKER_SPAWN_EGG_ALLY = ITEMS.registerItem("lurker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, LURKER, FactionSpawnEggItem.Side.ALLY));
@@ -454,6 +470,13 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.ultralisk.death", () -> SoundEvent.createVariableRangeEvent(id("entity.ultralisk.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> ULTRALISK_ATTACK =
             SOUND_EVENTS.register("entity.ultralisk.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.ultralisk.attack")));
+
+    // No hurt or attack event: the Overlord has no attack at all, and the source clips include no
+    // hurt bark, so it keeps the vanilla hurt sound rather than borrowing another unit's voice.
+    public static final DeferredHolder<SoundEvent, SoundEvent> OVERLORD_AMBIENT =
+            SOUND_EVENTS.register("entity.overlord.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.overlord.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> OVERLORD_DEATH =
+            SOUND_EVENTS.register("entity.overlord.death", () -> SoundEvent.createVariableRangeEvent(id("entity.overlord.death")));
 
     public static final DeferredHolder<SoundEvent, SoundEvent> HYDRALISK_AMBIENT =
             SOUND_EVENTS.register("entity.hydralisk.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.hydralisk.ambient")));
@@ -554,6 +577,8 @@ public class AsteriskCraft {
                 output.accept(HYDRALISK_SPAWN_EGG_ENEMY.get());
                 output.accept(MUTALISK_SPAWN_EGG_ALLY.get());
                 output.accept(MUTALISK_SPAWN_EGG_ENEMY.get());
+                output.accept(OVERLORD_SPAWN_EGG_ALLY.get());
+                output.accept(OVERLORD_SPAWN_EGG_ENEMY.get());
                 output.accept(LURKER_SPAWN_EGG_ALLY.get());
                 output.accept(LURKER_SPAWN_EGG_ENEMY.get());
                 output.accept(INFESTED_VILLAGER_SPAWN_EGG_ALLY.get());
@@ -624,6 +649,7 @@ public class AsteriskCraft {
         event.put(ULTRALISK.get(), UltraliskEntity.createAttributes().build());
         event.put(HYDRALISK.get(), HydraliskEntity.createAttributes().build());
         event.put(MUTALISK.get(), MutaliskEntity.createAttributes().build());
+        event.put(OVERLORD.get(), OverlordEntity.createAttributes().build());
         event.put(PHOTON_CANNON.get(), PhotonCannonEntity.createAttributes().build());
         event.put(LURKER.get(), LurkerEntity.createAttributes().build());
         event.put(INFESTED_VILLAGER.get(), InfestedVillagerEntity.createAttributes().build());

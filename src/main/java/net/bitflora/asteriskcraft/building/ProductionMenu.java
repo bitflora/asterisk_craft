@@ -28,9 +28,13 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_WARP = 3;           // warp-in ticks remaining (0 = ready)
     public static final int DATA_QUEUE_BASE = 4;     // queued count per option
     // The screen reads a queued count for every option, so this has to cover the widest card there
-    // is. Both bases sit at nine: the Nexus spends its on Wood/Stone pairs, and the Hive - which has
-    // no factory building to send unit production to - on one button per unit it can morph.
-    public static final int MAX_OPTIONS = 9;
+    // is: the Nexus spends its buttons on Wood/Stone pairs, and the Hive - which has no factory
+    // building to send unit production to - on one button per unit it can morph, so the Hive's card
+    // is the one that grows every time the swarm gains a unit. It is at ten as of the Overlord.
+    // ProductionCardLayoutTest fails the build if a card outgrows this: the count is not checked
+    // anywhere at runtime, and a card with one option too many read off the end of the data array
+    // and crashed the screen rather than degrading.
+    public static final int MAX_OPTIONS = 10;
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.

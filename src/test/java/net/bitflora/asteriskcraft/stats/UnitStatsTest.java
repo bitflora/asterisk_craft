@@ -22,7 +22,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(15, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(16, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -45,11 +45,10 @@ class UnitStatsTest {
     }
 
     @Test
-    void onlyTheTwoWorkersLackAttackDamage() {
+    void onlyNonCombatUnitsLackAttackDamage() {
         for (UnitStat stat : UnitStats.all()) {
-            boolean isWorker = stat == UnitStats.PROBE || stat == UnitStats.DRONE;
-            assertEquals(isWorker, stat.attackDamage().isEmpty(),
-                    stat.id() + ": attack damage presence should match worker status");
+            assertEquals(isNonCombatant(stat), stat.attackDamage().isEmpty(),
+                    stat.id() + ": attack damage presence should match non-combatant status");
         }
     }
 
@@ -70,6 +69,11 @@ class UnitStatsTest {
     void everyFlyerOutrangesItsOwnCruisingAltitude() {
         for (UnitStat stat : UnitStats.all()) {
             if (stat.flight().isEmpty()) {
+                continue;
+            }
+            if (stat.ranged().isEmpty()) {
+                // An unarmed flyer (the Overlord) has no stand-off to check: it never engages from
+                // altitude, so there is no range for its cruising height to have to clear.
                 continue;
             }
             UnitStat.Flight flight = stat.flightOrThrow();
@@ -200,6 +204,16 @@ class UnitStatsTest {
         assertEquals(UnitCost.NONE, UnitStats.PHOTON_CANNON.cost());
         assertEquals(UnitCost.NONE, UnitStats.SUNKEN_COLONY.cost());
         assertEquals(UnitCost.NONE, UnitStats.SPORE_COLONY.cost());
+    }
+
+    /**
+     * The units that never attack anything: the two workers, and the Overlord, whose whole job is
+     * to carry a detection bubble around and which pays for that by being unable to defend itself.
+     */
+    private static boolean isNonCombatant(UnitStat stat) {
+        return stat == UnitStats.PROBE
+                || stat == UnitStats.DRONE
+                || stat == UnitStats.OVERLORD;
     }
 
     /** The rooted defences: one per race for ground, plus the Zerg's anti-air Spore Colony. */

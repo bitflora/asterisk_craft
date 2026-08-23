@@ -46,7 +46,16 @@ import java.util.function.Supplier;
  * @param creep          ground cover spread around a new base, or null for a race that lays none
  * @param support        what a base's template fills gaps beneath it with, or null to leave the
  *                       ground as it lies (the Protoss stonework is its own plinth)
- * @param baseDefences   static defence planted with each base at world generation
+ * @param baseDefences   static defence planted with each base at world generation. The
+ *                       <em>computer's</em> only — the human's starting base deliberately plants
+ *                       none and gets {@link #playerKit} instead, so it mines its own way up
+ * @param baseEscort     mobile units spawned beside every base this race starts the match with,
+ *                       on <em>both</em> sides. That symmetry is the whole reason it is not folded
+ *                       into {@link #baseDefences}: a rule like "every Hive comes with an Overlord"
+ *                       has to hold for the player's base as much as the computer's, where static
+ *                       defence deliberately does not. Bootstrap only — a base warped in later from
+ *                       a kit brings no escort, because it is the <em>starting</em> position this
+ *                       describes
  * @param startingBank   what this race's shared bank is seeded with when it is the computer player
  * @param playerBank     what this race's shared bank is seeded with when it is the <em>human's</em>
  *                       — a fraction of {@link #startingBank}, because a player mines their own way
@@ -69,11 +78,16 @@ public record RaceProfile(
         @Nullable Supplier<BlockState> creep,
         @Nullable Supplier<BlockState> support,
         List<BaseDefence> baseDefences,
+        List<BaseDefence> baseEscort,
         List<StartingStack> startingBank,
         List<StartingStack> playerBank,
         List<Supplier<Item>> playerKit) {
 
-    /** A static-defence unit planted with each base at world generation, and how many of it. */
+    /**
+     * A unit spawned with each base at world generation, and how many of it. Used by both
+     * {@link #baseDefences} (the computer's static defence) and {@link #baseEscort} (each side's
+     * mobile escort) — the two differ in <em>which bases</em> they are walked for, not in shape.
+     */
     public record BaseDefence(Supplier<? extends EntityType<? extends Mob>> type, int count) {
     }
 
