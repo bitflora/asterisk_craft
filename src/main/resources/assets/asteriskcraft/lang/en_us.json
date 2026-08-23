@@ -93,6 +93,7 @@
   "message.asteriskcraft.enemy_location": "The enemy has scattered across the land. Destroy all %s of their bases to win.",
   "message.asteriskcraft.under_attack": "Your base is under attack!",
   "message.asteriskcraft.base_razed": "Enemy base destroyed! %s remaining.",
+  "message.asteriskcraft.own_base_razed": "Your base has been destroyed! %s remaining.",
   "message.asteriskcraft.victory": "Victory! The enemy has no bases left.",
   "message.asteriskcraft.defeat": "Defeat. Your last base has fallen.",
   "message.asteriskcraft.base.queued": "%1$s warping in... (%2$s in queue)",

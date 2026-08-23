@@ -70,15 +70,19 @@ public final class GameOutcome {
         // the census by now, but this must not depend on which of the two side effects runs first.
         int remaining = CoreCensus.count(serverLevel, razed, pos);
 
-        Result result = decide(razed, remaining, MatchSetup.of(level).playerFaction(), over);
+        Faction playerFaction = MatchSetup.of(level).playerFaction();
+        Result result = decide(razed, remaining, playerFaction, over);
         switch (result) {
             case DEFEAT -> {
                 overworld.setData(GameAttachments.GAME_OVER, true);
                 broadcast(overworld, Component.translatable("message.asteriskcraft.defeat"));
                 playOutcomeSound(overworld, false);
             }
-            case BASE_RAZED -> broadcast(overworld,
-                    Component.translatable("message.asteriskcraft.base_razed", remaining));
+            case BASE_RAZED -> broadcast(overworld, Component.translatable(
+                    razed == playerFaction
+                            ? "message.asteriskcraft.own_base_razed"
+                            : "message.asteriskcraft.base_razed",
+                    remaining));
             case VICTORY -> {
                 overworld.setData(GameAttachments.GAME_OVER, true);
                 broadcast(overworld, Component.translatable("message.asteriskcraft.victory"));
