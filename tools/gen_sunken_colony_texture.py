@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
 """
-Generate the Spore Colony's entity textures.
+Generate the Sunken Colony's entity textures.
 
-Same approach as `gen_dark_templar_texture.py`: read the packed per-cube UV islands back out of
-`build/model-export/spore_colony.json` and paint each cube's six faces individually, shaded by face
+Same approach as `gen_spore_colony_texture.py`: read the packed per-cube UV islands back out of
+`build/model-export/sunken_colony.json` and paint each cube's six faces individually, shaded by face
 direction. Output is a starting point, not a finished skin — the point is that
-`tools/blockbench/spore_colony.bbmodel` opens onto a correct layout with real artwork on it, so
+`tools/blockbench/sunken_colony.bbmodel` opens onto a correct layout with real artwork on it, so
 painting is a paint job rather than a setup job. See docs/texturing.md.
 
 Two files are written:
-    spore_colony.png       the skin — a mottled purple body under a near-black carapace, dark stone
-                           claws, and the orange chimney with its white eye
-    spore_colony_glow.png  the emissive pass: ONLY the mouth at the top of the chimney, everything
-                           else transparent, since UnitGlowLayer re-submits the whole model
+    sunken_colony.png       the skin — a near-black root mound and skirt, dark red tentacle and
+                            ground tendrils, pale bone spines and claw, and the glowing red maw
+    sunken_colony_glow.png  the emissive pass: ONLY the maw, everything else transparent, since
+                            UnitGlowLayer re-submits the whole model
 
-The palette follows the reference art, which is built on one cool mass (purple body, black shell,
-grey claws) and one warm one (the chimney), with the eye as the single bright note. The body gets
-heavier per-texel noise than anything else, because the art blotches it with darker spots and flat
-purple at this scale reads as plastic. The main blob is 16 units across — the same width as the
-Overlord's sac and the widest unbroken surface on this unit — so it takes the Overlord's heaviest
-jitter amplitude rather than the standard mottled one; `bodyTop` is smaller and stays a step lighter.
-The eye is deliberately excluded from both the mottling and the glow pass: it is a painted dot in the
-art, not a lamp.
+The colours are lifted straight off the unit's original flat-painted art (sampled from the shipped
+texture before this script existed) so the reskin stays the same animal, just no longer plastic-flat:
+that art had one solid colour per part and no per-face shading at all. The root mound and its skirt
+are the two biggest unbroken surfaces on the model — the mound's top is a 14x14 island and the skirt's
+is 16x16, wider than anything on the Overlord — so both take the Overlord's heaviest jitter amplitude.
+The tentacle and the low ground tendrils are the same hide and get the standard mottled amplitude, the
+way the Overlord's fringe does. The bone spines, the claw, and the maw stay clean: bone reads as bone
+precisely because it isn't blotchy, and the maw is the emissive read-at-a-distance cue and must stay
+legible rather than noisy.
 
 Usage:
-    python tools/gen_spore_colony_texture.py
+    python tools/gen_sunken_colony_texture.py
 Run it AFTER `./gradlew test` has refreshed the geometry dump, or the islands it paints will be the
 ones from the previous layout.
 """
@@ -35,44 +36,38 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-DUMP = ROOT / "build" / "model-export" / "spore_colony.json"
+DUMP = ROOT / "build" / "model-export" / "sunken_colony.json"
 TEX_DIR = ROOT / "src/main/resources/assets/asteriskcraft/textures/entity"
 
 CLEAR = (0, 0, 0, 0)
 
 # --- palette ------------------------------------------------------------------------------------
-# Keyed by leaf part name, straight off the reference art: a purple body, a near-black carapace, dark
-# stone claws, and the orange chimney that is the whole read at a distance.
-BODY = (128, 72, 152)          # the blob, mid purple
-BODY_TOP = (142, 84, 166)      # its crown, a shade up so the ellipsoid turns toward the light
-SHELL = (48, 30, 58)           # carapace: nearly black, barely purple
-CLAW = (92, 96, 104)           # the stone claws — the only cool grey on the model
-CHIMNEY = (188, 82, 40)        # the throat
-CHIMNEY_MID = (198, 92, 46)    # widening, catching more light
-CHIMNEY_RIM = (210, 104, 54)   # the flare, brightest of the three
-MOUTH = (104, 38, 16)          # the hole in the flare, in shadow
-EYE = (242, 242, 248)          # the single white eye
+# Sampled from the unit's original flat art: a near-black root mass, a dark red tentacle/tendril hide,
+# pale bone spines and claw, and a bright red maw.
+ROOT_MASS = (38, 20, 24)     # the mound and its skirt
+TENTACLE = (122, 28, 30)     # the segmented tentacle and the low ground tendrils
+BONE = (208, 194, 168)       # spines and the claw tip
+MAW = (150, 30, 20)          # the glowing mouth
 
-# Emissive pass — only the mouth appears in the glow texture. The eye is deliberately left out: in
-# the art it is a flat white dot, not a lamp, and lighting it turns a face into a headlight.
-MOUTH_GLOW = (255, 156, 68)
+# Emissive pass — only the maw appears in the glow texture, matching the original art's glow colour.
+MAW_GLOW = (255, 90, 40)
 
 PALETTE = {
-    "body": BODY, "bodyTop": BODY_TOP,
-    "shellBack": SHELL, "shellL": SHELL, "shellR": SHELL,
-    "clawFL": CLAW, "clawFR": CLAW, "clawL": CLAW, "clawR": CLAW,
-    "chimney": CHIMNEY, "chimneyMid": CHIMNEY_MID, "chimneyRim": CHIMNEY_RIM,
-    "mouth": MOUTH, "eye": EYE,
+    "base": ROOT_MASS, "skirt": ROOT_MASS,
+    "tentacle1": TENTACLE, "tentacle2": TENTACLE, "tentacle3": TENTACLE,
+    "rootL": TENTACLE, "rootR": TENTACLE,
+    "spineFL": BONE, "spineFR": BONE, "spineBL": BONE, "spineBR": BONE, "claw": BONE,
+    "maw": MAW,
 }
 
 # Which parts appear in the emissive pass, and in what colour.
-GLOWING = {"mouth": MOUTH_GLOW}
+GLOWING = {"maw": MAW_GLOW}
 
-# Parts painted with heavier noise. The art gives the body visible darker blotches; nothing else is
-# mottled, and the eye must stay a clean flat dot. The main blob gets the Overlord's widest amplitude
-# since it is just as large a flat surface; bodyTop is smaller and stays at the standard mottled level.
-MOTTLED = {"bodyTop"}
-HEAVILY_MOTTLED = {"body"}
+# Parts painted with heavier noise. The mound and skirt are the widest unbroken surfaces on the
+# model, so they get the Overlord's heaviest amplitude; the tentacle and tendrils get the standard
+# mottled level. Bone and the maw stay flat — see the module docs on why.
+MOTTLED = {"tentacle1", "tentacle2", "tentacle3", "rootL", "rootR"}
+HEAVILY_MOTTLED = {"base", "skirt"}
 
 # Per-face brightness. Box UV order is top, bottom, right(-x), front(-z), left(+x), back(+z).
 FACE_SHADE = {"top": 1.30, "bottom": 0.55, "right": 0.86, "front": 1.06, "left": 0.86, "back": 0.78}
@@ -163,11 +158,11 @@ def main():
         raise SystemExit(f"No palette entry for: {', '.join(sorted(set(unknown)))}")
 
     TEX_DIR.mkdir(parents=True, exist_ok=True)
-    skin.save(TEX_DIR / "spore_colony.png")
-    glow.save(TEX_DIR / "spore_colony_glow.png")
+    skin.save(TEX_DIR / "sunken_colony.png")
+    glow.save(TEX_DIR / "sunken_colony_glow.png")
     print(f"painted {painted} cubes onto {tex_w}x{tex_h}")
-    print(f"wrote {TEX_DIR / 'spore_colony.png'}")
-    print(f"wrote {TEX_DIR / 'spore_colony_glow.png'}")
+    print(f"wrote {TEX_DIR / 'sunken_colony.png'}")
+    print(f"wrote {TEX_DIR / 'sunken_colony_glow.png'}")
 
 
 if __name__ == "__main__":
