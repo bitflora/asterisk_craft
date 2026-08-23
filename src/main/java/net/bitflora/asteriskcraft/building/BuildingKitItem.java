@@ -1,6 +1,8 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.command.ControlledFaction;
+import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.game.GameBootstrap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -26,21 +28,48 @@ import java.util.function.Supplier;
  * {@link PsiField}: the rule is "this building needs power", and a building that is exempt
  * (a Nexus, a Pylon itself) simply never asks. Nothing in {@code PsiField} names a building.
  */
-public class BuildingKitItem extends Item implements PsiDependent {
+public class BuildingKitItem extends Item implements PsiDependent, CreepDependent {
     private final Identifier template;
     // A supplier, not the Block itself: kits are registered alongside the blocks they place, so
     // the block isn't resolvable yet at construction time.
     private final Supplier<? extends Block> coreBlock;
     private final BuildingTemplates.Footprint footprint;
     private final boolean requiresPylon;
+    private final boolean requiresCreep;
+    private final boolean spreadsCreep;
 
     public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock,
             BuildingTemplates.Footprint footprint, boolean requiresPylon) {
+        this(properties, template, coreBlock, footprint, requiresPylon, false, false);
+    }
+
+    /**
+     * @param spreadsCreep whether this kit's building should spread its race's ground cover (Zerg
+     *                     creep) out from itself once placed — true only for the Hive kit. Resolved
+     *                     against the placer's race at use time rather than hardcoded here, so this
+     *                     class still names no race: a race with no creep (Protoss) is a no-op.
+     */
+    public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock,
+            BuildingTemplates.Footprint footprint, boolean requiresPylon, boolean spreadsCreep) {
+        this(properties, template, coreBlock, footprint, requiresPylon, false, spreadsCreep);
+    }
+
+    /**
+     * @param requiresCreep whether this kit's building may only be placed on or within
+     *                      {@link CreepField#RADIUS} of Zerg creep — the sibling of
+     *                      {@code requiresPylon}, and never true at the same time as it. No kit sets
+     *                      it today (the Hive is exempt, like a Nexus is from psi), but it's wired
+     *                      the same way {@code spreadsCreep} was ahead of the eggs that needed it.
+     */
+    public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock,
+            BuildingTemplates.Footprint footprint, boolean requiresPylon, boolean requiresCreep, boolean spreadsCreep) {
         super(properties);
         this.template = template;
         this.coreBlock = coreBlock;
         this.footprint = footprint;
         this.requiresPylon = requiresPylon;
+        this.requiresCreep = requiresCreep;
+        this.spreadsCreep = spreadsCreep;
     }
 
     /**
@@ -56,6 +85,17 @@ public class BuildingKitItem extends Item implements PsiDependent {
     @Override
     public boolean requiresPylon() {
         return this.requiresPylon;
+    }
+
+    /** Whether this kit needs creep in range, for {@code client/CreepFieldOverlay}. */
+    @Override
+    public boolean requiresCreep() {
+        return this.requiresCreep;
+    }
+
+    @Override
+    public Faction placingFaction(Level level, Player player) {
+        return ControlledFaction.of(player);
     }
 
     @Override
@@ -78,6 +118,10 @@ public class BuildingKitItem extends Item implements PsiDependent {
             overlay(player, Component.translatable("message.asteriskcraft.kit.no_pylon", PsiField.RADIUS));
             return InteractionResult.FAIL;
         }
+        if (this.requiresCreep && !CreepField.covered(serverLevel, origin, ControlledFaction.of(player))) {
+            overlay(player, Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS));
+            return InteractionResult.FAIL;
+        }
 
         // No support fill: the template's own stonework is the base, so a gap under a sloping
         // edge is left as a gap rather than plugged with a foreign block.
@@ -91,8 +135,12 @@ public class BuildingKitItem extends Item implements PsiDependent {
         BlockEntity core = serverLevel.getBlockEntity(placed.core());
         // The building belongs to whoever warped it in, asked through the one chokepoint for
         // command ownership — so a kit never assumes the player is Protoss.
+        Faction faction = ControlledFaction.of(player);
         if (core instanceof WarpInBuilding building) {
-            building.setFaction(ControlledFaction.of(player));
+            building.setFaction(faction);
+        }
+        if (this.spreadsCreep) {
+            GameBootstrap.spreadCreep(serverLevel, placed.core(), faction);
         }
         // Start the warp explicitly rather than trusting the stamped core to arrive mid-warp: the
         // template carries the block-entity NBT captured from a finished building, spent countdown

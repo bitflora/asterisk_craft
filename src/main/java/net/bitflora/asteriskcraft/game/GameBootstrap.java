@@ -10,6 +10,7 @@ import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.minecraft.world.entity.Mob;
 import net.bitflora.asteriskcraft.race.RaceProfile;
+import net.bitflora.asteriskcraft.race.Races;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.core.BlockPos;
@@ -78,10 +79,10 @@ public final class GameBootstrap {
     // settling for a watery one rather than looping forever.
     private static final int WATER_RETRY_LIMIT = 3;
     private static final int INITIAL_WORKERS_PER_AI_BASE = 2;
-    // How far a race's ground cover ("creep" for the Zerg) reaches around a new AI base: every
+    // How far Zerg creep reaches around a new base: every
     // exposed natural-ground surface block within this radius is overrun. A race that lays none
     // (RaceProfile.creep) skips the sweep entirely.
-    private static final int AI_BASE_COVER_RADIUS = 10;
+    private static final int CREEP_RADIUS = 20;
 
     /**
      * Salt for the per-base mineral-field RNG. Seeded off the world seed and the base's own
@@ -92,6 +93,11 @@ public final class GameBootstrap {
     private static final long MINERAL_FIELD_SALT = 0x1D4E_9C63L;
     private static final Set<Block> COVERABLE_GROUND = Set.of(
             Blocks.GRASS_BLOCK, Blocks.STONE, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
+    // The same set, minus stone: the world-creation sweep runs once before anything is built, but a
+    // Hive/Sunken/Spore Colony placed mid-match must never turn stone the player has already quarried
+    // and built with into creep out from under them.
+    private static final Set<Block> RUNTIME_COVERABLE_GROUND = Set.of(
+            Blocks.GRASS_BLOCK, Blocks.SAND, Blocks.RED_SAND, Blocks.DIRT, Blocks.GRAVEL);
     // How far down to scan past a tree's logs and undergrowth when locating the real ground beneath
     // it — comfortably taller than any vanilla tree (a jungle giant on a slope is the worst case) so
     // we always reach the floor rather than falling back to the top of the scan.
@@ -189,6 +195,13 @@ public final class GameBootstrap {
         // through tree trunks the narrower footprint sweep left standing. That lands on the same
         // radius the AI's own clear uses.
         clearTrees(level, x, z, Math.max(footprint + PLAYER_BASE_CLEAR_MARGIN, MineralField.OUTER_RADIUS + 1));
+        // Ground cover first, building second, same as the AI's own base: coverGround rewrites
+        // exposed surface blocks, and the Hive's own template has dirt speckled through its
+        // mycelium that the sweep would otherwise eat. A race that lays no cover (Protoss) skips
+        // this. Only the starting base goes through this sweep — an expansion Hive is raised via
+        // BuildingKitItem, which never calls coverGround, so it never overruns stone the player
+        // has already placed around it.
+        coverGround(level, x, z, profile);
         int y = platformHeight(level, x, z, footprint);
         BlockPos origin = new BlockPos(x, y, z);
 
@@ -546,7 +559,7 @@ public final class GameBootstrap {
 
     /**
      * Spreads a race's ground cover — Zerg "creep" — over the natural ground surface within
-     * {@link #AI_BASE_COVER_RADIUS} of a new AI base: every exposed grass/stone/sand/red-sand/dirt/
+     * {@link #CREEP_RADIUS} of a new AI base: every exposed grass/stone/sand/red-sand/dirt/
      * gravel surface block (air directly above) becomes the race's cover block. A race that lays
      * none ({@link RaceProfile#creep()} null) returns immediately, leaving the terrain untouched.
      *
@@ -560,27 +573,59 @@ public final class GameBootstrap {
         if (profile.creep() == null) {
             return;
         }
-        BlockState cover = profile.creep().get();
-        for (int dx = -AI_BASE_COVER_RADIUS; dx <= AI_BASE_COVER_RADIUS; dx++) {
-            for (int dz = -AI_BASE_COVER_RADIUS; dz <= AI_BASE_COVER_RADIUS; dz++) {
-                if (dx * dx + dz * dz > AI_BASE_COVER_RADIUS * AI_BASE_COVER_RADIUS) {
+        spreadCover(level, cx, cz, profile.creep().get(), COVERABLE_GROUND, CREEP_RADIUS);
+    }
+
+    /**
+     * Spreads Zerg creep out from a Hive, Sunken Colony or Spore Colony placed mid-match — the same
+     * sweep {@link #coverGround} runs at world creation, over the same {@link #CREEP_RADIUS}, except
+     * it overruns {@link #RUNTIME_COVERABLE_GROUND} rather than {@link #COVERABLE_GROUND}: the
+     * bootstrap sweep runs once before the player has built anything, while a structure raised
+     * mid-match must not turn stone the player has quarried and built with into mycelium under them.
+     * A race with no creep (Protoss) is a no-op, so every placement call site can call this
+     * unconditionally rather than checking the race first.
+     */
+    public static void spreadCreep(ServerLevel level, BlockPos pos, Faction faction) {
+        RaceProfile profile = Races.of(faction);
+        if (profile == null || profile.creep() == null) {
+            return;
+        }
+        spreadCover(level, pos.getX(), pos.getZ(), profile.creep().get(), RUNTIME_COVERABLE_GROUND, CREEP_RADIUS);
+    }
+
+    private static void spreadCover(ServerLevel level, int cx, int cz, BlockState cover,
+            Set<Block> coverable, int radius) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius) {
                     continue;
                 }
                 int x = cx + dx;
                 int z = cz + dz;
                 int y = groundHeight(level, x, z);
                 BlockPos pos = new BlockPos(x, y, z);
-                if (isCoverableGround(level.getBlockState(pos)) && level.getBlockState(pos.above()).isAir()) {
+                if (coverable.contains(level.getBlockState(pos).getBlock())
+                        && isClearAbove(level.getBlockState(pos.above()))) {
                     level.setBlock(pos, cover, Block.UPDATE_ALL);
                 }
             }
         }
     }
 
+    /**
+     * Whether the space above a ground block is open enough for cover to spread underneath it.
+     * Leaf litter is not air but has no collision and survives fine on the solid block cover
+     * replaces it with, so a patch of forest floor scattered with fallen leaves must not be treated
+     * as blocked the way standing over an actual obstruction would be.
+     */
+    private static boolean isClearAbove(BlockState above) {
+        return above.isAir() || above.is(Blocks.LEAF_LITTER);
+    }
+
     private static @Nullable BlockPos placeAiBaseAt(ServerLevel level, int x, int y, int z,
             RaceProfile profile, Faction faction) {
         BlockPos origin = new BlockPos(x, y, z);
-        clearTrees(level, x, z, AI_BASE_COVER_RADIUS);
+        clearTrees(level, x, z, CREEP_RADIUS);
         // Ground cover first, building second: coverGround rewrites exposed surface blocks, and the
         // Hive's own template has dirt speckled through its mycelium that the sweep would otherwise
         // eat. A race that lays no cover skips this.

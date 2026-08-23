@@ -41,6 +41,11 @@ import org.jetbrains.annotations.Nullable;
  * only has to agree with it, which {@code BuildingTemplatesTest} is what keeps true. The one place it
  * is deliberately the more permissive of the two is Pylon <em>ownership</em> — see
  * {@link PsiField#covered(net.minecraft.world.level.BlockGetter, BlockPos)}.
+ *
+ * <p>Deliberately checks only {@code requiresPylon()}, not {@code requiresCreep()}: no
+ * {@link BuildingKitItem} requires creep today (the Hive kit is exempt, like a Nexus is from psi), so
+ * there is no {@code Verdict} for it yet. A future creep-gated kit needs one here alongside a
+ * {@code CreepField} check, the same way {@code PsiField} is wired in below.
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
 public final class KitPlacementPreview {

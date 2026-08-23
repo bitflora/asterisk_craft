@@ -107,6 +107,22 @@ Production buildings share a common shape, factored into `building/`:
   (`PsiField.onlinePylons`, a walk over the block entities of the surrounding chunks) rather than a
   sweep of block positions, because `client/PsiFieldOverlay` paints the whole powered area and needs
   one lookup to answer a thousand ground columns.
+- **`building/CreepField` is the Zerg answer to the same question `PsiField` answers for the
+  Protoss — and deliberately a separate class, not a generalization of it.** A Zerg building may be
+  placed within `CreepField.RADIUS` (20) of *any* creep source (a Hive, or a Sunken or Spore
+  Colony — the `entity/CreepSource` marker, sitting beside `Rooted`/`Flyer`/`Detector`) or standing
+  outright on the race's creep block (mycelium, unowned — a razed base's creep stays buildable for
+  whoever reaches it). **Unlike psi, both clauses are deliberately faction-blind**: creep is shared
+  territory, not an army-specific resource, so an enemy colony egg (used for testing, or a future
+  Zerg-mirror PvP match) may go down beside an ally's creep exactly as freely as its own —
+  `CreepField.creepSources` is always walked with a null owner, and the `Faction` a caller passes in
+  only picks which race's ground block counts as creep. It is reached from the same two call sites as
+  psi, through the sibling `building/CreepDependent` flag (`requiresCreep`) rather than a second field
+  on `PsiDependent`, because the two mechanisms are allowed to diverge later and neither may name the
+  other's race. Colonies already spread mycelium in a matching 20-block circle on placement
+  (`game/GameBootstrap.spreadCreep`), which is what lets a chain of colonies push creep outward
+  across the map. `client/PsiFieldOverlay` and `client/CreepFieldOverlay` share their grid/rendering
+  mechanics through `client/GroundGridOverlay`; each still owns its coverage rule and colours.
 - `building/CoreCensus` is the **only** answer to "where are this faction's bases". Every base enrols itself from its own tick, so it sees one warped in from a kit, and it is symmetric across the two sides in a way the old bootstrap-written position attachments never were. `game/GameOutcome.decide` is symmetric too: a side is out when its *last* base falls, whichever side that is — so an expansion base buys the player another life exactly the way a second Hive always bought the swarm one.
 - Each building is a `BaseEntityBlock` + `BlockEntity` pair (`BaseBlock`/`BaseBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`. A building's `preRemoveSideEffects` deliberately skips `super` (see `ArmyLinkedContainer`) so destroying one building never drops/clears the whole army's shared bank.
 

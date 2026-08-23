@@ -1,9 +1,13 @@
 package net.bitflora.asteriskcraft.entity;
 
+import net.bitflora.asteriskcraft.building.CreepDependent;
+import net.bitflora.asteriskcraft.building.CreepField;
 import net.bitflora.asteriskcraft.building.PsiDependent;
 import net.bitflora.asteriskcraft.building.PsiField;
+import net.bitflora.asteriskcraft.command.ControlledFaction;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.game.GameBootstrap;
 import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -46,10 +50,10 @@ import java.util.function.Supplier;
  *
  * <p>The Photon Cannon is a building that happens to be an entity, so its "kit" is one of these
  * rather than a {@code building/BuildingKitItem} — which makes this the second of the mod's two
- * placement call sites, and the reason for {@code requiresPylon}. Both sites ask
- * {@code building/PsiField} and nothing else.
+ * placement call sites, and the reason for {@code requiresPylon}/{@code requiresCreep}. Both sites
+ * ask {@code building/PsiField} and {@code building/CreepField} and nothing else.
  */
-public class FactionSpawnEggItem extends Item implements PsiDependent {
+public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDependent {
 
     /** Whose side an egg's mob joins, resolved against the match when the egg is used. */
     public enum Side {
@@ -67,6 +71,8 @@ public class FactionSpawnEggItem extends Item implements PsiDependent {
     private final Supplier<? extends EntityType<? extends Mob>> entityType;
     private final Side side;
     private final boolean requiresPylon;
+    private final boolean requiresCreep;
+    private final boolean spreadsCreep;
 
     public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType, Side side) {
         this(properties, entityType, side, false);
@@ -79,15 +85,68 @@ public class FactionSpawnEggItem extends Item implements PsiDependent {
      */
     public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType,
             Side side, boolean requiresPylon) {
+        this(properties, entityType, side, requiresPylon, false);
+    }
+
+    /**
+     * @param spreadsCreep whether this egg's mob should spread its race's ground cover (Zerg creep)
+     *                     out from itself once placed — true only for the Sunken/Spore Colony eggs.
+     *                     Resolved against the spawned mob's faction at use time, so this class still
+     *                     names no race: a race with no creep (Protoss) is a no-op.
+     */
+    public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType,
+            Side side, boolean requiresPylon, boolean spreadsCreep) {
+        this(properties, entityType, side, requiresPylon, false, spreadsCreep);
+    }
+
+    /**
+     * @param requiresCreep whether this egg places a <em>building</em> that needs Zerg creep in
+     *                       range — the sibling of {@code requiresPylon}, and never true at the same
+     *                       time as it. True only for the Sunken/Spore Colony eggs.
+     */
+    public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType,
+            Side side, boolean requiresPylon, boolean requiresCreep, boolean spreadsCreep) {
         super(properties);
         this.entityType = entityType;
         this.side = side;
         this.requiresPylon = requiresPylon;
+        this.requiresCreep = requiresCreep;
+        this.spreadsCreep = spreadsCreep;
     }
 
     @Override
     public boolean requiresPylon() {
         return this.requiresPylon;
+    }
+
+    @Override
+    public boolean requiresCreep() {
+        return this.requiresCreep;
+    }
+
+    /**
+     * Resolves the faction for {@link CreepDependent}'s client-side overlay — deliberately
+     * <em>not</em> {@code this.side.resolve(level)}: {@code MatchSetup.of} answers with its
+     * hardcoded default on the client (the level-scoped match setup isn't synced), which is fine for
+     * {@link #spawnMob}'s authoritative server-side check but would silently paint the wrong
+     * player's creep on the client whenever the human isn't playing the default's race. The player's
+     * own faction is instead read off {@code command.ControlledFaction}, a synced per-player
+     * attachment that answers correctly on both sides; the ENEMY case has no equivalent synced
+     * source, so it falls back to "whichever playable faction isn't the human's", which matches every
+     * match today (exactly two playable factions, never both the same).
+     */
+    @Override
+    public Faction placingFaction(Level level, Player player) {
+        Faction human = ControlledFaction.of(player);
+        if (this.side == Side.ALLY) {
+            return human;
+        }
+        for (Faction candidate : Faction.values()) {
+            if (candidate != Faction.NEUTRAL && candidate != human) {
+                return candidate;
+            }
+        }
+        return human;
     }
 
     @Override
@@ -139,10 +198,20 @@ public class FactionSpawnEggItem extends Item implements PsiDependent {
             }
             return InteractionResult.FAIL;
         }
+        if (this.requiresCreep && !CreepField.covered(level, pos, faction)) {
+            if (user instanceof ServerPlayer player) {
+                player.sendSystemMessage(
+                        Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS), true);
+            }
+            return InteractionResult.FAIL;
+        }
         EntityType<? extends Mob> type = entityType.get();
         Mob mob = type.spawn(level, stack, user, pos, EntitySpawnReason.SPAWN_ITEM_USE, tryMoveDown, movedUp);
         if (mob != null) {
             FactionAttachments.set(mob, faction);
+            if (this.spreadsCreep) {
+                GameBootstrap.spreadCreep(level, mob.blockPosition(), faction);
+            }
             stack.consume(1, user);
             level.gameEvent(user, GameEvent.ENTITY_PLACE, pos);
         }

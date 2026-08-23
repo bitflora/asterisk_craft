@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity.zerg;
 
 import net.bitflora.asteriskcraft.entity.Altitude;
+import net.bitflora.asteriskcraft.entity.CreepSource;
 import net.bitflora.asteriskcraft.entity.Rooted;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
@@ -43,7 +44,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link net.bitflora.asteriskcraft.stats.UnitStats#SUNKEN_COLONY} — not here.
  */
-public class SunkenColonyEntity extends Monster implements Rooted {
+public class SunkenColonyEntity extends Monster implements Rooted, CreepSource {
     private static final UnitStat STAT = UnitStats.SUNKEN_COLONY;
 
     // Synced rather than broadcast as an entity event: an int carries the animation's progress (not

@@ -150,7 +150,7 @@ public class AsteriskCraft {
     // have no equivalent of — see PsiField, which names no building.
     public static final DeferredItem<BuildingKitItem> HIVE_KIT = ITEMS.registerItem("hive_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.HIVE, HIVE_CORE,
-                    BuildingTemplates.HIVE_FOOTPRINT, false));
+                    BuildingTemplates.HIVE_FOOTPRINT, false, true));
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
@@ -417,14 +417,14 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ALLY));
+            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true));
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ENEMY));
+            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ENEMY, false, true, true));
 
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("spore_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ALLY));
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true));
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("spore_colony_spawn_egg_enemy",
-            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ENEMY));
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ENEMY, false, true, true));
 
     // --- Sounds ---
     // Ambient events each name several ogg files in sounds.json; vanilla's sound system already
