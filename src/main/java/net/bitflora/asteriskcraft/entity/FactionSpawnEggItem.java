@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -102,7 +103,9 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
     /**
      * @param requiresCreep whether this egg places a <em>building</em> that needs Zerg creep in
      *                       range — the sibling of {@code requiresPylon}, and never true at the same
-     *                       time as it. True only for the Sunken/Spore Colony eggs.
+     *                       time as it. True only for the Sunken/Spore Colony eggs, which is also
+     *                       why it doubles as the gate for refusing a spot standing on leaves — a
+     *                       colony rooted in foliage that can be chopped out from under it.
      */
     public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType,
             Side side, boolean requiresPylon, boolean requiresCreep, boolean spreadsCreep) {
@@ -202,6 +205,12 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
             if (user instanceof ServerPlayer player) {
                 player.sendSystemMessage(
                         Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS), true);
+            }
+            return InteractionResult.FAIL;
+        }
+        if (this.requiresCreep && level.getBlockState(pos.below()).is(BlockTags.LEAVES)) {
+            if (user instanceof ServerPlayer player) {
+                player.sendSystemMessage(Component.translatable("message.asteriskcraft.kit.on_leaves"), true);
             }
             return InteractionResult.FAIL;
         }

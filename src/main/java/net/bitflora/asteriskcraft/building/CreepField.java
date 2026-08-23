@@ -73,10 +73,11 @@ public final class CreepField {
      * genuinely want one faction's sources, and because it's the same shape as
      * {@link PsiField#onlinePylons}.
      *
-     * <p>Two branches, neither naming a building: a {@link FactionCore} block entity of the right
-     * faction (the Hive, without saying so — a Nexus is a {@link FactionCore} too, but only Zerg
-     * placement ever calls this), and a {@link CreepSource} entity of the right faction (the two
-     * colonies).
+     * <p>Two branches, neither naming a building: a {@link FactionCore} block entity that
+     * {@link FactionCore#projectsCreep()} (the Hive, without saying so — a Nexus is a
+     * {@link FactionCore} too but its race has no creep, so it is excluded even though Zerg
+     * placement is the only caller today), and a {@link CreepSource} entity of the right faction
+     * (the two colonies).
      */
     public static List<BlockPos> creepSources(Level level, BlockPos center, int searchRadius, @Nullable Faction owner) {
         List<BlockPos> found = new ArrayList<>();
@@ -92,7 +93,7 @@ public final class CreepField {
                     continue;
                 }
                 for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
-                    if (!(blockEntity instanceof FactionCore core)) {
+                    if (!(blockEntity instanceof FactionCore core) || !core.projectsCreep()) {
                         continue;
                     }
                     BlockPos pos = blockEntity.getBlockPos();

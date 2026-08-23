@@ -409,6 +409,11 @@ public class BaseBlockEntity extends BlockEntity
         return this.faction;
     }
 
+    @Override
+    public boolean projectsCreep() {
+        return this.profile.creep() != null;
+    }
+
     /**
      * Whichever side of this match plays this base's race. NEUTRAL when nobody does, which is the
      * honest answer for a base of a race sitting out the match and keeps it out of both armies.
