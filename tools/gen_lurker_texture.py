@@ -46,14 +46,15 @@ TEX_DIR = ROOT / "src/main/resources/assets/asteriskcraft/textures/entity"
 CLEAR = (0, 0, 0, 0)
 
 # --- palette ------------------------------------------------------------------------------------
-# Sampled from hydralisk.png: the Lurker is the same animal in a different shape.
+# The whole animal is brown: a mottled hide over darker chitin, with the plating a lighter tan-brown
+# rather than the bone white the Hydralisk carries. Sampled from hydralisk.png, since the Lurker is
+# the same animal on a spider's frame — the most common texel in that skin is about 90,47,26.
 HIDE = (92, 48, 27)          # the soft body, the commonest colour in the Hydralisk's skin
 HIDE_DARK = (57, 28, 17)     # creases and the plating that sits in shadow
-BONE = (170, 122, 68)        # the pale tan of the hood, brow and every spine
-BONE_DIM = (138, 96, 54)     # bone in shadow — the underside plates and the mandibles
-CHITIN = (68, 34, 20)        # femurs: darker than the body so a leg reads against it
-CHITIN_LIGHT = (150, 106, 58)  # shins: lighter than the body, for the same reason
-FANG = (206, 176, 122)       # teeth, the brightest non-emissive thing on the model
+PLATE = (134, 90, 50)        # the lighter tan-brown of the hood, the brow and every spine
+PLATE_DIM = (108, 71, 39)    # plate in shadow — the snout ridge and the mandibles
+CHITIN = (68, 34, 20)        # legs: darker than the body, so eight of them read against it
+FANG = (176, 140, 96)        # teeth, the palest thing on the model and still a brown
 EYE = (255, 224, 160)        # matches the Hydralisk's lit eye
 
 # Emissive pass, off hydralisk_glow.png: a hot amber at the spine tips, a paler one in the eyes.
@@ -61,31 +62,26 @@ EYE_GLOW = (255, 224, 160)
 SPINE_GLOW = (255, 144, 65)
 
 PALETTE = {
-    # Body
+    # Body: vanilla's spider cephalothorax and abdomen
     "thorax": HIDE, "abdomen": HIDE,
-    "carapace": HIDE_DARK, "abdomen_plate": HIDE_DARK,
-    # The rack, and the crest that sits with it above the surface
-    "spine1": BONE, "spine2": BONE, "spine3": BONE, "spine4": BONE,
-    "spine5": BONE, "spine6": BONE,
-    "crest_spine_left": BONE, "crest_spine_right": BONE,
-    # Head
-    "neck": HIDE, "head": HIDE,
-    "brow_ridge": BONE, "hood": BONE,
-    "hood_horn_left": BONE, "hood_horn_right": BONE,
-    "upper_jaw": HIDE, "lower_jaw": HIDE, "snout_ridge": BONE_DIM,
+    # The rack, and the crest that sits with it above the surface when the unit is burrowed
+    "spine1": PLATE, "spine2": PLATE, "spine3": PLATE, "spine4": PLATE,
+    "spine5": PLATE, "spine6": PLATE,
+    "crest_spine_left": PLATE, "crest_spine_right": PLATE,
+    # Head — the Hydralisk's, transplanted onto the spider's head pivot
+    "head": HIDE,
+    "brow_ridge": PLATE, "hood": PLATE,
+    "hood_horn_left": PLATE, "hood_horn_right": PLATE,
+    "upper_jaw": HIDE, "lower_jaw": HIDE, "snout_ridge": PLATE_DIM,
     "fang_upper_left": FANG, "fang_upper_right": FANG,
     "fang_lower_left": FANG, "fang_lower_right": FANG,
-    "mandible_left": BONE_DIM, "mandible_right": BONE_DIM,
+    "mandible_left": PLATE_DIM, "mandible_right": PLATE_DIM,
     "eye_left": EYE, "eye_right": EYE,
-    # Legs: femur dark, shin light, so neither vanishes against the body it crosses
-    "leg_left_front": CHITIN, "leg_right_front": CHITIN,
-    "leg_left_mid_front": CHITIN, "leg_right_mid_front": CHITIN,
-    "leg_left_mid_hind": CHITIN, "leg_right_mid_hind": CHITIN,
-    "leg_left_hind": CHITIN, "leg_right_hind": CHITIN,
-    "shin_left_front": CHITIN_LIGHT, "shin_right_front": CHITIN_LIGHT,
-    "shin_left_mid_front": CHITIN_LIGHT, "shin_right_mid_front": CHITIN_LIGHT,
-    "shin_left_mid_hind": CHITIN_LIGHT, "shin_right_mid_hind": CHITIN_LIGHT,
-    "shin_left_hind": CHITIN_LIGHT, "shin_right_hind": CHITIN_LIGHT,
+    # Legs: vanilla's eight, darker than the body they cross so none of them vanishes against it
+    "right_hind_leg": CHITIN, "left_hind_leg": CHITIN,
+    "right_middle_hind_leg": CHITIN, "left_middle_hind_leg": CHITIN,
+    "right_middle_front_leg": CHITIN, "left_middle_front_leg": CHITIN,
+    "right_front_leg": CHITIN, "left_front_leg": CHITIN,
 }
 
 # Which parts appear in the emissive pass, and in what colour. Kept to the eyes and the spikes that
@@ -101,9 +97,18 @@ GLOWING = {
 # length. Faces shorter than this are lit throughout.
 GLOW_TIP_TEXELS = 3
 
-# Parts painted with heavier noise: hide blotches the way the Hydralisk's does, and flat brown at
-# this scale reads as plastic. Bone and teeth stay clean.
-MOTTLED = {"thorax", "abdomen", "neck", "head", "upper_jaw", "lower_jaw"}
+# Parts painted with heavier noise — which here is most of the animal, because "mottled brown" is
+# the whole colour scheme and flat brown reads as plastic at 16px. Only the teeth and the eyes stay
+# clean, since a blotchy tooth stops reading as a tooth.
+MOTTLED = {
+    "thorax", "abdomen", "head", "upper_jaw", "lower_jaw",
+    "hood", "hood_horn_left", "hood_horn_right", "brow_ridge", "snout_ridge",
+    "mandible_left", "mandible_right",
+    "right_hind_leg", "left_hind_leg",
+    "right_middle_hind_leg", "left_middle_hind_leg",
+    "right_middle_front_leg", "left_middle_front_leg",
+    "right_front_leg", "left_front_leg",
+}
 
 # Per-face brightness. Box UV order is top, bottom, right(-x), front(-z), left(+x), back(+z).
 FACE_SHADE = {"top": 1.30, "bottom": 0.55, "right": 0.86, "front": 1.06, "left": 0.86, "back": 0.78}
