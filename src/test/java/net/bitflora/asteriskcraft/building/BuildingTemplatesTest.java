@@ -56,6 +56,14 @@ class BuildingTemplatesTest {
         assertSingleCore("pylon", "asteriskcraft:pylon_core");
     }
 
+    @Test
+    void commandCenterTemplateHasOneCore() {
+        // Generated rather than exported from a design world (tools/make_core_template.py) — the
+        // Command Center is nothing but its core block so far. Same assertion either way: whatever
+        // produced the .nbt, the placement code anchors on exactly one core.
+        assertSingleCore("command_center", "asteriskcraft:command_center_core");
+    }
+
     // --- declared footprints (the client's placement outline) vs. the templates themselves ---
     // A client can't load a template — they live under data/ and only a server's
     // StructureTemplateManager reads them — so each kit declares its building's box up front. These
@@ -80,6 +88,12 @@ class BuildingTemplatesTest {
     @Test
     void pylonFootprintMatchesTemplate() {
         assertFootprint("pylon", "asteriskcraft:pylon_core", BuildingTemplates.PYLON_FOOTPRINT);
+    }
+
+    @Test
+    void commandCenterFootprintMatchesTemplate() {
+        assertFootprint("command_center", "asteriskcraft:command_center_core",
+                BuildingTemplates.COMMAND_CENTER_FOOTPRINT);
     }
 
     private static void assertFootprint(String template, String coreBlockId, BuildingTemplates.Footprint footprint) {

@@ -49,6 +49,15 @@ public final class Races {
     private static final int ZERG_BANK_SLOTS = 81;
 
     /**
+     * The Terran base is as sturdy as the other two — the thing you lose the game with should be —
+     * but carries no shields (not a Terran mechanic) and no warp-in, since nothing raises one from
+     * a kit yet.
+     */
+    private static final int TERRAN_BASE_HEALTH = 325;
+    /** The Protoss shape: three rows, and only a handful of item types ever in it. */
+    private static final int TERRAN_BANK_SLOTS = 27;
+
+    /**
      * What the Zerg bank is stocked with when the swarm is the computer player: the old
      * 128/128/48-per-Hive x3 total, from when each Hive held its own independent stock.
      */
@@ -144,9 +153,43 @@ public final class Races {
             // rest.
             List.of(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get));
 
+    /**
+     * The Terran, as far as they go today: a Command Center and the SCVs that mine for it. Every
+     * entry below that reads as "nothing" is genuinely nothing yet rather than an omission — there
+     * is no Terran combat unit to plant as a base defence, no second building to hand out as a
+     * starting kit, and no prerequisite of the Pylon/creep kind, so no ground cover to lay.
+     *
+     * <p>Which means a Terran <em>computer</em> opponent mines and never attacks. That is a
+     * sandbox rather than a match, and it is worth having as one until the army lands; see
+     * data/asteriskcraft/build_scripts/terran.txt.
+     */
+    public static final RaceProfile TERRAN = new RaceProfile(
+            Race.TERRAN,
+            AsteriskCraft.COMMAND_CENTER_CORE::get,
+            BuildingTemplates.COMMAND_CENTER,
+            TERRAN_BASE_HEALTH,
+            0,
+            0,
+            TERRAN_BANK_SLOTS,
+            UnitRoster.builder()
+                    .worker(UnitStats.SCV, AsteriskCraft.SCV)
+                    .build(),
+            () -> ProductionKind.TERRAN_BASE,
+            AsteriskCraft.id("build_scripts/terran.txt"),
+            // No creep, and no support fill: the Terran set down on the ground as they find it.
+            null,
+            null,
+            List.of(),
+            List.of(),
+            List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
+                    new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
+            PLAYER_BANK,
+            List.of());
+
     private static final Map<Race, RaceProfile> BY_RACE = new EnumMap<>(Map.of(
             Race.PROTOSS, PROTOSS,
-            Race.ZERG, ZERG));
+            Race.ZERG, ZERG,
+            Race.TERRAN, TERRAN));
 
     private Races() {
     }

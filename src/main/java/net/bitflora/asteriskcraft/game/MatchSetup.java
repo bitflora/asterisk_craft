@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.game;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile;
@@ -44,24 +45,47 @@ public record MatchSetup(Faction playerFaction, Faction aiFaction) {
     ).apply(inst, MatchSetup::new));
 
     /**
-     * The match a human playing {@code playerRace} produces: they take the side that plays it, and
-     * the computer takes the other. This is what {@code GameBootstrap} writes from the
-     * {@code player_race} game rule, and the only place the opponent is derived.
+     * The match two picked races produce: each takes the side that plays it. This is what
+     * {@code GameBootstrap} writes from the {@code player_race} and {@code ai_race} game rules.
      *
-     * <p>With two races the opponent is unambiguous. A third would make "the other one" a choice
-     * rather than a fact, and should grow a second rule here rather than a rule elsewhere.
+     * <p>With two races the opponent used to be derivable — "the faction that isn't yours". A third
+     * made that an arbitrary choice, so it became a second rule and a second picker rather than a
+     * cleverer derivation.
+     *
+     * <p><b>A mirror match is not a match, and this is the one place that is enforced.</b> Two
+     * rules are two ints, so a command or a hand-edited save can name the same race twice; a
+     * dedicated server has no picker to stop it. Both sides would then draw on one bank
+     * ({@code building.ArmyBank} keys one per {@link Race}) and neither would shoot the other
+     * ({@link Faction#isEnemy} is strictly cross-faction), which reads as the game being broken
+     * rather than as an unusual setting. So the opponent is re-derived rather than honoured.
      */
-    public static MatchSetup forPlayerRace(Race playerRace) {
-        Faction player = Faction.of(playerRace);
-        if (player == null) {
-            throw new IllegalArgumentException("no side plays " + playerRace);
+    public static MatchSetup forRaces(Race playerRace, Race aiRace) {
+        Faction player = sideOf(playerRace);
+        if (aiRace == playerRace) {
+            Faction fallback = anyOtherSide(player);
+            AsteriskCraft.LOGGER.warn(
+                    "AsteriskCraft: both sides were set to {}; the computer plays {} instead",
+                    playerRace.getSerializedName(), fallback.getSerializedName());
+            return new MatchSetup(player, fallback);
         }
-        for (Faction opponent : Faction.values()) {
-            if (opponent != Faction.NEUTRAL && opponent != player) {
-                return new MatchSetup(player, opponent);
+        return new MatchSetup(player, sideOf(aiRace));
+    }
+
+    private static Faction sideOf(Race race) {
+        Faction faction = Faction.of(race);
+        if (faction == null) {
+            throw new IllegalArgumentException("no side plays " + race);
+        }
+        return faction;
+    }
+
+    private static Faction anyOtherSide(Faction taken) {
+        for (Faction other : Faction.values()) {
+            if (other != Faction.NEUTRAL && other != taken) {
+                return other;
             }
         }
-        throw new IllegalStateException("no opponent available for " + playerRace);
+        throw new IllegalStateException("no opponent available for " + taken);
     }
 
     /**

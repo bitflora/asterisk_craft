@@ -1,7 +1,14 @@
-- You must construct additional pylons
-
-Additional units in old mod:
-Protoss: Zealot, Dark Templar, Zeratul, Probe (+Dark/Void/Purifier variants), Reaver, Scarab
-Zerg: Zergling family, Hydralisk family, Mutalisk family, Larva/Broodling, Queen, Brutalisk, Tyrannozor, Brakk
-Terran: Marine, Civilian/Infested Civilian, Predator, Jim Raynor, Wraith, Scout
-Two interesting orphans: Overlord and Sentry have complete, large hand-built models (700-1650 lines) with textures implied but no entity class wiring them up — those could be extracted if you ever want an Overlord or Sentry uni
+- Control/Supply/Psi limits
+- Fix training times for Zerg Colonies, use noxious_gas and item_slime
+- Fix unit costs for AI players vs Zerg
+- New Structures
+    - Spawning Pool
+    - Spire
+    - StarGate
+    - Everything terran
+- Terran Units
+    - SCVs
+    - Marines
+    - Firebats
+    - Ghosts
+    - Bunker

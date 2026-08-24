@@ -30,6 +30,7 @@
   "block.asteriskcraft.depleted_node": "Depleted Node",
   "block.asteriskcraft.gateway_core": "Gateway",
   "block.asteriskcraft.hive_core": "Hive",
+  "block.asteriskcraft.command_center_core": "Command Center",
   "block.asteriskcraft.pylon_core": "Pylon",
   "item.asteriskcraft.pylon_kit": "Pylon Kit",
   "item.asteriskcraft.gateway_kit": "Gateway Kit",
@@ -78,6 +79,7 @@
   "entity.asteriskcraft.scout": "Scout",
   "entity.asteriskcraft.dark_templar": "Dark Templar",
   "entity.asteriskcraft.drone": "Drone",
+  "entity.asteriskcraft.scv": "SCV",
   "entity.asteriskcraft.zergling": "Zergling",
   "entity.asteriskcraft.ultralisk": "Ultralisk",
   "entity.asteriskcraft.hydralisk": "Hydralisk",
@@ -172,7 +174,10 @@
   "config.jade.plugin_asteriskcraft.protoss_shield": "Protoss Shield",
   "config.jade.plugin_asteriskcraft.building_defense": "Building Health & Shields",
   "gamerule.asteriskcraft.player_race": "Race",
-  "gamerule.asteriskcraft.player_race.description": "Which race you command. The computer plays the other one.",
+  "gamerule.asteriskcraft.player_race.description": "Which race you command.",
+  "gamerule.asteriskcraft.ai_race": "Enemy Race",
+  "gamerule.asteriskcraft.ai_race.description": "Which race the computer plays. Setting it to your own race moves it to another.",
   "race.asteriskcraft.protoss": "Protoss",
-  "race.asteriskcraft.zerg": "Zerg"
+  "race.asteriskcraft.zerg": "Zerg",
+  "race.asteriskcraft.terran": "Terran"
 }

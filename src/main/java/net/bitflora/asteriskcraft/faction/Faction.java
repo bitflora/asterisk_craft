@@ -21,7 +21,8 @@ import org.jetbrains.annotations.Nullable;
 public enum Faction implements StringRepresentable {
     NEUTRAL("neutral", null),
     PROTOSS("protoss", Race.PROTOSS),
-    ZERG("zerg", Race.ZERG);
+    ZERG("zerg", Race.ZERG),
+    TERRAN("terran", Race.TERRAN);
 
     public static final Codec<Faction> CODEC = StringRepresentable.fromEnum(Faction::values);
     public static final StreamCodec<ByteBuf, Faction> STREAM_CODEC =
@@ -51,7 +52,7 @@ public enum Faction implements StringRepresentable {
 
     /**
      * The side that plays {@code race}, or null if no side does. The inverse of {@link #race()},
-     * and the one place a race is turned back into a side — {@code game.MatchSetup.forPlayerRace}
+     * and the one place a race is turned back into a side — {@code game.MatchSetup.forRaces}
      * is what needs it, because the race is what a player picks and the side is what everything
      * downstream works in.
      */

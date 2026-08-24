@@ -161,7 +161,25 @@ public enum ProductionKind {
                     Icon.ofItem(AsteriskCraft.HIVE_KIT),
                     CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 5,
                     new Action.GiveKit(AsteriskCraft.HIVE_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.hive_kit_ready"))));
+                            BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.hive_kit_ready")))),
+    /**
+     * The Command Center's card. One column, because one unit: the Terran ship with an economy and
+     * no army yet, so the only thing a Command Center can do is put another SCV on the field.
+     *
+     * <p>A Wood button above a Stone one, the {@link #PROTOSS_BASE} shape rather than the Hive's:
+     * an SCV costs 50 of <em>either</em> resource, and the two buttons are what turn that choice
+     * into something the player makes rather than something the payment code guesses. Alternative 0
+     * is Wood and 1 is Stone, matching the order in {@code UnitStats.SCV}'s cost.
+     */
+    TERRAN_BASE(() -> AsteriskCraft.COMMAND_CENTER_CORE.get(), Races.TERRAN.bankSlots(), List.of(
+            new OptionView(
+                    Icon.ofIcon("scv"),
+                    CostText.tooltip(UnitStats.SCV.cost(), 0), 0,
+                    new Action.TrainWorker(0)),
+            new OptionView(
+                    Icon.ofIcon("scv"),
+                    CostText.tooltip(UnitStats.SCV.cost(), 1), 0,
+                    new Action.TrainWorker(1))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

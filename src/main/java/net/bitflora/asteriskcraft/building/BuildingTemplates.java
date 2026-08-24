@@ -40,6 +40,7 @@ public final class BuildingTemplates {
     public static final Identifier GATEWAY = AsteriskCraft.id("gateway");
     public static final Identifier HIVE = AsteriskCraft.id("hive");
     public static final Identifier PYLON = AsteriskCraft.id("pylon");
+    public static final Identifier COMMAND_CENTER = AsteriskCraft.id("command_center");
 
     /**
      * A template's bounding box and where its core sits inside it, declared up front so the
@@ -64,6 +65,10 @@ public final class BuildingTemplates {
     public static final Footprint HIVE_FOOTPRINT = new Footprint(new Vec3i(8, 7, 7), new BlockPos(4, 2, 3));
     public static final Footprint GATEWAY_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
     public static final Footprint PYLON_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
+    // The Command Center is currently nothing but its core block, so its template is a 1x1x1 and
+    // the core sits at its origin. That is the building's shape today, not a special case in the
+    // machinery: re-export a designed Command Center over the .nbt and update these two numbers.
+    public static final Footprint COMMAND_CENTER_FOOTPRINT = new Footprint(new Vec3i(1, 1, 1), BlockPos.ZERO);
 
     /** Where a stamped template landed: its core block, its min corner, and its size. */
     public record Placed(BlockPos core, BlockPos min, Vec3i size) {

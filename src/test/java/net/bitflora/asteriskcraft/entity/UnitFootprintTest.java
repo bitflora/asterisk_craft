@@ -47,6 +47,7 @@ class UnitFootprintTest {
     private static Ground[] groundUnits() {
         return new Ground[]{
                 new Ground(AsteriskCraft.PROBE.get(), UnitStats.PROBE),
+                new Ground(AsteriskCraft.SCV.get(), UnitStats.SCV),
                 new Ground(AsteriskCraft.ZEALOT.get(), UnitStats.ZEALOT),
                 new Ground(AsteriskCraft.DRAGOON.get(), UnitStats.DRAGOON),
                 new Ground(AsteriskCraft.DARK_TEMPLAR.get(), UnitStats.DARK_TEMPLAR),

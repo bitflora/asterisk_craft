@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "asteriskcraft:block/command_center_core"
+  }
+}

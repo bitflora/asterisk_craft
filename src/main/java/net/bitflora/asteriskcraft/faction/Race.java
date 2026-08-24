@@ -41,7 +41,22 @@ public enum Race implements StringRepresentable {
      */
     ZERG("zerg", false, true, true,
             Set.of(WildKind.CIVILIAN),
-            Set.of(WildKind.CIVILIAN, WildKind.HOSTILE));
+            Set.of(WildKind.CIVILIAN, WildKind.HOSTILE)),
+    /**
+     * No shields, no HP regen, nothing raised from the dead — the Terran are what is left when the
+     * other two races' cheap tricks are taken away, and they buy their staying power instead.
+     *
+     * <p>Their wild-target sets match the Protoss, and for the same reason: a Terran army shoots
+     * the monsters that come at it whether or not a human is standing in it, so command widens
+     * nothing here.
+     *
+     * <p>Appended, and every later race must be too: this ordinal is what the
+     * {@code asteriskcraft:player_race} and {@code asteriskcraft:ai_race} game rules persist, so
+     * inserting a race would re-side every existing world.
+     */
+    TERRAN("terran", false, false, false,
+            Set.of(WildKind.HOSTILE),
+            Set.of(WildKind.HOSTILE));
 
     public static final Codec<Race> CODEC = StringRepresentable.fromEnum(Race::values);
     public static final StreamCodec<ByteBuf, Race> STREAM_CODEC =

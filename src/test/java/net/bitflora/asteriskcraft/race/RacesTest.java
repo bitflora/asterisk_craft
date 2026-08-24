@@ -89,7 +89,7 @@ class RacesTest {
         for (RaceProfile profile : Races.all()) {
             assertNotNull(profile.worker(), profile.race() + " declares no worker");
             assertTrue(profile.worker().isWorker(), profile.race() + "'s worker is not flagged as one");
-            assertTrue(profile.roster().names().contains(profile.race() == Race.PROTOSS ? "probe" : "drone"),
+            assertTrue(profile.roster().names().contains(profile.worker().id()),
                     profile.race() + "'s roster does not list its own worker");
         }
     }

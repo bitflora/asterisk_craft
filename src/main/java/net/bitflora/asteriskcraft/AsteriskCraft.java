@@ -31,6 +31,7 @@ import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
@@ -124,9 +125,14 @@ public class AsteriskCraft {
             props -> new BaseBlock(Race.ZERG, props),
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
 
+    public static final DeferredBlock<BaseBlock> COMMAND_CENTER_CORE = BLOCKS.registerBlock("command_center_core",
+            props -> new BaseBlock(Race.TERRAN, props),
+            p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
+
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
+    public static final DeferredItem<BlockItem> COMMAND_CENTER_CORE_ITEM = ITEMS.registerSimpleBlockItem("command_center_core", COMMAND_CENTER_CORE);
     public static final DeferredItem<BlockItem> PYLON_CORE_ITEM = ITEMS.registerSimpleBlockItem("pylon_core", PYLON_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
@@ -166,11 +172,13 @@ public class AsteriskCraft {
 
     // --- Block entities ---
 
-    // One type for every race's base — both core blocks are valid for it, which is what a shared
-    // BaseBlockEntity means.
+    // One type for every race's base — every core block is valid for it, which is what a shared
+    // BaseBlockEntity means. A race added without its core block listed here gets a base block that
+    // silently has no block entity behind it.
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BaseBlockEntity>> BASE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("base",
-                    () -> new BlockEntityType<>(BaseBlockEntity::new, NEXUS_CORE.get(), HIVE_CORE.get()));
+                    () -> new BlockEntityType<>(BaseBlockEntity::new,
+                            NEXUS_CORE.get(), HIVE_CORE.get(), COMMAND_CENTER_CORE.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DepletedNodeBlockEntity>> DEPLETED_NODE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("depleted_node", () -> new BlockEntityType<>(DepletedNodeBlockEntity::new, DEPLETED_NODE.get()));
@@ -193,6 +201,13 @@ public class AsteriskCraft {
                     .sized(0.7f, 0.9f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("probe"))));
+
+    // The SCV borrows the Probe's hitbox along with its model — see client/terran/ScvRenderer.
+    public static final DeferredHolder<EntityType<?>, EntityType<ScvEntity>> SCV =
+            ENTITY_TYPES.register("scv", () -> EntityType.Builder.of(ScvEntity::new, MobCategory.CREATURE)
+                    .sized(0.7f, 0.9f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scv"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
@@ -556,6 +571,7 @@ public class AsteriskCraft {
                 output.accept(NEXUS_KIT.get());
                 output.accept(HIVE_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
+                output.accept(COMMAND_CENTER_CORE_ITEM.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
                 output.accept(PROBE_SPAWN_EGG_ENEMY.get());
@@ -640,6 +656,7 @@ public class AsteriskCraft {
     // WorkerEntity's (which has none).
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
+        event.put(SCV.get(), ScvEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());

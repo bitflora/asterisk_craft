@@ -316,3 +316,10 @@ and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/clie
   static.
 - `CycleButton.builder(Function<T, Component>, T defaultValue)` takes the initial value as the
   builder argument in this version; there is no `withInitialValue`.
+- **`CycleButton.setValue(T)` does not fire the button's `OnValueChange`** (read in the decompiled
+  `CycleButton.java`: it moves `index`, then calls the private `updateValue`, which only rewrites the
+  message/tooltip/value — the listener is invoked from `cycleValue`, i.e. only by a click or a
+  scroll). So two buttons can be wired to push each other off a shared choice with no re-entrancy
+  guard at all — but whatever the listener would have done (here: writing the game rule) has to be
+  done by hand at the same time, or the widget and the value it stands for silently disagree. Used by
+  `client/RacePickerOverlay` to keep the Race and Enemy Race pickers off the same race.

@@ -20,6 +20,7 @@ import net.minecraft.world.item.component.DyedItemColor;
 public final class TeamColors {
     private static final int PROTOSS_COLOR = 0x2050C8; // blue
     private static final int ZERG_COLOR = 0x8A1030; // dark red
+    private static final int TERRAN_COLOR = 0x2E8B2E; // steel green
 
     private TeamColors() {
     }
@@ -29,6 +30,7 @@ public final class TeamColors {
         return switch (faction) {
             case PROTOSS -> PROTOSS_COLOR;
             case ZERG -> ZERG_COLOR;
+            case TERRAN -> TERRAN_COLOR;
             case NEUTRAL -> -1;
         };
     }

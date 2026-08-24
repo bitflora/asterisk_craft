@@ -9,6 +9,7 @@ import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
 import net.bitflora.asteriskcraft.client.protoss.ProbeRenderer;
+import net.bitflora.asteriskcraft.client.terran.ScvRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ScoutModel;
 import net.bitflora.asteriskcraft.client.protoss.ScoutRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ZealotModel;
@@ -86,6 +87,8 @@ public class AsteriskCraftClient {
     @SubscribeEvent
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
+        // The SCV reuses PROBE_LAYER, so there is no layer definition of its own to register.
+        event.registerEntityRenderer(AsteriskCraft.SCV.get(), ScvRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), DragoonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SCOUT.get(), ScoutRenderer::new);

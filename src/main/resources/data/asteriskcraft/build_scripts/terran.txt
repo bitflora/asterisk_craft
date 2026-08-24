@@ -1,0 +1,21 @@
+# AsteriskCraft — enemy Terran build order.
+#
+# Lines run top-to-bottom. Edit this file (or override it from your own datapack at
+# data/<namespace>/build_scripts/terran.txt) and run /reload to change how the enemy plays.
+#
+# Commands:
+#   Workers: N            keep at least N SCVs alive from here on (trains more when short)
+#   Defence: <units>      train these units; they patrol and defend the base
+#   Wave: <units>         train these units, then send the whole group to attack once complete
+#   Wait S                pause S seconds before the next command
+#   Repeat N              loop the previous N commands endlessly (put it last)
+#
+#   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
+#   Units: SCV (worker). That is the whole Terran roster today.
+#
+# The Terran have a Command Center and an economy and nothing to fight with — so a Terran computer
+# opponent mines, sits there, and loses. That is deliberate for this slice, and it is useful: it is
+# the sandbox setting, an opponent that leaves you alone while you learn a race. Once Terran combat
+# units exist, this file is where the opponent actually becomes one, with no code change.
+
+Workers: 9

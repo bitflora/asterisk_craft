@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +23,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(16, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(17, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -176,14 +177,16 @@ class UnitStatsTest {
     }
 
     @Test
-    void protossStaysPickyAndZergPaysInAnything() {
-        for (UnitStat stat : UnitStats.PROTOSS_ROSTER) {
+    void protossAndTerranStayPickyAndZergPaysInAnything() {
+        for (UnitStat stat : Stream.concat(UnitStats.PROTOSS_ROSTER.stream(), UnitStats.TERRAN_ROSTER.stream())
+                .toList()) {
             if (!stat.cost().isPurchasable()) {
                 continue;
             }
             for (var bundle : stat.cost().alternatives()) {
                 for (ResourceAmount line : bundle) {
-                    assertTrue(line.resource() != Resource.ANY, stat.id() + ": Protoss costs should never be ANY");
+                    assertTrue(line.resource() != Resource.ANY,
+                            stat.id() + ": only Zerg costs may be ANY");
                 }
             }
         }
@@ -207,12 +210,13 @@ class UnitStatsTest {
     }
 
     /**
-     * The units that never attack anything: the two workers, and the Overlord, whose whole job is
+     * The units that never attack anything: the three workers, and the Overlord, whose whole job is
      * to carry a detection bubble around and which pays for that by being unable to defend itself.
      */
     private static boolean isNonCombatant(UnitStat stat) {
         return stat == UnitStats.PROBE
                 || stat == UnitStats.DRONE
+                || stat == UnitStats.SCV
                 || stat == UnitStats.OVERLORD;
     }
 

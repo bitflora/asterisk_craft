@@ -15,7 +15,9 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
- * The mod's game rules. There is one: which race the human plays.
+ * The mod's game rules: which race the human plays, and which race the computer plays. Two rules
+ * rather than one because with three races "the other one" stopped being a fact — see
+ * {@link MatchSetup#forRaces}.
  *
  * <p>A game rule rather than a config, because the choice is per <em>world</em> and has to be made
  * before the world exists. Game rules are a registry in 26.1 ({@link Registries#GAME_RULE}), and
@@ -37,10 +39,10 @@ public final class AsteriskCraftGameRules {
     private static final int MAX_RACE = Race.values().length - 1;
 
     /**
-     * Which race the human commands; the computer plays the other one (see
-     * {@link MatchSetup#forPlayerRace}). Read once, at bootstrap — {@code GameBootstrap} freezes
-     * the answer into {@link GameAttachments#MATCH_SETUP} so editing the rule mid-match can't swap
-     * the sides out from under a world whose bases are already standing.
+     * Which race the human commands. Read once, together with {@link #AI_RACE}, at bootstrap —
+     * {@code GameBootstrap} freezes the pair into {@link GameAttachments#MATCH_SETUP} so editing
+     * either rule mid-match can't swap the sides out from under a world whose bases are already
+     * standing.
      *
      * <p>Built by hand rather than through {@code GameRules.registerInteger} so the id lands in
      * this mod's namespace; the arguments are otherwise exactly what that helper passes.
@@ -56,6 +58,23 @@ public final class AsteriskCraftGameRules {
                     Race.PROTOSS.ordinal(),
                     FeatureFlagSet.of()));
 
+    /**
+     * Which race the computer plays. Nothing stops this naming the same race as {@link #PLAYER_RACE}
+     * — a rule is an int a command can set — so {@link MatchSetup#forRaces} is where a mirror match
+     * is turned back into a real one. {@code client.RacePickerOverlay} keeps the two pickers from
+     * ever producing one in the first place.
+     */
+    public static final DeferredHolder<GameRule<?>, GameRule<Integer>> AI_RACE =
+            GAME_RULES.register("ai_race", () -> new GameRule<>(
+                    GameRuleCategory.MISC,
+                    GameRuleType.INT,
+                    IntegerArgumentType.integer(MIN_RACE, MAX_RACE),
+                    GameRuleTypeVisitor::visitInteger,
+                    Codec.intRange(MIN_RACE, MAX_RACE),
+                    value -> value,
+                    Race.ZERG.ordinal(),
+                    FeatureFlagSet.of()));
+
     private AsteriskCraftGameRules() {
     }
 
@@ -66,6 +85,11 @@ public final class AsteriskCraftGameRules {
      */
     public static Race playerRace(ServerLevel level) {
         return raceOf(level.getGameRules().get(PLAYER_RACE.get()));
+    }
+
+    /** The race the computer plays in {@code level}, clamped the same way. */
+    public static Race aiRace(ServerLevel level) {
+        return raceOf(level.getGameRules().get(AI_RACE.get()));
     }
 
     /** A rule value as a race, clamped into range. */

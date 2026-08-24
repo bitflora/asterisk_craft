@@ -51,7 +51,9 @@ public final class UnitLabels {
             Map.entry("sunken_colony", "K"),
             // ...which leaves S free on the Zerg side for the Spore Colony
             Map.entry("spore_colony", "S"),
-            Map.entry("infested_villager", "I"));
+            Map.entry("infested_villager", "I"),
+            // Terran
+            Map.entry("scv", "S"));
 
     private UnitLabels() {
     }

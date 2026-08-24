@@ -122,7 +122,8 @@ public final class GameBootstrap {
             // — has to keep agreeing with it, so editing the rule mid-match must not swap the sides
             // out from under a world whose bases are already standing.
             overworld.setData(GameAttachments.MATCH_SETUP,
-                    MatchSetup.forPlayerRace(AsteriskCraftGameRules.playerRace(overworld)));
+                    MatchSetup.forRaces(AsteriskCraftGameRules.playerRace(overworld),
+                            AsteriskCraftGameRules.aiRace(overworld)));
         }
         MatchSetup setup = MatchSetup.of(overworld);
 

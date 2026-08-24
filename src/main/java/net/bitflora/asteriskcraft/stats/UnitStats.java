@@ -218,6 +218,19 @@ public final class UnitStats {
             .cost(UnitCost.NONE) // never trained, so no buildTicks either
             .build();
 
+    // --- Terran ---
+
+    /**
+     * The SCV. Numerically the Probe with its shields taken away — the Terran carry none — which
+     * leaves it the cheapest thing in the mod that can still be killed by a single Zergling.
+     * Deliberately priced identically to the other two workers: what a race differs in is what it
+     * builds with its economy, not what the economy itself costs to staff.
+     */
+    public static final UnitStat SCV = UnitStat.builder("scv")
+            .health(10.0).shield(0).speed(0.35).followRange(48.0)
+            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(200)
+            .build();
+
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
     public static final List<UnitStat> PROTOSS_ROSTER =
             List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
@@ -227,11 +240,17 @@ public final class UnitStats {
             List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, OVERLORD, ULTRALISK, LURKER, SUNKEN_COLONY,
                     SPORE_COLONY, INFESTED_VILLAGER);
 
+    /**
+     * The Terran roster. One entry for now — the race ships with an economy and no army — and it
+     * holds the same "names a real resource, never ANY" invariant the Protoss one does.
+     */
+    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV);
+
     private UnitStats() {
     }
 
     /** The whole roster, for invariant tests and a future datapack override layer. */
     public static List<UnitStat> all() {
-        return Stream.concat(PROTOSS_ROSTER.stream(), ZERG_ROSTER.stream()).toList();
+        return Stream.of(PROTOSS_ROSTER, ZERG_ROSTER, TERRAN_ROSTER).flatMap(List::stream).toList();
     }
 }
