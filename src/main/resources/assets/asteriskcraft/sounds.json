@@ -134,6 +134,21 @@
     "subtitle": "subtitles.entity.asteriskcraft.lurker.burrow",
     "sounds": ["asteriskcraft:mob/lurker/lurker-burrow"]
   },
+  "entity.scv.ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.scv.ambient",
+    "sounds": [
+      "asteriskcraft:mob/scv/scv-live1",
+      "asteriskcraft:mob/scv/scv-live2"
+    ]
+  },
+  "entity.scv.death": {
+    "category": "neutral",
+    "subtitle": "subtitles.entity.asteriskcraft.scv.death",
+    "sounds": [
+      "asteriskcraft:mob/scv/scv-death"
+    ]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

@@ -210,13 +210,18 @@ class UnitStatsTest {
     }
 
     /**
-     * The units that never attack anything: the three workers, and the Overlord, whose whole job is
-     * to carry a detection bubble around and which pays for that by being unable to defend itself.
+     * The units that never attack anything: two of the three workers, and the Overlord, whose whole
+     * job is to carry a detection bubble around and which pays for that by being unable to defend
+     * itself.
+     *
+     * <p>The SCV is deliberately not among them — it is the one worker in the mod that is armed, and
+     * that is a statement about the Terran rather than an oversight. It still never picks a fight:
+     * what keeps it a worker is the absence of a target-acquisition goal, not the absence of a
+     * weapon. See {@code entity.terran.ScvEntity}.
      */
     private static boolean isNonCombatant(UnitStat stat) {
         return stat == UnitStats.PROBE
                 || stat == UnitStats.DRONE
-                || stat == UnitStats.SCV
                 || stat == UnitStats.OVERLORD;
     }
 

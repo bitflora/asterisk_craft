@@ -3,48 +3,53 @@ package net.bitflora.asteriskcraft.client.terran;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.client.AsteriskCraftClient;
 import net.bitflora.asteriskcraft.client.UnitGlowLayer;
-import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
-import net.bitflora.asteriskcraft.client.protoss.ProbeRenderState;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
 
 /**
- * The SCV, which borrows the Probe's geometry outright: it bakes {@code PROBE_LAYER} rather than
- * registering a layer of its own, so there is one model class, one UV layout and one entry in the
- * model tests for the two of them.
+ * The SCV: its own model, its own layer, its own render state, like every other unit. (It used to
+ * bake the Probe's layer and render as one — see docs/shaping.md's V6a slice for why that was the
+ * cheap answer at the time.)
  *
- * <p>That is why a Terran renderer names a Protoss render state. {@link ProbeModel} is an
- * {@code EntityModel<ProbeRenderState>}, so anything driving it must feed it one; the alternative
- * (generifying the model over a shared worker render state) buys nothing until the SCV grows
- * geometry of its own, at which point it gets its own model, state and layer like every other unit.
- *
- * <p>The textures are its own files from the start, so repainting the SCV in Blockbench (see
- * docs/texturing.md) never touches the Probe.
+ * <p>Two layers, and the second is unusual for this mod: {@link ScvPilotLayer} draws vanilla's baby
+ * villager head in the cab, off vanilla's own texture, which is a thing no other unit here needs.
  */
-public class ScvRenderer extends MobRenderer<ScvEntity, ProbeRenderState, ProbeModel> {
+public class ScvRenderer extends MobRenderer<ScvEntity, ScvRenderState, ScvModel> {
     private static final Identifier TEXTURE = AsteriskCraft.id("textures/entity/scv.png");
     private static final Identifier GLOW = AsteriskCraft.id("textures/entity/scv_glow.png");
 
     public ScvRenderer(EntityRendererProvider.Context context) {
-        super(context, new ProbeModel(context.bakeLayer(AsteriskCraftClient.PROBE_LAYER)), 0.4f);
+        super(context, new ScvModel(context.bakeLayer(AsteriskCraftClient.SCV_LAYER)), 0.5f);
         this.addLayer(new UnitGlowLayer<>(this, GLOW));
+        // The pilot is a second draw with vanilla's own villager texture — see ScvPilotLayer.
+        this.addLayer(new ScvPilotLayer(this, context));
     }
 
     @Override
-    public ProbeRenderState createRenderState() {
-        return new ProbeRenderState();
+    public ScvRenderState createRenderState() {
+        return new ScvRenderState();
     }
 
     @Override
-    public void extractRenderState(ScvEntity scv, ProbeRenderState state, float partialTicks) {
+    public void extractRenderState(ScvEntity scv, ScvRenderState state, float partialTicks) {
         super.extractRenderState(scv, state, partialTicks);
-        state.miningProgress = scv.getAttackAnim(partialTicks);
+        // getAttackAnim already interpolates the swing 0 -> 1 across partial ticks, so the stroke
+        // stays smooth instead of stepping once per tick. It covers both jobs the cutter has:
+        // HarvestGoal re-swings every tick it works a node, and melee swings the same hand.
+        state.cutterProgress = scv.getAttackAnim(partialTicks);
     }
 
     @Override
-    public Identifier getTextureLocation(ProbeRenderState state) {
+    protected void scale(ScvRenderState state, PoseStack poseStack) {
+        // The model spans y -5.5..24, i.e. 1.84 blocks, a shade over its own 1.8-block hitbox.
+        poseStack.scale(0.95f, 0.95f, 0.95f);
+    }
+
+    @Override
+    public Identifier getTextureLocation(ScvRenderState state) {
         return TEXTURE;
     }
 }

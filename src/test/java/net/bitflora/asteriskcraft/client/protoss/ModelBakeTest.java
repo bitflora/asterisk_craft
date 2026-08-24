@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.client.protoss;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
 import net.bitflora.asteriskcraft.client.zerg.HydraliskModel;
 import net.bitflora.asteriskcraft.client.zerg.LurkerModel;
@@ -26,6 +27,11 @@ class ModelBakeTest {
     void zealotModelBakesAndResolvesAnimatedParts() {
         // Constructing each model runs the getChild(...) lookups for every animated part.
         assertNotNull(new ZealotModel(ZealotModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void scvModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new ScvModel(ScvModel.createBodyLayer().bakeRoot()));
     }
 
     @Test

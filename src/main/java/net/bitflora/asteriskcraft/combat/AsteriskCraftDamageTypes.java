@@ -58,11 +58,15 @@ public final class AsteriskCraftDamageTypes {
     /** The Infested Villager's detonation. Its blast, not a swing — the unit only ever deals it once. */
     public static final ResourceKey<DamageType> INFESTED_BLAST = key("infested_blast");
 
+    // Terran
+    /** The SCV's welding torch. The only damage type in the mod dealt by a worker. */
+    public static final ResourceKey<DamageType> FUSION_CUTTER = key("fusion_cutter");
+
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
-            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST);
+            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER);
 
     private AsteriskCraftDamageTypes() {
     }

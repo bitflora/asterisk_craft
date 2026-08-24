@@ -226,9 +226,16 @@ public final class UnitStats {
      * Deliberately priced identically to the other two workers: what a race differs in is what it
      * builds with its economy, not what the economy itself costs to staff.
      */
+    /**
+     * The one worker in the mod that is armed. It never goes looking for a fight — see
+     * {@code entity.terran.ScvEntity} for the retaliate-only goal set — but a Terran economy that
+     * can answer a stray Zergling is a real difference between the races, not a rounding error, and
+     * it is paid for in the build time: an SCV takes twice as long to come out as a Probe.
+     */
     public static final UnitStat SCV = UnitStat.builder("scv")
-            .health(10.0).shield(0).speed(0.35).followRange(48.0)
-            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(200)
+            .health(30.0).shield(0).armor(0.0).speed(0.35).followRange(48.0)
+            .attackDamage(3.0)
+            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(400)
             .build();
 
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */

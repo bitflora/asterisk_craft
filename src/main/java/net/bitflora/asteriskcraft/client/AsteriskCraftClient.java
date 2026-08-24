@@ -9,6 +9,7 @@ import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
 import net.bitflora.asteriskcraft.client.protoss.ProbeRenderer;
+import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.terran.ScvRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ScoutModel;
 import net.bitflora.asteriskcraft.client.protoss.ScoutRenderer;
@@ -47,6 +48,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
 public class AsteriskCraftClient {
     public static final ModelLayerLocation PROBE_LAYER = new ModelLayerLocation(AsteriskCraft.id("probe"), "main");
+    public static final ModelLayerLocation SCV_LAYER = new ModelLayerLocation(AsteriskCraft.id("scv"), "main");
     public static final ModelLayerLocation ZEALOT_LAYER = new ModelLayerLocation(AsteriskCraft.id("zealot"), "main");
     public static final ModelLayerLocation DRAGOON_LAYER = new ModelLayerLocation(AsteriskCraft.id("dragoon"), "main");
     public static final ModelLayerLocation SCOUT_LAYER = new ModelLayerLocation(AsteriskCraft.id("scout"), "main");
@@ -67,6 +69,7 @@ public class AsteriskCraftClient {
     @SubscribeEvent
     static void onRegisterLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(PROBE_LAYER, ProbeModel::createBodyLayer);
+        event.registerLayerDefinition(SCV_LAYER, ScvModel::createBodyLayer);
         event.registerLayerDefinition(ZEALOT_LAYER, ZealotModel::createBodyLayer);
         event.registerLayerDefinition(DRAGOON_LAYER, DragoonModel::createBodyLayer);
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
@@ -87,7 +90,6 @@ public class AsteriskCraftClient {
     @SubscribeEvent
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
-        // The SCV reuses PROBE_LAYER, so there is no layer definition of its own to register.
         event.registerEntityRenderer(AsteriskCraft.SCV.get(), ScvRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), DragoonRenderer::new);

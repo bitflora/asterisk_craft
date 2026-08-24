@@ -202,10 +202,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("probe"))));
 
-    // The SCV borrows the Probe's hitbox along with its model — see client/terran/ScvRenderer.
+    // A walker's hitbox, not the Probe's hovering orb. Deliberately smaller than the rendered mech:
+    // the shoulder pods reach ~1.2 blocks across and the arm booms ~0.9 blocks out front, but the
+    // pathfinder sizes a node's footprint by floor(width + 1), so 0.8 still occupies a single node
+    // where 1.0 would need two. Letting the pods and booms overhang is the better trade — the same
+    // call ZEALOT makes below for its pauldrons.
     public static final DeferredHolder<EntityType<?>, EntityType<ScvEntity>> SCV =
             ENTITY_TYPES.register("scv", () -> EntityType.Builder.of(ScvEntity::new, MobCategory.CREATURE)
-                    .sized(0.7f, 0.9f)
+                    .sized(0.8f, 1.8f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scv"))));
 
@@ -388,6 +392,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> PROBE_SPAWN_EGG_ENEMY = ITEMS.registerItem("probe_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, PROBE, FactionSpawnEggItem.Side.ENEMY));
 
+    public static final DeferredItem<FactionSpawnEggItem> SCV_SPAWN_EGG_ALLY = ITEMS.registerItem("scv_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, SCV, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> SCV_SPAWN_EGG_ENEMY = ITEMS.registerItem("scv_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, SCV, FactionSpawnEggItem.Side.ENEMY));
+
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ENEMY = ITEMS.registerItem("zealot_spawn_egg_enemy",
@@ -521,6 +530,12 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.probe.hurt", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.hurt")));
     public static final DeferredHolder<SoundEvent, SoundEvent> PROBE_DEATH =
             SOUND_EVENTS.register("entity.probe.death", () -> SoundEvent.createVariableRangeEvent(id("entity.probe.death")));
+    // No SCV_HURT: the archive has two acknowledgement lines and a death line for the SCV and no
+    // pain line, so ScvEntity leaves getHurtSound at Mob's default rather than reusing a bark.
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCV_AMBIENT =
+            SOUND_EVENTS.register("entity.scv.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scv.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCV_DEATH =
+            SOUND_EVENTS.register("entity.scv.death", () -> SoundEvent.createVariableRangeEvent(id("entity.scv.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
             SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
@@ -575,6 +590,8 @@ public class AsteriskCraft {
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
                 output.accept(PROBE_SPAWN_EGG_ENEMY.get());
+                output.accept(SCV_SPAWN_EGG_ALLY.get());
+                output.accept(SCV_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
