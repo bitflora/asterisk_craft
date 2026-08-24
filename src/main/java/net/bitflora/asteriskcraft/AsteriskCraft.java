@@ -31,6 +31,7 @@ import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
@@ -212,6 +213,16 @@ public class AsteriskCraft {
                     .sized(0.8f, 1.8f)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scv"))));
+
+    // Vanilla's villager footprint, because the model is vanilla's villager: 1.95 keeps the
+    // pathfinder's floor(height + 1) at two nodes tall, and 0.6 at one node wide, so a Marine walks
+    // anywhere a villager does. The rifle reaches ~1.1 blocks out front and is left overhanging, the
+    // same call SCV makes above for its booms.
+    public static final DeferredHolder<EntityType<?>, EntityType<MarineEntity>> MARINE =
+            ENTITY_TYPES.register("marine", () -> EntityType.Builder.of(MarineEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("marine"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
@@ -397,6 +408,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> SCV_SPAWN_EGG_ENEMY = ITEMS.registerItem("scv_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SCV, FactionSpawnEggItem.Side.ENEMY));
 
+    public static final DeferredItem<FactionSpawnEggItem> MARINE_SPAWN_EGG_ALLY = ITEMS.registerItem("marine_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> MARINE_SPAWN_EGG_ENEMY = ITEMS.registerItem("marine_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ENEMY));
+
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ENEMY = ITEMS.registerItem("zealot_spawn_egg_enemy",
@@ -536,6 +552,14 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.scv.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scv.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> SCV_DEATH =
             SOUND_EVENTS.register("entity.scv.death", () -> SoundEvent.createVariableRangeEvent(id("entity.scv.death")));
+    // No MARINE_HURT either, and for the same reason as the SCV above: the archive has an
+    // acknowledgement line and two death lines for the Marine and no pain line.
+    public static final DeferredHolder<SoundEvent, SoundEvent> MARINE_AMBIENT =
+            SOUND_EVENTS.register("entity.marine.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.marine.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> MARINE_DEATH =
+            SOUND_EVENTS.register("entity.marine.death", () -> SoundEvent.createVariableRangeEvent(id("entity.marine.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> MARINE_ATTACK =
+            SOUND_EVENTS.register("entity.marine.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.marine.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
             SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
@@ -592,6 +616,8 @@ public class AsteriskCraft {
                 output.accept(PROBE_SPAWN_EGG_ENEMY.get());
                 output.accept(SCV_SPAWN_EGG_ALLY.get());
                 output.accept(SCV_SPAWN_EGG_ENEMY.get());
+                output.accept(MARINE_SPAWN_EGG_ALLY.get());
+                output.accept(MARINE_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
@@ -674,6 +700,7 @@ public class AsteriskCraft {
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(SCV.get(), ScvEntity.createAttributes().build());
+        event.put(MARINE.get(), MarineEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());

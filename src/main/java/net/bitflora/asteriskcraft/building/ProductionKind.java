@@ -163,13 +163,17 @@ public enum ProductionKind {
                     new Action.GiveKit(AsteriskCraft.HIVE_KIT::get, Resource.STONE,
                             BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.hive_kit_ready")))),
     /**
-     * The Command Center's card. One column, because one unit: the Terran ship with an economy and
-     * no army yet, so the only thing a Command Center can do is put another SCV on the field.
+     * The Command Center's card. The Terran have no factory building, so — like the Hive and unlike
+     * the Nexus — the base is where the army comes from as well as the economy.
      *
-     * <p>A Wood button above a Stone one, the {@link #PROTOSS_BASE} shape rather than the Hive's:
-     * an SCV costs 50 of <em>either</em> resource, and the two buttons are what turn that choice
-     * into something the player makes rather than something the payment code guesses. Alternative 0
-     * is Wood and 1 is Stone, matching the order in {@code UnitStats.SCV}'s cost.
+     * <p>The two columns are deliberately different shapes, and the difference is the rule rather
+     * than an inconsistency. The worker column is a Wood button above a Stone one, the
+     * {@link #PROTOSS_BASE} split: an SCV costs 50 of <em>either</em> resource, and the pair is what
+     * turns that into a choice the player makes rather than one the payment code guesses.
+     * Alternative 0 is Wood and 1 is Stone, matching the order in {@code UnitStats.SCV}'s cost. The
+     * Marine gets a single button, because {@link Action.TrainUnit} pays through
+     * {@code CostPayment.payAny} — the Wood/Stone split is a worker-only affordance, and a combat
+     * unit takes whichever the army has.
      */
     TERRAN_BASE(() -> AsteriskCraft.COMMAND_CENTER_CORE.get(), Races.TERRAN.bankSlots(), List.of(
             new OptionView(
@@ -179,7 +183,11 @@ public enum ProductionKind {
             new OptionView(
                     Icon.ofIcon("scv"),
                     CostText.tooltip(UnitStats.SCV.cost(), 1), 0,
-                    new Action.TrainWorker(1))));
+                    new Action.TrainWorker(1)),
+            new OptionView(
+                    Icon.ofIcon("marine"),
+                    CostText.tooltip(UnitStats.MARINE.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.MARINE.id()))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

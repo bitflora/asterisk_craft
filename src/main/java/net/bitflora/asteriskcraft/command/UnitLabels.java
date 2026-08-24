@@ -53,7 +53,8 @@ public final class UnitLabels {
             Map.entry("spore_colony", "S"),
             Map.entry("infested_villager", "I"),
             // Terran
-            Map.entry("scv", "S"));
+            Map.entry("scv", "S"),
+            Map.entry("marine", "M"));
 
     private UnitLabels() {
     }

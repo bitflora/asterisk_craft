@@ -91,6 +91,7 @@ UNITS = {
     "sunken_colony": ("zerg", "SunkenColonyModel"),
     "spore_colony": ("zerg", "SporeColonyModel"),
     "scv": ("terran", "ScvModel"),
+    "marine": ("terran", "MarineModel"),
 }
 
 GUTTER = 1  # texels between islands, so painting can't bleed across and fractional sizes stay clear

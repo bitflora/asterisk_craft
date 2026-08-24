@@ -61,12 +61,14 @@ public final class AsteriskCraftDamageTypes {
     // Terran
     /** The SCV's welding torch. The only damage type in the mod dealt by a worker. */
     public static final ResourceKey<DamageType> FUSION_CUTTER = key("fusion_cutter");
+    /** The Marine's rifle. */
+    public static final ResourceKey<DamageType> GAUSS_RIFLE = key("gauss_rifle");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
-            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER);
+            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE);
 
     private AsteriskCraftDamageTypes() {
     }

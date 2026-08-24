@@ -13,7 +13,11 @@ AsteriskCraft is a NeoForge mod that brings a StarCraft-style RTS loop (gather �
 
 ## Guidelines
 
-Prefer a Minecraft style where possible. Spherical Starcraft entities should become cubes. Where possible, reuse vanilla models. Terrans should be based on Villagers.
+Prefer a Minecraft style where possible. Spherical Starcraft entities should become cubes. Where possible, reuse vanilla models.
+
+**Borrowing a vanilla model means borrowing its texture too, as a second draw — that is the default, not an option.** A model part can only be painted from its own model's texture, so re-authoring vanilla geometry inside a mod model class means hand-copying vanilla pixels into the mod's PNG, which is a copy that goes stale silently the next time vanilla retouches it. Instead, bake the vanilla `ModelLayerLocation`, hang it on an **empty container part** in the mod's model, and draw it in a `RenderLayer` with vanilla's own texture — `client/terran/MarineHeadLayer` (the adult villager head) and `client/terran/ScvPilotLayer` (the baby villager head in the cab) are the two worked examples, and both models expose a `translateToX(PoseStack)` that walks the part chain for the layer. Hide the vanilla sub-parts you don't want by setting `visible = false` on them rather than by re-authoring the mesh around them. Re-author vanilla geometry **only** when the mod needs to modify or replace it — `client/zerg/InfestedVillagerModel` copies villager proportions because it has to graft a Zergling's head onto them.
+
+**Terrans should be based on Villagers**, and the default Terran pose is a villager's: vanilla's 8x12x6 torso, the inflated 20-tall robe, 4x12x4 legs on the same hips, and **arms folded across the belly** at pivot `(0, 3, -1)` tilted `-0.75`. A Terran that needs a limb somewhere else moves one off that pose rather than starting from a different one; whatever the unit carries is cradled in the folded arms unless there is a specific reason it cannot be. `client/terran/MarineModel` is the reference.
 
 
 ## Commands

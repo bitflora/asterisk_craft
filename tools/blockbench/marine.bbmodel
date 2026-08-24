@@ -1,0 +1,1351 @@
+{
+  "meta": {
+    "format_version": "4.5",
+    "model_format": "modded_entity",
+    "box_uv": true
+  },
+  "name": "marine",
+  "model_identifier": "marine",
+  "modded_entity_version": "1.17",
+  "modded_entity_flip_y": true,
+  "modded_entity_entity_class": "Entity",
+  "visible_box": [
+    2,
+    2,
+    0
+  ],
+  "variable_placeholders": "",
+  "resolution": {
+    "width": 128,
+    "height": 128
+  },
+  "elements": [
+    {
+      "name": "arm_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -8.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        -4.0,
+        23.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        36,
+        50
+      ],
+      "uuid": "8af24175-75b6-5104-b807-84313f442eb9"
+    },
+    {
+      "name": "arm_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        4.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        8.0,
+        23.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        54,
+        50
+      ],
+      "uuid": "11190a87-551f-5d64-948a-92bff976bb21"
+    },
+    {
+      "name": "arms_folded_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        19.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        93,
+        20
+      ],
+      "uuid": "705fc247-8c8e-5fc2-b58c-5fe2529efed6"
+    },
+    {
+      "name": "rifle_barrel_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.09999999999999987,
+        15.89,
+        -13.78
+      ],
+      "to": [
+        1.9,
+        17.69,
+        -7.779999999999999
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        72,
+        50
+      ],
+      "uuid": "fc0f03c2-fd76-5cfb-8b3b-dbbe02e829a0"
+    },
+    {
+      "name": "rifle_magazine_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.0,
+        11.090000000000002,
+        -6.279999999999999
+      ],
+      "to": [
+        2.0,
+        15.090000000000002,
+        -3.7799999999999994
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        68
+      ],
+      "uuid": "df194de6-76b4-5b1d-be69-13f75c8bea04"
+    },
+    {
+      "name": "rifle_muzzle_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -0.1499999999999999,
+        15.64,
+        -14.78
+      ],
+      "to": [
+        2.15,
+        17.94,
+        -13.78
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        11,
+        68
+      ],
+      "uuid": "9b7b792a-7fea-568d-a22d-0bfd16697bf0"
+    },
+    {
+      "name": "rifle_receiver_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -0.5,
+        15.090000000000003,
+        -7.779999999999999
+      ],
+      "to": [
+        2.5,
+        18.290000000000003,
+        -1.7799999999999994
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        90,
+        50
+      ],
+      "uuid": "0daec460-2b7c-5507-b2c8-0010094d2ea4"
+    },
+    {
+      "name": "rifle_sight_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.40000000000000013,
+        17.89,
+        -9.28
+      ],
+      "to": [
+        1.6,
+        19.09,
+        -7.68
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        20,
+        68
+      ],
+      "uuid": "8d679f53-3fd4-50f9-9641-03202762881d"
+    },
+    {
+      "name": "rifle_stock_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -0.25,
+        15.440000000000001,
+        -1.7799999999999998
+      ],
+      "to": [
+        2.25,
+        17.94,
+        2.72
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        1.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        110,
+        50
+      ],
+      "uuid": "f1fc843c-2c0b-5c22-a282-9d44ff61df86"
+    },
+    {
+      "name": "body_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        12.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        24.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        0
+      ],
+      "uuid": "abae1019-5931-5664-92ba-550760145769"
+    },
+    {
+      "name": "neck_ring_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.5,
+        23.0,
+        -3.5
+      ],
+      "to": [
+        4.5,
+        25.0,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        34,
+        20
+      ],
+      "uuid": "10e11bc2-4f66-5f85-a360-b57369f05788"
+    },
+    {
+      "name": "robe_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        4.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        24.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.5,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        20
+      ],
+      "uuid": "d6f3a56c-d019-5ae9-b5b1-f46fdd095129"
+    },
+    {
+      "name": "antenna_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -5.1,
+        32.0,
+        1.7000000000000002
+      ],
+      "to": [
+        -4.1,
+        36.0,
+        2.7
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -4.6,
+        32.0,
+        2.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        52,
+        68
+      ],
+      "uuid": "8ea5c3c7-c26c-5063-bb85-ec2586fec709"
+    },
+    {
+      "name": "antenna_tip_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -5.15,
+        36.0,
+        1.6500000000000001
+      ],
+      "to": [
+        -4.05,
+        36.9,
+        2.75
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -4.6,
+        36.0,
+        2.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        58,
+        68
+      ],
+      "uuid": "4b34f77b-5413-5ec1-a780-4339992883f3"
+    },
+    {
+      "name": "helmet_back_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.5,
+        25.5,
+        2.5
+      ],
+      "to": [
+        4.5,
+        33.5,
+        4.7
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        68,
+        20
+      ],
+      "uuid": "e3c827a5-5697-5508-a70b-60782e2c1497"
+    },
+    {
+      "name": "helmet_brim_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.5,
+        32.8,
+        -5.6
+      ],
+      "to": [
+        4.5,
+        35.0,
+        -3.9999999999999996
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        28,
+        68
+      ],
+      "uuid": "1919346a-d99e-5012-a4be-37e937f0d9a2"
+    },
+    {
+      "name": "helmet_crown_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.5,
+        33.0,
+        -4.5
+      ],
+      "to": [
+        4.5,
+        36.0,
+        4.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        30,
+        0
+      ],
+      "uuid": "cd0875cc-c5ae-5d08-a558-c8de9957bf81"
+    },
+    {
+      "name": "helmet_lamp_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -1.6,
+        33.4,
+        -6.0
+      ],
+      "to": [
+        1.6,
+        34.4,
+        -5.4
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        65,
+        68
+      ],
+      "uuid": "9f305f51-2feb-5454-b982-c9e3af95ecf9"
+    },
+    {
+      "name": "helmet_side_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -5.6,
+        26.5,
+        -3.5
+      ],
+      "to": [
+        -4.0,
+        33.5,
+        4.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        68,
+        0
+      ],
+      "uuid": "eb2fda26-d6ca-5d17-b07c-4c6f4d249d67"
+    },
+    {
+      "name": "helmet_side_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        3.9999999999999996,
+        26.5,
+        -3.5
+      ],
+      "to": [
+        5.6,
+        33.5,
+        4.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        90,
+        0
+      ],
+      "uuid": "e5fa10f8-8641-5149-85cf-feaf27f30219"
+    },
+    {
+      "name": "leg_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        0.0,
+        -2.0
+      ],
+      "to": [
+        0.0,
+        12.0,
+        2.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        50
+      ],
+      "uuid": "fdb82f70-a9e9-5cd5-99ea-2e30afa5ae69"
+    },
+    {
+      "name": "leg_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.0,
+        0.0,
+        -2.0
+      ],
+      "to": [
+        4.0,
+        12.0,
+        2.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        18,
+        50
+      ],
+      "uuid": "0602c8fe-4638-5cae-8f6f-95dee5564490"
+    }
+  ],
+  "outliner": [
+    {
+      "name": "arms",
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        42.97183463481174,
+        -0.0,
+        0.0
+      ],
+      "uuid": "6b7ee188-5dce-581e-87fb-77046060cb1c",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        {
+          "name": "arm_left",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "00427eda-7b64-5103-a8c0-650c93aad2f2",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "8af24175-75b6-5104-b807-84313f442eb9"
+          ]
+        },
+        {
+          "name": "arm_right",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "d06ad06f-7f42-5c59-9934-6b0470b18e99",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "11190a87-551f-5d64-948a-92bff976bb21"
+          ]
+        },
+        {
+          "name": "arms_folded",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "eb04c02f-4080-54ca-9c53-936a29beeb03",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "705fc247-8c8e-5fc2-b58c-5fe2529efed6"
+          ]
+        },
+        {
+          "name": "rifle",
+          "origin": [
+            1.0,
+            16.69,
+            -3.28
+          ],
+          "rotation": [
+            -42.97183463481174,
+            17.188733853924695,
+            0.0
+          ],
+          "uuid": "77b45700-6517-56f5-ae40-da7fd955c482",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            {
+              "name": "rifle_barrel",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "5df3ec08-303f-5606-bb95-9fba9382e35a",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "fc0f03c2-fd76-5cfb-8b3b-dbbe02e829a0"
+              ]
+            },
+            {
+              "name": "rifle_magazine",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "f6543193-f9a7-5887-b701-4ac075282575",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "df194de6-76b4-5b1d-be69-13f75c8bea04"
+              ]
+            },
+            {
+              "name": "rifle_muzzle",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "08cc7002-5499-5d23-ac50-efc281b5a4d9",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "9b7b792a-7fea-568d-a22d-0bfd16697bf0"
+              ]
+            },
+            {
+              "name": "rifle_receiver",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "eba804b9-c25f-53c5-a64f-c85a924b9e7f",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "0daec460-2b7c-5507-b2c8-0010094d2ea4"
+              ]
+            },
+            {
+              "name": "rifle_sight",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "a7c6e8c9-ad45-56dd-bef7-046f596b48fb",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "8d679f53-3fd4-50f9-9641-03202762881d"
+              ]
+            },
+            {
+              "name": "rifle_stock",
+              "origin": [
+                1.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "deac9522-3cde-5df3-be50-9ed4b8d48f62",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "f1fc843c-2c0b-5c22-a282-9d44ff61df86"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "body",
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "437f166c-0528-59f2-a82a-7d10357c9fc2",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "abae1019-5931-5664-92ba-550760145769",
+        {
+          "name": "neck_ring",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "45cf4e42-a594-5167-a8ad-b3f8d9936e2e",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "10e11bc2-4f66-5f85-a360-b57369f05788"
+          ]
+        },
+        {
+          "name": "robe",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "25ae866e-97e9-574d-bd06-c355335c52cd",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "d6f3a56c-d019-5ae9-b5b1-f46fdd095129"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "head",
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "04c9ebca-ee6f-5227-bd80-ea3bf3b87dc8",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        {
+          "name": "antenna",
+          "origin": [
+            -4.6,
+            32.0,
+            2.2
+          ],
+          "rotation": [
+            25.783100780887047,
+            -0.0,
+            20.05352282957881
+          ],
+          "uuid": "2aa6760b-b847-5017-b3c7-d751334dffbf",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "8ea5c3c7-c26c-5063-bb85-ec2586fec709",
+            {
+              "name": "antenna_tip",
+              "origin": [
+                -4.6,
+                36.0,
+                2.2
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "e7c1f36b-e544-5742-a514-077f42d4cc2e",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "4b34f77b-5413-5ec1-a780-4339992883f3"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "helmet_back",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "fe82eb2b-7af6-5339-9edf-3e19e3b4790b",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "e3c827a5-5697-5508-a70b-60782e2c1497"
+          ]
+        },
+        {
+          "name": "helmet_brim",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "1239c846-95d5-51cb-add2-6160afdca936",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "1919346a-d99e-5012-a4be-37e937f0d9a2"
+          ]
+        },
+        {
+          "name": "helmet_crown",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "9c3f5736-eb8b-59a7-beb8-abdfaaeaa105",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "cd0875cc-c5ae-5d08-a558-c8de9957bf81"
+          ]
+        },
+        {
+          "name": "helmet_lamp",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "1ff0ae75-8ab9-5797-8205-4b60a09386f8",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "9f305f51-2feb-5454-b982-c9e3af95ecf9"
+          ]
+        },
+        {
+          "name": "helmet_side_left",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "dc96d8da-2988-5e09-8c9b-e3a87370f744",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "eb2fda26-d6ca-5d17-b07c-4c6f4d249d67"
+          ]
+        },
+        {
+          "name": "helmet_side_right",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "f917fea4-0e4a-5488-a22c-3c117fd540c9",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "e5fa10f8-8641-5149-85cf-feaf27f30219"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "leg_left",
+      "origin": [
+        -2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "19859e45-9799-5ce4-9fdd-0e23efa1dcf6",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "fdb82f70-a9e9-5cd5-99ea-2e30afa5ae69"
+      ]
+    },
+    {
+      "name": "leg_right",
+      "origin": [
+        2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "adb2e21d-26a8-5e0e-bef2-31a8468c6d24",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "0602c8fe-4638-5cae-8f6f-95dee5564490"
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\marine.png",
+      "name": "marine.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "0",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "505681a1-51b2-5bd8-a2ac-5a8af34dc4e1",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    },
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\marine_glow.png",
+      "name": "marine_glow.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "1",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "7c99f855-677f-569e-bead-a4024592e338",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    }
+  ]
+}

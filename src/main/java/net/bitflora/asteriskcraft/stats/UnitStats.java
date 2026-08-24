@@ -238,6 +238,25 @@ public final class UnitStats {
             .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(400)
             .build();
 
+    /**
+     * The Marine. The Terran line infantry, and the first thing the race has that goes looking for a
+     * fight: a rifle at five blocks on a one-second cadence, for three damage a shot.
+     *
+     * <p>Deliberately the frailest combat unit in the mod at 20 HP — under a Zergling's, and two
+     * Zealot swings — because everything else about it says "bring more of them". It is the cheapest
+     * unit either picky race can buy, it comes out in 24 seconds, and a lone one loses to almost
+     * anything on the field. Massed, its damage stacks the way no single Terran unit's does, which
+     * is the whole shape of the race until it has more in it.
+     *
+     * <p>An SCV's walk with the rifle's weight on it: a shade slower than the worker that built it,
+     * matching the Hydralisk it will most often be shooting at.
+     */
+    public static final UnitStat MARINE = UnitStat.builder("marine")
+            .health(20.0).shield(0).armor(0.0).speed(0.25).followRange(48.0)
+            .attackDamage(3.0).ranged(5.0f, 20).attackAnimTicks(6)
+            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(480)
+            .build();
+
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
     public static final List<UnitStat> PROTOSS_ROSTER =
             List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
@@ -248,10 +267,10 @@ public final class UnitStats {
                     SPORE_COLONY, INFESTED_VILLAGER);
 
     /**
-     * The Terran roster. One entry for now — the race ships with an economy and no army — and it
-     * holds the same "names a real resource, never ANY" invariant the Protoss one does.
+     * The Terran roster. A worker and one soldier, and it holds the same "names a real resource,
+     * never ANY" invariant the Protoss one does.
      */
-    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV);
+    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE);
 
     private UnitStats() {
     }

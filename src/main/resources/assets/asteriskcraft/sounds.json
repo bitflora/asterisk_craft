@@ -149,6 +149,28 @@
       "asteriskcraft:mob/scv/scv-death"
     ]
   },
+  "entity.marine.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.marine.ambient",
+    "sounds": [
+      "asteriskcraft:mob/marine/marine-live1"
+    ]
+  },
+  "entity.marine.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.marine.death",
+    "sounds": [
+      "asteriskcraft:mob/marine/marine-death1",
+      "asteriskcraft:mob/marine/marine-death2"
+    ]
+  },
+  "entity.marine.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.marine.attack",
+    "sounds": [
+      "asteriskcraft:mob/marine/marine-attack"
+    ]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

@@ -22,6 +22,7 @@ import net.bitflora.asteriskcraft.client.zerg.OverlordModel;
 import net.bitflora.asteriskcraft.client.zerg.SunkenColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.SporeColonyModel;
 import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerModel;
+import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.PartPose;
@@ -157,6 +158,7 @@ final class ModelGeometry {
         map.put("sunken_colony", SunkenColonyModel::createBodyLayer);
         map.put("spore_colony", SporeColonyModel::createBodyLayer);
         map.put("scv", ScvModel::createBodyLayer);
+        map.put("marine", MarineModel::createBodyLayer);
         // Collections.unmodifiableMap, not Map.copyOf — the latter does not preserve insertion order.
         return Collections.unmodifiableMap(map);
     }

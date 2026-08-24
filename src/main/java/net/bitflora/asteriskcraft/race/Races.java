@@ -152,14 +152,17 @@ public final class Races {
             List.of(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get));
 
     /**
-     * The Terran, as far as they go today: a Command Center and the SCVs that mine for it. Every
-     * entry below that reads as "nothing" is genuinely nothing yet rather than an omission — there
-     * is no Terran combat unit to plant as a base defence, no second building to hand out as a
-     * starting kit, and no prerequisite of the Pylon/creep kind, so no ground cover to lay.
+     * The Terran, as far as they go today: a Command Center, the SCVs that mine for it, and the
+     * Marines they build. The entries below that still read as "nothing" are genuinely nothing yet
+     * rather than omissions — there is no second Terran building to hand out as a starting kit, and
+     * no prerequisite of the Pylon/creep kind, so no ground cover to lay.
      *
-     * <p>Which means a Terran <em>computer</em> opponent mines and never attacks. That is a
-     * sandbox rather than a match, and it is worth having as one until the army lands; see
-     * data/asteriskcraft/build_scripts/terran.txt.
+     * <p><b>Their base defence is a pair of live Marines rather than a structure</b>, which is the
+     * one place the race reads differently from the other two in this table: the Protoss plant a
+     * Photon Cannon and the Zerg a Sunken and a Spore, both rooted, while the Terran have nothing
+     * static to plant and post a guard instead. A guard can be pulled off to fight elsewhere, and
+     * can chase what it is shooting at, so a Terran base is defended more loosely than either of
+     * the others — a real difference in how the race holds ground, not a placeholder.
      */
     public static final RaceProfile TERRAN = new RaceProfile(
             Race.TERRAN,
@@ -171,13 +174,18 @@ public final class Races {
             TERRAN_BANK_SLOTS,
             UnitRoster.builder()
                     .worker(UnitStats.SCV, AsteriskCraft.SCV)
+                    .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),
             // No creep, and no support fill: the Terran set down on the ground as they find it.
             null,
             null,
-            List.of(),
+            // Two Marines standing on the Command Center. The race's only answer to "what is
+            // guarding this base at world start" — see the class doc above.
+            List.of(new BaseDefence(AsteriskCraft.MARINE, 2)),
+            // No escort: the Terran have no flyer and no detector, so there is nothing a Command
+            // Center wants hovering over it that the two Marines below it are not already doing.
             List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
