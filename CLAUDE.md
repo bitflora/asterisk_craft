@@ -10,6 +10,12 @@ AsteriskCraft is a NeoForge mod that brings a StarCraft-style RTS loop (gather â
 
 **Read [docs/neoforge-api-notes.md](docs/neoforge-api-notes.md) before calling an unfamiliar NeoForge/MC API.** It documents specific API shapes verified against this exact version's decompiled source (e.g. `Mob.finalizeSpawn` being deprecated in favor of `EventHooks.finalizeMobSpawn`, the Codec-based `ValueOutput`/`ValueInput` save API, sun-burn being tag-gated not class-gated) and where to find the decompiled source jars to verify anything not already listed there. Add to it when you discover another non-obvious API behavior by digging through jars.
 
+
+## Guidelines
+
+Prefer a Minecraft style where possible. Spherical Starcraft entities should become cubes. Where possible, reuse vanilla models. Terrans should be based on Villagers.
+
+
 ## Commands
 
 - `./gradlew test` â€” run the JUnit test suite. Tests run inside a bootstrapped NeoForge environment (`neoForge.unitTest.enable()` in build.gradle), so real registries/blocks/items/entity types resolve in-test.
