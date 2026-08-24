@@ -31,6 +31,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -211,6 +212,10 @@ public class BaseBlockEntity extends BlockEntity
             CoreCensus.ensureRegistered(level, base.buildingFaction(), pos);
             base.enrolled = true;
         }
+        // Kept in step from the tick rather than only from setFaction, so a base that resolved its
+        // side from the match — or one loaded from a world saved before the property existed —
+        // still tells the client who owns it. A no-op once the two agree.
+        base.publishFaction(base.buildingFaction());
         // Ticked ahead of the sky/queue gates so shields recharge even while the base is buried.
         if (base.defense.tickWarpIn(level, pos)) {
             base.setChanged();
@@ -403,14 +408,24 @@ public class BaseBlockEntity extends BlockEntity
 
     @Override
     public Faction buildingFaction() {
-        if (this.level == null) {
-            // Asked before the block entity has a level: answer, but don't cache it, or the base
-            // would be stuck belonging to nobody for the rest of its life.
-            return this.faction == null ? Faction.NEUTRAL : this.faction;
+        if (this.faction != null) {
+            return this.faction;
         }
-        if (this.faction == null) {
-            this.faction = resolveFaction();
+        // The blockstate carries the same answer and is the half of it the client ever sees, so it
+        // is consulted before anything is derived: a client that guessed from MatchSetup would be
+        // guessing from its hardcoded default (the match itself is a level attachment and is not
+        // synced), which is wrong for every matchup but that default's.
+        Faction shown = getBlockState().getValue(BaseBlock.FACTION);
+        if (shown != Faction.NEUTRAL) {
+            return shown;
         }
+        if (this.level == null || this.level.isClientSide()) {
+            // Asked before the block entity has a level, or on a client that has not been told:
+            // answer, but don't cache it, or the base would be stuck belonging to nobody for the
+            // rest of its life.
+            return Faction.NEUTRAL;
+        }
+        this.faction = resolveFaction();
         return this.faction;
     }
 
@@ -433,6 +448,24 @@ public class BaseBlockEntity extends BlockEntity
     public void setFaction(Faction faction) {
         this.faction = faction;
         this.setChanged();
+        publishFaction(faction);
+    }
+
+    /**
+     * Mirrors the owning side onto the blockstate, which is how it reaches the client at all — see
+     * {@link BaseBlock#FACTION}. Written whenever it differs rather than only at placement, for the
+     * same reason {@code PylonBlock.ONLINE} is: a base stamped from a structure template arrives
+     * carrying the blockstate captured in the design world, and a base saved before this property
+     * existed comes back neutral with its real side still on the block entity.
+     */
+    private void publishFaction(Faction faction) {
+        if (this.level == null) {
+            return;
+        }
+        BlockState state = getBlockState();
+        if (state.hasProperty(BaseBlock.FACTION) && state.getValue(BaseBlock.FACTION) != faction) {
+            this.level.setBlock(this.worldPosition, state.setValue(BaseBlock.FACTION, faction), Block.UPDATE_ALL);
+        }
     }
 
     @Override
