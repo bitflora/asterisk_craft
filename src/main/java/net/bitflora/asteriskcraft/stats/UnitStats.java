@@ -257,6 +257,27 @@ public final class UnitStats {
             .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(480)
             .build();
 
+    /**
+     * The Bunker. The first unit in the mod that holds other units, and the only structure with no
+     * weapon of its own: everything it does to an enemy is done by whatever is inside it.
+     *
+     * <p>Its numbers are all shell. 175 HP is the toughest thing either race fields short of a base,
+     * and the armour 1 is the point of the building — it is flat reduction, so it is worth most
+     * against exactly the massed small hits a Terran player is trying to survive. There is no
+     * shield (the Terran carry none) and no attack damage, which makes it the first entry here that
+     * is both {@code rooted()} and unarmed; {@code UnitStatsTest} had to split those two ideas apart
+     * to say so.
+     *
+     * <p>Kit-bought at a Command Center for {@code BaseBlockEntity.BUNKER_COST}, not trained — hence
+     * NONE, and hence no build ticks. The thirty seconds it takes to stand up is the construction
+     * countdown on {@code entity.terran.BunkerEntity} itself, the same place the Photon Cannon keeps
+     * its ten.
+     */
+    public static final UnitStat BUNKER = UnitStat.builder("bunker")
+            .health(175.0).shield(0).armor(1.0).rooted()
+            .cost(UnitCost.NONE) // never trained, so no buildTicks either
+            .build();
+
     /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
     public static final List<UnitStat> PROTOSS_ROSTER =
             List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
@@ -270,7 +291,7 @@ public final class UnitStats {
      * The Terran roster. A worker and one soldier, and it holds the same "names a real resource,
      * never ANY" invariant the Protoss one does.
      */
-    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE);
+    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, BUNKER);
 
     private UnitStats() {
     }

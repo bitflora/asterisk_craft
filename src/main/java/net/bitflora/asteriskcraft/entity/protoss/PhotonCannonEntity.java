@@ -7,7 +7,6 @@ import net.bitflora.asteriskcraft.entity.Detector;
 import net.bitflora.asteriskcraft.entity.Rooted;
 import net.bitflora.asteriskcraft.entity.Shielded;
 import net.bitflora.asteriskcraft.entity.ai.protoss.CannonFireGoal;
-import net.bitflora.asteriskcraft.faction.Cloaking;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.faction.WildKind;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
@@ -100,10 +99,13 @@ public class PhotonCannonEntity extends Mob implements Shielded, Detector, Roote
                         FactionAttachments.isCommanded(this.level(), FactionAttachments.get(this)))
                         // The cannon is the one targeting site that doesn't route through
                         // FactionAttachments.isHostile(Entity, Entity) — it consumes the pure
-                        // faction overload instead — so it applies the cloak gate itself. Being a
-                        // detector doesn't exempt it: it still only shoots what its own faction can
-                        // currently see, which is what its sweep just made true.
-                        && Cloaking.isVisibleTo(target, FactionAttachments.get(this))));
+                        // faction overload instead — so it applies the live-entity gates itself,
+                        // through the same helper rather than a copy of them. Being a detector
+                        // doesn't exempt it from the cloak half: it still only shoots what its own
+                        // faction can currently see, which is what its sweep just made true. Nothing
+                        // exempts it from the shelter half — a Marine in a Bunker is behind the
+                        // Bunker whoever is looking.
+                        && FactionAttachments.isEngageable(target, FactionAttachments.get(this))));
     }
 
     /** A Photon Cannon is the Protoss detector; the envelope is in the balance table. */

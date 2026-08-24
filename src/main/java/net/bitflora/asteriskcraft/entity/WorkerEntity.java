@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
+import net.bitflora.asteriskcraft.entity.ai.BoardGoal;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.CommandedMoveGoal;
 import net.bitflora.asteriskcraft.faction.Faction;
@@ -158,6 +159,10 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
         // A move order interrupts the economy (RTS move); a carried load is still delivered
         // before a fresh mine because DeliverGoal outranks HarvestGoal.
         this.goalSelector.addGoal(1, new CommandedMoveGoal(this, 1.1));
+        // Beside the move order, and for the same reason a combat unit gets one: an SCV is Organic,
+        // so a Terran player can pull their economy into a Bunker when a rush arrives. A worker whose
+        // race has nothing to climb into simply never receives the order.
+        this.goalSelector.addGoal(1, new BoardGoal(this, 1.1));
         this.goalSelector.addGoal(2, new DeliverGoal(this));
         this.goalSelector.addGoal(3, new HarvestGoal(this));
         // Below HarvestGoal, so the moment a node of the assigned resource regrows the worker is

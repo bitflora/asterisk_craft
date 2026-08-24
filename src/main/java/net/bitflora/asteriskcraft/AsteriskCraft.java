@@ -31,6 +31,7 @@ import net.bitflora.asteriskcraft.entity.FactionSpawnEggItem;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
+import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
@@ -65,6 +66,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -165,6 +167,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> PHOTON_CANNON_KIT = ITEMS.registerItem("photon_cannon_kit",
             props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, FactionSpawnEggItem.Side.ALLY, true));
 
+    // The Bunker is an entity too, so its kit is a spawn item for the same reason the Photon Cannon's
+    // is. Ungated: the Terran have no Pylon and no creep, so there is no prerequisite to ask about.
+    public static final DeferredItem<FactionSpawnEggItem> BUNKER_KIT = ITEMS.registerItem("bunker_kit",
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.BUNKER, FactionSpawnEggItem.Side.ALLY));
+
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
 
@@ -223,6 +230,25 @@ public class AsteriskCraft {
                     .sized(0.6f, 1.95f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("marine"))));
+
+    // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
+    // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
+    // behind rather than a tower. Rooted, so none of the pathfinder footprint reasoning above applies.
+    //
+    // The four seats are the whole multi-passenger implementation (plus the cap in
+    // BunkerEntity.canAddPassenger): Entity.positionRider indexes this list by a rider's position in
+    // getPassengers(), so declaring four points is what stops all four stacking in one spot. They sit
+    // inside the hull rather than on the roof — vanilla's fallback for PASSENGER is (0, height, 0),
+    // which for a building means the garrison stands on top of it — and at 0.9 high so an eye-level
+    // line-of-sight check leaves the model cleanly.
+    public static final DeferredHolder<EntityType<?>, EntityType<BunkerEntity>> BUNKER =
+            ENTITY_TYPES.register("bunker", () -> EntityType.Builder.of(BunkerEntity::new, MobCategory.MISC)
+                    .sized(2.6f, 2.0f)
+                    .passengerAttachments(
+                            new Vec3(0.6, 0.9, 0.6), new Vec3(-0.6, 0.9, 0.6),
+                            new Vec3(0.6, 0.9, -0.6), new Vec3(-0.6, 0.9, -0.6))
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("bunker"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
@@ -412,6 +438,11 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> MARINE_SPAWN_EGG_ENEMY = ITEMS.registerItem("marine_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ENEMY));
+
+    public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ENEMY = ITEMS.registerItem("bunker_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ALLY));
@@ -611,6 +642,7 @@ public class AsteriskCraft {
                 output.accept(HIVE_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CENTER_CORE_ITEM.get());
+                output.accept(BUNKER_KIT.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
                 output.accept(PROBE_SPAWN_EGG_ENEMY.get());
@@ -618,6 +650,8 @@ public class AsteriskCraft {
                 output.accept(SCV_SPAWN_EGG_ENEMY.get());
                 output.accept(MARINE_SPAWN_EGG_ALLY.get());
                 output.accept(MARINE_SPAWN_EGG_ENEMY.get());
+                output.accept(BUNKER_SPAWN_EGG_ALLY.get());
+                output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
@@ -701,6 +735,7 @@ public class AsteriskCraft {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(SCV.get(), ScvEntity.createAttributes().build());
         event.put(MARINE.get(), MarineEntity.createAttributes().build());
+        event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());

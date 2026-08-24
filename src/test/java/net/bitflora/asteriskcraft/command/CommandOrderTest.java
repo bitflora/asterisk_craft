@@ -40,6 +40,12 @@ class CommandOrderTest {
         assertEquals(CommandOrder.Kind.ATTACK, attack.kind());
         assertEquals(id, attack.target().orElseThrow());
         assertTrue(attack.pos().isEmpty());
+
+        UUID transport = UUID.randomUUID();
+        CommandOrder load = CommandOrder.load(transport);
+        assertEquals(CommandOrder.Kind.LOAD, load.kind());
+        assertEquals(transport, load.target().orElseThrow());
+        assertTrue(load.pos().isEmpty(), "a transport is aimed at as an entity, never as a block");
     }
 
     @Test
@@ -49,6 +55,8 @@ class CommandOrderTest {
         assertEquals(CommandOrder.mine(new BlockPos(0, 64, 0)), roundTrip(CommandOrder.mine(new BlockPos(0, 64, 0))));
         CommandOrder attack = CommandOrder.attack(UUID.randomUUID());
         assertEquals(attack, roundTrip(attack));
+        CommandOrder load = CommandOrder.load(UUID.randomUUID());
+        assertEquals(load, roundTrip(load));
     }
 
     @Test
@@ -66,5 +74,7 @@ class CommandOrderTest {
         assertEquals("move", CommandOrder.Kind.MOVE.getSerializedName());
         assertEquals("attack", CommandOrder.Kind.ATTACK.getSerializedName());
         assertEquals("mine", CommandOrder.Kind.MINE.getSerializedName());
+        assertEquals("guard", CommandOrder.Kind.GUARD.getSerializedName());
+        assertEquals("load", CommandOrder.Kind.LOAD.getSerializedName());
     }
 }

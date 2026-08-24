@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.client.protoss;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import net.bitflora.asteriskcraft.client.terran.BunkerModel;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
@@ -38,6 +39,11 @@ class ModelBakeTest {
     @Test
     void marineModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new MarineModel(MarineModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void bunkerModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new BunkerModel(BunkerModel.createBodyLayer().bakeRoot()));
     }
 
     @Test

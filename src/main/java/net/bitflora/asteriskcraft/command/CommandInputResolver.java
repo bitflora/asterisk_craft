@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.command;
 
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
+import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.faction.WildKind;
@@ -38,6 +39,8 @@ public final class CommandInputResolver {
     private static final DustParticleOptions ATTACK_TARGET_FLASH = new DustParticleOptions(0xFF3333, 1.2f);
     /** Brief flash confirming a valid MINE order landed on a harvestable block. */
     private static final DustParticleOptions MINE_TARGET_FLASH = new DustParticleOptions(0xFFFF33, 1.2f);
+    /** Brief flash confirming a LOAD order landed on a friendly transport. */
+    private static final DustParticleOptions LOAD_TARGET_FLASH = new DustParticleOptions(0x33CCFF, 1.2f);
 
     private CommandInputResolver() {
     }
@@ -84,10 +87,16 @@ public final class CommandInputResolver {
         if (units.isEmpty()) {
             return;
         }
-        LivingEntity attackTarget = enemyTargetAt(packet, level, player, owner);
-        boolean issued = attackTarget != null
-                ? issueAttack(units, attackTarget, level)
-                : issueMove(units, packet, level);
+        BunkerEntity transport = friendlyTransportAt(packet, level, owner);
+        LivingEntity attackTarget = transport == null ? enemyTargetAt(packet, level, player, owner) : null;
+        boolean issued;
+        if (transport != null) {
+            issued = issueLoad(units, transport, level);
+        } else if (attackTarget != null) {
+            issued = issueAttack(units, attackTarget, level);
+        } else {
+            issued = issueMove(units, packet, level);
+        }
         if (issued) {
             level.playSound(null, player.blockPosition(), SoundEvents.NOTE_BLOCK_PLING.value(),
                     SoundSource.PLAYERS, 0.5f, 1.6f);
@@ -95,10 +104,32 @@ public final class CommandInputResolver {
         }
     }
 
+    /**
+     * Get in: every selected unit the transport would actually take is sent to climb inside it, and
+     * the rest of the selection is left alone rather than being marched at a door it can't use.
+     *
+     * <p>Deliberately not spread through {@link MoveFormation}: there is one destination and it is an
+     * entity, so a ring around it would only put units further from the thing they are walking to.
+     */
+    private static boolean issueLoad(List<Mob> units, BunkerEntity transport, ServerLevel level) {
+        boolean issued = false;
+        for (Mob unit : units) {
+            if (!transport.boardable(unit)) {
+                continue;
+            }
+            CommandAttachments.setOrder(unit, CommandOrder.load(transport.getUUID()));
+            issued = true;
+        }
+        if (issued) {
+            flash(level, transport.blockPosition(), LOAD_TARGET_FLASH);
+        }
+        return issued;
+    }
+
     /** Focus-fire: everything that can shoot converges on one target, so there is nothing to spread. */
     private static boolean issueAttack(List<Mob> units, LivingEntity attackTarget, ServerLevel level) {
         boolean issued = false;
-        for (Mob unit : units) {
+        for (Mob unit : unloadTransports(units)) {
             // Probes have no attack; they sit the attack order out rather than march into it.
             if (unit instanceof WorkerEntity) {
                 continue;
@@ -126,7 +157,7 @@ public final class CommandInputResolver {
         boolean harvestable = atBlock && level.getBlockState(packet.pos()).is(WorkerEntity.HARVESTABLE);
         List<Mob> movers = new ArrayList<>(units.size());
         boolean mining = false;
-        for (Mob unit : units) {
+        for (Mob unit : unloadTransports(units)) {
             if (harvestable && unit instanceof WorkerEntity) {
                 // The block itself is the order — a mining Probe is not spread into the formation.
                 CommandAttachments.setOrder(unit, CommandOrder.mine(packet.pos()));
@@ -148,6 +179,36 @@ public final class CommandInputResolver {
         return mining || !movers.isEmpty();
     }
 
+    /**
+     * Turns out any transport in the selection and hands back the selection with each transport
+     * replaced by the units that were inside it.
+     *
+     * <p><b>A move or attack order given to a Bunker unloads it</b> — that is the rule, rather than a
+     * special case for one of the two. A Bunker cannot march and cannot shoot, so an order of either
+     * kind aimed at it can only ever have been meant for its garrison; the alternative is a
+     * right-click that visibly does nothing. The ejected units then take their formation slots or
+     * their attack order exactly like any other squad, which is why this returns a list rather than
+     * issuing anything itself.
+     *
+     * <p>A <em>load</em> order is the exception and never reaches here: right-clicking one Bunker
+     * while another is selected would be a transfer, which is a feature rather than a natural reading
+     * of the click, so it does nothing at all.
+     */
+    private static List<Mob> unloadTransports(List<Mob> units) {
+        if (units.stream().noneMatch(BunkerEntity.class::isInstance)) {
+            return units; // the overwhelmingly common case, and no list to build
+        }
+        List<Mob> resolved = new ArrayList<>(units.size());
+        for (Mob unit : units) {
+            if (unit instanceof BunkerEntity transport) {
+                resolved.addAll(transport.unload());
+            } else {
+                resolved.add(unit);
+            }
+        }
+        return resolved;
+    }
+
     /** The point a move order is centred on: a right-clicked entity's block, else the clicked block. */
     private static BlockPos moveCentre(CommandInputPacket packet, ServerLevel level) {
         if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
@@ -166,9 +227,29 @@ public final class CommandInputResolver {
         if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
             return null;
         }
+        // A garrisoned unit is skipped rather than returned: its hitbox is clipped up to the
+        // transport's ride position and overlaps it, so a click meant for the Bunker could otherwise
+        // land on whatever is inside it. Nothing sheltered is selectable — see PlayerSelection.
         if (level.getEntity(packet.entityId()) instanceof Mob unit
-                && unit.isAlive() && FactionAttachments.get(unit) == owner) {
+                && unit.isAlive() && !unit.isPassenger() && FactionAttachments.get(unit) == owner) {
             return unit;
+        }
+        return null;
+    }
+
+    /**
+     * A friendly transport under the crosshair — the thing that turns a right-click into "get in"
+     * rather than "walk over there". Only the owner's own: right-clicking an <em>enemy</em> Bunker
+     * has to keep meaning attack, which is why this is checked before {@link #enemyTargetAt} rather
+     * than instead of it.
+     */
+    private static BunkerEntity friendlyTransportAt(CommandInputPacket packet, ServerLevel level, Faction owner) {
+        if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
+            return null;
+        }
+        if (level.getEntity(packet.entityId()) instanceof BunkerEntity transport
+                && transport.isAlive() && FactionAttachments.get(transport) == owner) {
+            return transport;
         }
         return null;
     }

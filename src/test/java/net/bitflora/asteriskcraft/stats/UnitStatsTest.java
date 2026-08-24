@@ -23,7 +23,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(18, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(19, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -54,15 +54,15 @@ class UnitStatsTest {
     }
 
     @Test
-    void onlyStaticDefenceIsRooted() {
+    void onlyStructuresAreRooted() {
         // The executable form of the MOVEMENT_SPEED-defaults-to-0.7 trap: exactly the rooted
-        // defences must be zero-speed / full-knockback-resistance, and nothing else should be.
+        // structures must be zero-speed / full-knockback-resistance, and nothing else should be.
         for (UnitStat stat : UnitStats.all()) {
-            boolean isStaticDefence = isStaticDefence(stat);
-            assertEquals(isStaticDefence, stat.movementSpeed() == 0.0,
-                    stat.id() + ": zero movement speed should match static-defence status");
-            assertEquals(isStaticDefence, stat.knockbackResistance() == 1.0,
-                    stat.id() + ": full knockback resistance should match static-defence status");
+            boolean isStructure = isRootedStructure(stat);
+            assertEquals(isStructure, stat.movementSpeed() == 0.0,
+                    stat.id() + ": zero movement speed should match rooted-structure status");
+            assertEquals(isStructure, stat.knockbackResistance() == 1.0,
+                    stat.id() + ": full knockback resistance should match rooted-structure status");
         }
     }
 
@@ -207,12 +207,17 @@ class UnitStatsTest {
         assertEquals(UnitCost.NONE, UnitStats.PHOTON_CANNON.cost());
         assertEquals(UnitCost.NONE, UnitStats.SUNKEN_COLONY.cost());
         assertEquals(UnitCost.NONE, UnitStats.SPORE_COLONY.cost());
+        assertEquals(UnitCost.NONE, UnitStats.BUNKER.cost());
     }
 
     /**
      * The units that never attack anything: two of the three workers, and the Overlord, whose whole
      * job is to carry a detection bubble around and which pays for that by being unable to defend
      * itself.
+     *
+     * <p>The Bunker is the odd one: it is a structure rather than a unit, and it has no attack because
+     * everything it does to an enemy is done by whatever is inside it. Which is also why it is the
+     * only entry here that is dangerous to walk up to.
      *
      * <p>The SCV is deliberately not among them — it is the one worker in the mod that is armed, and
      * that is a statement about the Terran rather than an oversight. It still never picks a fight:
@@ -222,10 +227,27 @@ class UnitStatsTest {
     private static boolean isNonCombatant(UnitStat stat) {
         return stat == UnitStats.PROBE
                 || stat == UnitStats.DRONE
-                || stat == UnitStats.OVERLORD;
+                || stat == UnitStats.OVERLORD
+                || stat == UnitStats.BUNKER;
     }
 
-    /** The rooted defences: one per race for ground, plus the Zerg's anti-air Spore Colony. */
+    /**
+     * Every structure that stands where it is put: the three armed defences below, plus the Bunker.
+     *
+     * <p>Kept separate from {@link #isStaticDefence} because the Bunker split the two ideas apart.
+     * Until it existed, "rooted" and "a static defence" named the same three entries, and one
+     * predicate covered both the movement-speed invariant and the reach invariant. A Bunker is rooted
+     * and has no weapon at all, so it belongs to the first and not the second.
+     */
+    private static boolean isRootedStructure(UnitStat stat) {
+        return isStaticDefence(stat) || stat == UnitStats.BUNKER;
+    }
+
+    /**
+     * The rooted defences that <em>shoot</em>: one per race for ground, plus the Zerg's anti-air
+     * Spore Colony. The Bunker is deliberately not among them — it is a rooted structure with no gun,
+     * so it has no reach for {@link #staticDefenceNeverAcquiresBeyondItsReach} to check.
+     */
     private static boolean isStaticDefence(UnitStat stat) {
         return stat == UnitStats.PHOTON_CANNON
                 || stat == UnitStats.SUNKEN_COLONY

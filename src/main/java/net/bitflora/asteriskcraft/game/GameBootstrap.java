@@ -8,6 +8,7 @@ import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
+import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
 import net.minecraft.world.entity.Mob;
 import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
@@ -656,11 +657,16 @@ public final class GameBootstrap {
             spawnStartingWorkers(level, core, profile, faction, INITIAL_WORKERS_PER_AI_BASE);
             // Static defence planted with each base, so an early rush meets something with teeth
             // even when the army is out on a wave. Which units, and how many, is the race's own.
+            List<Mob> defences = new ArrayList<>();
             for (RaceProfile.BaseDefence defence : profile.baseDefences()) {
                 for (int i = 0; i < defence.count(); i++) {
-                    UnitSpawns.spawn(level, core, defence.type().get(), faction, profile.race(), false);
+                    Mob spawned = UnitSpawns.spawn(level, core, defence.type().get(), faction, profile.race(), false);
+                    if (spawned != null) {
+                        defences.add(spawned);
+                    }
                 }
             }
+            crewDefences(defences);
             spawnBaseEscort(level, core, profile, faction);
         }
         return core;
@@ -737,6 +743,34 @@ public final class GameBootstrap {
      * in {@link #placeAiBaseAt}, where the human deliberately gets nothing. Bootstrap only: an
      * expansion base warped in from a kit brings no escort.
      */
+    /**
+     * Puts a base's own defenders inside a transport planted with them, if its race declared both. The
+     * Terran are the only race that does today: their static defence is a Bunker, which is a wall
+     * rather than a gun, so a base that spawned one and left its Marines standing beside it would be
+     * defended by nothing the Bunker contributed.
+     *
+     * <p>Written over what was just spawned rather than as a sweep of the area, so it can never pick
+     * up a unit that merely happens to be standing nearby, and so the pairing is a fact about the
+     * profile's {@code baseDefences} list rather than about geography. It names no race and no unit:
+     * a transport is anything that is a {@link Garrison}, a crew is anything that transport will take,
+     * and a race that declared neither gets an empty loop.
+     *
+     * <p>The transport is stood up first. A freshly spawned Bunker is thirty seconds from being
+     * finished and refuses passengers until it is — the same trap {@code BaseBlockEntity.skipWarpIn}
+     * exists for, since a building world generation placed was never built by anybody.
+     */
+    private static void crewDefences(List<Mob> defences) {
+        for (Mob defence : defences) {
+            if (!(defence instanceof BunkerEntity transport)) {
+                continue;
+            }
+            transport.skipConstruction();
+            for (Mob crew : defences) {
+                transport.board(crew);
+            }
+        }
+    }
+
     private static void spawnBaseEscort(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
         for (RaceProfile.BaseDefence escort : profile.baseEscort()) {
             for (int i = 0; i < escort.count(); i++) {

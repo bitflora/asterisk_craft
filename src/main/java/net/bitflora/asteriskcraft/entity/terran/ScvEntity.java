@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.entity.terran;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
+import net.bitflora.asteriskcraft.entity.Organic;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.entity.ai.MeleeAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
@@ -33,7 +34,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its stats live in {@link UnitStats#SCV}.
  */
-public class ScvEntity extends WorkerEntity {
+public class ScvEntity extends WorkerEntity implements Organic {
 
     public ScvEntity(EntityType<? extends ScvEntity> type, Level level) {
         super(type, level);

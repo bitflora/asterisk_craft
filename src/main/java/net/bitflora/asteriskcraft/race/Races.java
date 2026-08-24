@@ -157,12 +157,13 @@ public final class Races {
      * rather than omissions — there is no second Terran building to hand out as a starting kit, and
      * no prerequisite of the Pylon/creep kind, so no ground cover to lay.
      *
-     * <p><b>Their base defence is a pair of live Marines rather than a structure</b>, which is the
-     * one place the race reads differently from the other two in this table: the Protoss plant a
-     * Photon Cannon and the Zerg a Sunken and a Spore, both rooted, while the Terran have nothing
-     * static to plant and post a guard instead. A guard can be pulled off to fight elsewhere, and
-     * can chase what it is shooting at, so a Terran base is defended more loosely than either of
-     * the others — a real difference in how the race holds ground, not a placeholder.
+     * <p><b>Their base defence is a Bunker with a pair of live Marines in it</b>, and it is still the
+     * one place the race reads differently from the other two in this table. The Protoss plant a
+     * Photon Cannon and the Zerg a Sunken and a Spore — structures that <em>are</em> guns. The Terran
+     * plant a structure that is only a wall, and the guns are the same two Marines they always were:
+     * pull them out and the base is bare, exactly as before. So a Terran base is still held more
+     * loosely than either of the others, and is now also the only one whose defence can be dismantled
+     * by the defender.
      */
     public static final RaceProfile TERRAN = new RaceProfile(
             Race.TERRAN,
@@ -174,6 +175,11 @@ public final class Races {
             TERRAN_BANK_SLOTS,
             UnitRoster.builder()
                     .worker(UnitStats.SCV, AsteriskCraft.SCV)
+                    // The Bunker is deliberately absent, exactly as the Photon Cannon is from the
+                    // Protoss roster and the colonies from the Zerg one: a roster is what a
+                    // building can be told to *train*, and a structure bought as a kit is never
+                    // trained. Listing it would let a build script name it and get one for nothing,
+                    // since a kit-bought unit carries UnitCost.NONE and no build time.
                     .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
@@ -181,16 +187,20 @@ public final class Races {
             // No creep, and no support fill: the Terran set down on the ground as they find it.
             null,
             null,
-            // Two Marines standing on the Command Center. The race's only answer to "what is
-            // guarding this base at world start" — see the class doc above.
-            List.of(new BaseDefence(AsteriskCraft.MARINE, 2)),
+            // A Bunker and the two Marines that crew it. GameBootstrap puts the Marines inside once
+            // both are standing (see its garrison pass) — order here is irrelevant, since it boards
+            // afterwards rather than as it spawns.
+            List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2)),
             // No escort: the Terran have no flyer and no detector, so there is nothing a Command
             // Center wants hovering over it that the two Marines below it are not already doing.
             List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
             PLAYER_BANK,
-            List.of());
+            // One Bunker kit, so placing it is the Terran opening move the way a Pylon is the Protoss
+            // one — except that a Bunker does nothing until the player has built something to put in
+            // it, which is the race's whole shape restated as an opening.
+            List.of(AsteriskCraft.BUNKER_KIT::get));
 
     private static final Map<Race, RaceProfile> BY_RACE = new EnumMap<>(Map.of(
             Race.PROTOSS, PROTOSS,

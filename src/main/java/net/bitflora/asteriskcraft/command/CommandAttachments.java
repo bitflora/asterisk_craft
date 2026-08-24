@@ -68,7 +68,7 @@ public final class CommandAttachments {
     }
 
     public static void setOrder(Entity entity, CommandOrder order) {
-        if (order.kind() == CommandOrder.Kind.MOVE && entity instanceof Mob mob) {
+        if (order.kind().isMarch() && entity instanceof Mob mob) {
             // A fresh move order overrides whatever the unit is doing, including a fight already in
             // progress, so CommandedMoveGoal can take over immediately instead of yielding to a stale
             // target acquired before the order landed. Clearing the target only sticks because of the

@@ -88,15 +88,23 @@ public class StuckWanderGoal extends Goal {
     }
 
     /**
-     * Whether the unit is standing still for a good reason. Two signals, because no one of them
+     * Whether the unit is standing still for a good reason. Three signals, because no one of them
      * covers every unit: {@code swinging} catches a melee unit landing hits and a unit battering a
      * building (both go through {@code Mob.swing}), while a ranged unit does neither — vanilla's
      * {@code RangedAttackGoal} stops its navigation and fires without any swing, so a Hydralisk
-     * shooting something down would otherwise read as pinned. A unit may name a third of its own
+     * shooting something down would otherwise read as pinned. A unit may name a fourth of its own
      * through the three-argument constructor.
+     *
+     * <p>The third is {@code isPassenger()}, and unlike the Lurker's it is universally true rather
+     * than per-unit, which is why it is built in rather than passed: a unit that isn't moving because
+     * it is riding something isn't stuck — its position is not its own, and no amount of wandering
+     * would change it. Left out, a Marine garrisoned in a Bunker would be judged stuck every 40
+     * seconds and this goal (priority -1, holding {@code MOVE}) would preempt the
+     * {@code RangedAttackGoal} it is in there to run, so the whole garrison would fall silent in
+     * bursts.
      */
     private boolean busy() {
-        if (this.mob.swinging || this.alsoBusy.getAsBoolean()) {
+        if (this.mob.swinging || this.mob.isPassenger() || this.alsoBusy.getAsBoolean()) {
             return true;
         }
         LivingEntity target = this.mob.getTarget();

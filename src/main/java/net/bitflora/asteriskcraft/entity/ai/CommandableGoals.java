@@ -5,8 +5,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 
 /**
- * Installs the standard "responds to player orders" goal pair on a combat unit: a
- * {@link CommandedMoveGoal} (move orders) and a {@link CommandedAttackGoal} (focus-fire orders).
+ * Installs the standard "responds to player orders" goals on a combat unit: a
+ * {@link CommandedMoveGoal} (move orders), a {@link BoardGoal} (get-inside-that orders) and a
+ * {@link CommandedAttackGoal} (focus-fire orders).
  * Call from a unit's {@code registerGoals()}. Kept faction-generic so Zerg units can opt in later.
  */
 public final class CommandableGoals {
@@ -16,6 +17,9 @@ public final class CommandableGoals {
     public static void install(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector) {
         configureNavigation(mob);
         goalSelector.addGoal(1, new CommandedMoveGoal(mob, 1.1));
+        // Same priority as the march, because getting into cover is one. The two can never both want
+        // the unit: a unit carries one order at a time and each goal reads a different kind.
+        goalSelector.addGoal(1, new BoardGoal(mob, 1.1));
         goalSelector.addGoal(5, new GuardGoal(mob, 1.0));
         targetSelector.addGoal(0, new CommandedAttackGoal(mob));
     }

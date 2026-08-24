@@ -174,6 +174,9 @@ public enum ProductionKind {
      * Marine gets a single button, because {@link Action.TrainUnit} pays through
      * {@code CostPayment.payAny} — the Wood/Stone split is a worker-only affordance, and a combat
      * unit takes whichever the army has.
+     *
+     * <p>The third column is the Bunker, and it is the race's one structure: the Terran plant nothing
+     * rooted that shoots, so what they buy instead is somewhere to put the Marines from column two.
      */
     TERRAN_BASE(() -> AsteriskCraft.COMMAND_CENTER_CORE.get(), Races.TERRAN.bankSlots(), List.of(
             new OptionView(
@@ -187,7 +190,15 @@ public enum ProductionKind {
             new OptionView(
                     Icon.ofIcon("marine"),
                     CostText.tooltip(UnitStats.MARINE.cost(), 0), 1,
-                    new Action.TrainUnit(UnitStats.MARINE.id()))));
+                    new Action.TrainUnit(UnitStats.MARINE.id())),
+            // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
+            // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
+            // building's price. A single button, because its cost names one resource.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.BUNKER_KIT),
+                    CostText.tooltip(BaseBlockEntity.BUNKER_COST, Resource.STONE), 2,
+                    new Action.GiveKit(AsteriskCraft.BUNKER_KIT::get, Resource.STONE,
+                            BaseBlockEntity.BUNKER_COST, "message.asteriskcraft.base.bunker_ready"))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

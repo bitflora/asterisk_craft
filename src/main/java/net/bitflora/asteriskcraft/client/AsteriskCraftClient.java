@@ -9,6 +9,8 @@ import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonRenderer;
 import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
 import net.bitflora.asteriskcraft.client.protoss.ProbeRenderer;
+import net.bitflora.asteriskcraft.client.terran.BunkerModel;
+import net.bitflora.asteriskcraft.client.terran.BunkerRenderer;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.MarineRenderer;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
@@ -52,6 +54,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation PROBE_LAYER = new ModelLayerLocation(AsteriskCraft.id("probe"), "main");
     public static final ModelLayerLocation SCV_LAYER = new ModelLayerLocation(AsteriskCraft.id("scv"), "main");
     public static final ModelLayerLocation MARINE_LAYER = new ModelLayerLocation(AsteriskCraft.id("marine"), "main");
+    public static final ModelLayerLocation BUNKER_LAYER = new ModelLayerLocation(AsteriskCraft.id("bunker"), "main");
     public static final ModelLayerLocation ZEALOT_LAYER = new ModelLayerLocation(AsteriskCraft.id("zealot"), "main");
     public static final ModelLayerLocation DRAGOON_LAYER = new ModelLayerLocation(AsteriskCraft.id("dragoon"), "main");
     public static final ModelLayerLocation SCOUT_LAYER = new ModelLayerLocation(AsteriskCraft.id("scout"), "main");
@@ -74,6 +77,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(PROBE_LAYER, ProbeModel::createBodyLayer);
         event.registerLayerDefinition(SCV_LAYER, ScvModel::createBodyLayer);
         event.registerLayerDefinition(MARINE_LAYER, MarineModel::createBodyLayer);
+        event.registerLayerDefinition(BUNKER_LAYER, BunkerModel::createBodyLayer);
         event.registerLayerDefinition(ZEALOT_LAYER, ZealotModel::createBodyLayer);
         event.registerLayerDefinition(DRAGOON_LAYER, DragoonModel::createBodyLayer);
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
@@ -96,6 +100,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.PROBE.get(), ProbeRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SCV.get(), ScvRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.MARINE.get(), MarineRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.BUNKER.get(), BunkerRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRAGOON.get(), DragoonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.SCOUT.get(), ScoutRenderer::new);

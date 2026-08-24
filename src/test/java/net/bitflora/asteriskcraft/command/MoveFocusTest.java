@@ -39,6 +39,19 @@ class MoveFocusTest {
     }
 
     @Test
+    void exactlyTheOrdersThatWalkSomewhereOverrideCombat() {
+        // Which kinds open the window is the half of the rule that isn't about time. GUARD is the
+        // interesting exclusion: it also names a position, but holding a station means fighting for
+        // it, so it must not suppress targeting even briefly.
+        assertTrue(CommandOrder.Kind.MOVE.isMarch());
+        assertTrue(CommandOrder.Kind.LOAD.isMarch(), "getting into cover is a march");
+        assertFalse(CommandOrder.Kind.GUARD.isMarch(), "a station is held, not marched to");
+        assertFalse(CommandOrder.Kind.ATTACK.isMarch(), "an attack order asks for the opposite");
+        assertFalse(CommandOrder.Kind.MINE.isMarch());
+        assertFalse(CommandOrder.Kind.NONE.isMarch());
+    }
+
+    @Test
     void theClearedValueIsNeverFocused() {
         // clearOrder and a non-MOVE order both store 0. On a fresh world getGameTime() is 0 too, so
         // the comparison has to be strict: a >= here would leave every unit ignoring enemies until

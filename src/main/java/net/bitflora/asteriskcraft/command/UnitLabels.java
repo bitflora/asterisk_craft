@@ -54,7 +54,8 @@ public final class UnitLabels {
             Map.entry("infested_villager", "I"),
             // Terran
             Map.entry("scv", "S"),
-            Map.entry("marine", "M"));
+            Map.entry("marine", "M"),
+            Map.entry("bunker", "B"));
 
     private UnitLabels() {
     }

@@ -152,17 +152,37 @@ public final class FactionAttachments {
      * at. That is the intended rule, and it is the whole reason cloak is frightening rather than
      * cosmetic.
      *
-     * <p>The pure overload below is deliberately left cloak-free: cloak is a fact about a live
-     * entity, not about a pair of factions, and keeping it out preserves that rule's testability.
-     * The one targeting site that consumes the pure overload directly — the Photon Cannon's own
-     * selector, via {@code building.PhotonCannonTargeting} — therefore applies
-     * {@link Cloaking#isVisibleTo(Entity, Faction)} itself.
+     * <p>It is where <b>garrisoning</b> is enforced for the same reason ({@link Garrison}): a unit
+     * riding inside a Bunker is not hostile to anything, because everything aimed at it has to go
+     * through the shell instead. Cloak and shelter are the same shape of rule and share the same
+     * choke point, which is why neither needed a line in any goal.
+     *
+     * <p><b>Both are only half a rule.</b> A {@code TargetingConditions.Selector} is consulted when a
+     * target is acquired and never again, so a unit that cloaks — or boards — while something
+     * already holds it stays held. {@code combat.TargetRetentionHandler} is the other half for both.
+     *
+     * <p>The pure overload below is deliberately left cloak- and shelter-free: both are facts about a
+     * live entity, not about a pair of factions, and keeping them out preserves that rule's
+     * testability. The one targeting site that consumes the pure overload directly — the Photon
+     * Cannon's own selector, via {@code building.PhotonCannonTargeting} — therefore applies
+     * {@link #isEngageable(Entity, Faction)} itself.
      */
     public static boolean isHostile(Entity self, Entity candidate) {
         Faction selfFaction = get(self);
         return isHostile(selfFaction, raceOf(self), get(candidate), WildKind.of(candidate),
                 isCommanded(self.level(), selfFaction))
-                && Cloaking.isVisibleTo(candidate, selfFaction);
+                && isEngageable(candidate, selfFaction);
+    }
+
+    /**
+     * Whether {@code candidate} can be fought at all by {@code viewer}'s side, setting aside whose
+     * side it is on: it must not be cloaked-and-undetected, and it must not be sheltered inside a
+     * {@link Garrison}. The two live-entity gates {@link #isHostile(Entity, Entity)} applies on top
+     * of the pure faction rule, factored out so the one site that bypasses that overload can apply
+     * exactly the same pair rather than a drifting copy of it.
+     */
+    public static boolean isEngageable(Entity candidate, Faction viewer) {
+        return Cloaking.isVisibleTo(candidate, viewer) && !Garrison.isGarrisoned(candidate);
     }
 
     /**

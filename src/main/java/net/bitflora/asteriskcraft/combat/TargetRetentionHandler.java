@@ -4,6 +4,7 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Cloaked;
 import net.bitflora.asteriskcraft.faction.Cloaking;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Garrison;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -12,8 +13,10 @@ import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /**
- * Keeps an attacker from holding on to a target that has disappeared behind a cloak — the
- * <em>retention</em> half of the rule {@code FactionAttachments.isHostile} enforces on acquisition.
+ * Keeps an attacker from holding on to a target that has stopped being engageable — the
+ * <em>retention</em> half of the two live-entity rules {@code FactionAttachments.isHostile} enforces
+ * on acquisition: a unit that has disappeared behind a cloak, and a unit that has climbed inside a
+ * {@link net.bitflora.asteriskcraft.faction.Garrison}.
  *
  * <p><b>Why acquisition alone isn't enough.</b> Verified against the decompiled 26.1.2 source:
  * {@code TargetGoal.canContinueToUse} — which every vanilla target goal inherits, ours included —
@@ -25,7 +28,9 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
  * <p>That hole was invisible until the Lurker. The Dark Templar is cloaked permanently, so it can
  * never be acquired in the first place and there is never a target to hold on to; the Lurker is the
  * first unit whose cloak comes up <em>after</em> acquisition, which is exactly the case the vanilla
- * path doesn't handle.
+ * path doesn't handle. The Bunker is the second instance of the same shape and the reason this class
+ * is named for the shape rather than for cloak: a Marine that boards while it is being shot at has
+ * exactly the Lurker's problem, and needed exactly the Lurker's fix.
  *
  * <p><b>It takes two listeners, because there are two ways a target survives.</b>
  *
@@ -46,15 +51,16 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
  * {@link LivingChangeTargetEvent} means "leave the target as it was", which for a mob already locked
  * on would preserve exactly the thing being fixed.
  *
- * <p><b>Deliberately scoped to cloak, not to hostility in general.</b> The tempting version of this —
- * "drop any target {@code isHostile} would no longer allow" — quietly breaks the rest of the world: a
- * vanilla zombie chasing the player is a NEUTRAL attacker on a target {@code isHostile} says nothing
- * useful about, and the sweep would strip its target every tick and leave zombies unable to attack
- * anyone. So the guard is the narrow one, and a target that is not {@link Cloaked} is never touched.
+ * <p><b>Deliberately scoped to these two rules, not to hostility in general.</b> The tempting version
+ * of this — "drop any target {@code isHostile} would no longer allow" — quietly breaks the rest of
+ * the world: a vanilla zombie chasing the player is a NEUTRAL attacker on a target
+ * {@code isHostile} says nothing useful about, and the sweep would strip its target every tick and
+ * leave zombies unable to attack anyone. So the guard stays narrow, and a target that is neither
+ * {@link Cloaked} nor riding a {@link net.bitflora.asteriskcraft.faction.Garrison} is never touched.
  *
- * <p>Both listeners run for every mob, not just the mod's own units, because a cloak has to work
- * against everything that can hold a grudge — including the wild hostiles {@code isHostile}
- * deliberately lets our units fight.
+ * <p>Both listeners run for every mob, not just the mod's own units, because a cloak — and a bunker
+ * wall — has to work against everything that can hold a grudge, including the wild hostiles
+ * {@code isHostile} deliberately lets our units fight.
  *
  * <p><b>One residual, and it is deliberate.</b> A mob whose grudge came from {@code HurtByTargetGoal}
  * keeps that goal <em>running</em> after the veto empties its target, because that goal's
@@ -65,9 +71,9 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
  * the lesser of the two behaviours — the alternative is the cloak simply not working.
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID)
-public final class CloakTargetHandler {
+public final class TargetRetentionHandler {
 
-    private CloakTargetHandler() {
+    private TargetRetentionHandler() {
     }
 
     @SubscribeEvent
@@ -92,12 +98,21 @@ public final class CloakTargetHandler {
     }
 
     /**
-     * Whether {@code target} is cloaked and currently invisible to {@code viewer}'s faction. The
-     * uncloaked early-out is first and is the overwhelmingly common case, so both listeners cost a
-     * single {@code instanceof} for every entity in the world that isn't part of this mechanic.
+     * Whether {@code target} has stopped being engageable by {@code viewer}'s faction: either it is
+     * cloaked and no detector of that faction currently reveals it, or it is sheltered inside a
+     * garrison. Both early-outs are a single {@code instanceof} on the overwhelmingly common case, so
+     * this costs almost nothing for every entity in the world that isn't part of either mechanic.
+     *
+     * <p>Written out rather than delegated to {@code FactionAttachments.isEngageable} on purpose:
+     * that helper is the *acquisition* pair and answers "may this be fought", which is true of an
+     * uncloaked, unsheltered entity of any faction — including the player a zombie is chasing. Here
+     * the question has to be the narrower "was this taken away from an attacker that already had
+     * it", so the two conditions are guarded by their own markers first.
      */
     private static boolean hidden(LivingEntity viewer, LivingEntity target) {
-        return Cloaked.isCloaked(target)
-                && !Cloaking.isVisibleTo(target, FactionAttachments.get(viewer));
+        if (Cloaked.isCloaked(target)) {
+            return !Cloaking.isVisibleTo(target, FactionAttachments.get(viewer));
+        }
+        return Garrison.isGarrisoned(target);
     }
 }

@@ -97,12 +97,19 @@ public class PlayerSelection {
         this.ids.clear();
     }
 
-    /** Live, still-valid selected units; prunes dead/despawned ids as a side effect. */
+    /**
+     * Live, still-commandable selected units; prunes ids that are no longer either as a side effect.
+     *
+     * <p>A unit that has climbed inside a transport is dropped exactly like a dead one, and its glow
+     * with it. It is not gone, but it is no longer the player's to order — everything about it is the
+     * transport's business now, and leaving it selected would mean a right-click quietly trying to
+     * march a squad that is inside a building, with a glow shining out through the wall.
+     */
     public List<Mob> pruneAndGet(ServerLevel level) {
         List<Mob> live = new ArrayList<>();
         Iterator<UUID> it = this.ids.iterator();
         while (it.hasNext()) {
-            if (level.getEntity(it.next()) instanceof Mob unit && unit.isAlive()) {
+            if (level.getEntity(it.next()) instanceof Mob unit && unit.isAlive() && !unit.isPassenger()) {
                 live.add(unit);
             } else {
                 it.remove();
@@ -115,8 +122,14 @@ public class PlayerSelection {
         return this.ids.size();
     }
 
+    /**
+     * Selects {@code unit}, unless it is riding something — a garrisoned unit is not the player's to
+     * order (see {@link #pruneAndGet}), and this is the other end of that rule: control-group recall
+     * and Ctrl-click-all both come through here, so neither can put one back into a selection that
+     * {@code pruneAndGet} would only strip out again.
+     */
     private void add(Mob unit) {
-        if (this.ids.add(unit.getUUID())) {
+        if (!unit.isPassenger() && this.ids.add(unit.getUUID())) {
             unit.setGlowingTag(true);
         }
     }

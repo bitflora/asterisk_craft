@@ -2,12 +2,15 @@ package net.bitflora.asteriskcraft.entity.terran;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.combat.AsteriskCraftDamageTypes;
+import net.bitflora.asteriskcraft.entity.Organic;
 import net.bitflora.asteriskcraft.entity.ai.CommandableGoals;
 import net.bitflora.asteriskcraft.entity.ai.FactionTargetGoal;
 import net.bitflora.asteriskcraft.entity.ai.HitscanAttacks;
 import net.bitflora.asteriskcraft.entity.ai.RetaliateGoal;
 import net.bitflora.asteriskcraft.entity.ai.SiegeBlockGoal;
 import net.bitflora.asteriskcraft.entity.ai.StuckWanderGoal;
+import net.bitflora.asteriskcraft.entity.ai.UnitRangedAttackGoal;
+import net.bitflora.asteriskcraft.faction.Garrison;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
@@ -23,7 +26,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
@@ -33,7 +35,7 @@ import net.minecraft.world.level.Level;
  * The Terran line infantry, and the first thing the race has that goes looking for a fight. The
  * shape is the Hydralisk's — a plain hostile mob (not a repurposed Skeleton, see
  * docs/neoforge-api-notes.md) with faction targeting, a {@link SiegeBlockGoal}, and a hitscan
- * fired on a fixed cadence by a plain {@link RangedAttackGoal}.
+ * fired on a fixed cadence by a plain {@link UnitRangedAttackGoal}.
  *
  * <p>The difference from its {@link net.bitflora.asteriskcraft.entity.terran.ScvEntity} stablemate
  * is the whole worker/soldier line: an SCV carries a weapon and no {@link FactionTargetGoal}, so it
@@ -45,7 +47,7 @@ import net.minecraft.world.level.Level;
  *
  * <p>Its numbers live in {@link UnitStats#MARINE} — not here.
  */
-public class MarineEntity extends Monster implements RangedAttackMob {
+public class MarineEntity extends Monster implements RangedAttackMob, Organic {
     private static final UnitStat STAT = UnitStats.MARINE;
     private static final UnitStat.Ranged RANGED = STAT.rangedOrThrow();
 
@@ -79,7 +81,11 @@ public class MarineEntity extends Monster implements RangedAttackMob {
         // Priority 0 (above the move/attack goals): the digger must be able to preempt movement to
         // batter through an obstruction, not merely fill a yield window. See SiegeBlockGoal.
         this.goalSelector.addGoal(0, new SiegeBlockGoal(this));
-        this.goalSelector.addGoal(4, new RangedAttackGoal(this, 1.0, RANGED.cooldown(), RANGED.range()));
+        // The mod's own ranged goal rather than vanilla's, because the radius has to be live: a
+        // Marine shooting from inside a Bunker reaches a block further than one standing beside it,
+        // and vanilla freezes attackRadius at construction. See UnitRangedAttackGoal.
+        this.goalSelector.addGoal(4, new UnitRangedAttackGoal(this, 1.0, RANGED.cooldown(),
+                () -> RANGED.range() + Garrison.rangeBonusFor(this)));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(-1, new RetaliateGoal(this));

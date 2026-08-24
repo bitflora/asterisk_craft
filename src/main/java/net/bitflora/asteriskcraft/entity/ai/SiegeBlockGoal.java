@@ -43,6 +43,13 @@ import org.jetbrains.annotations.Nullable;
  * permanently stuck — see the three-argument constructor.
  * (The Photon Cannon is an entity, so retaliating against it needs no special case here — units
  * target and hit it back through the normal {@link RetaliateGoal}/{@code FactionTargetGoal} path.)
+ *
+ * <p><b>A passenger is excluded outright</b>, both branches, and that is a fact about riding rather
+ * than about any one vehicle: a unit inside something can neither walk up to a building nor dig its
+ * way anywhere, and its navigation reports "done and not arrived" continuously, which is the exact
+ * signal the obstruction branch reads as being stuck. Left in, a Marine garrisoned in a Bunker would
+ * chew through the terrain in front of it — and, because this goal sits at priority 0 holding
+ * {@code MOVE}, would do it instead of firing.
  */
 public class SiegeBlockGoal extends Goal {
     private static final int BUILDING_SCAN_RADIUS = 3;
@@ -106,6 +113,9 @@ public class SiegeBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        if (this.mob.isPassenger()) {
+            return false;
+        }
         if (--this.cooldown > 0) {
             return false;
         }
@@ -129,6 +139,9 @@ public class SiegeBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        if (this.mob.isPassenger()) {
+            return false;
+        }
         return switch (this.mode) {
             // An assault already under way is dropped by a move order too, not just prevented by one:
             // canUse() alone would leave a unit mid-siege hammering away until the building fell.

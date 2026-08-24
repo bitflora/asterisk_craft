@@ -82,6 +82,11 @@ public class BaseBlockEntity extends BlockEntity
     public static final int BASE_KIT_COST = 400;
     /** All-wood or all-cobblestone, and cheaper than what it unlocks: a Pylon is a prerequisite, not a prize. */
     public static final int PYLON_COST = 100;
+    /**
+     * Cobblestone-only, and the cheapest structure in the mod: a Bunker is worth nothing empty, so
+     * what a player really pays for it is the four units they have to put inside.
+     */
+    public static final int BUNKER_COST = 100;
     public static final int MAX_QUEUE = 5;
     /** Pay with whichever cost alternative the army can afford - see {@link #queueUnit}. */
     private static final int ANY_COST = -1;

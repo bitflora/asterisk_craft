@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
  * <p><b>An order does not override the cloak gate.</b> {@link #engageable()} is {@link #ordered()}
  * plus {@code FactionAttachments.isHostile}, and it is the one the goal actually sets a target from —
  * without it this goal would re-assert an invisible target every tick and undo
- * {@code combat.CloakTargetHandler}, making a standing order the one way to keep hitting something
+ * {@code combat.TargetRetentionHandler}, making a standing order the one way to keep hitting something
  * that has cloaked.
  *
  * <p>The two are kept separate rather than merged because they answer different questions: an
