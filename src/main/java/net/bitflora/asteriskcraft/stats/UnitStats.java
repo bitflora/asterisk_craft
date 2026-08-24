@@ -21,6 +21,7 @@ import static net.bitflora.asteriskcraft.stats.UnitCost.line;
 public final class UnitStats {
 
     // --- Protoss ---
+    public static final int HOVER_HEIGHT = 4;
 
     public static final UnitStat PROBE = UnitStat.builder("probe")
             .health(10.0).shield(10).speed(0.35).followRange(48.0)
@@ -50,7 +51,7 @@ public final class UnitStats {
             // ground, so a pair of Scouts out-trades the flock they intercept while staying an
             // indifferent answer to a ground army the Zealots should be handling.
             .attackDamage(11.0).antiAirBonus(10.0).ranged(9.0f, 30)
-            .flight(0.6, 6, 64.0f)
+            .flight(0.6, HOVER_HEIGHT, 64.0f)
             .cost(UnitCost.all(line(STONE, 150), line(IRON, 20))).buildTicks(200)
             .build();
 
@@ -106,7 +107,7 @@ public final class UnitStats {
             .health(60.0).armor(0.0).speed(0.25)
             .attackDamage(4.5).ranged(9.0f, 30)
             .bounce(3, 0.5f, 5.0f)
-            .flight(0.6, 6, 64.0f)
+            .flight(0.6, HOVER_HEIGHT, 64.0f)
             .cost(UnitCost.of(ANY, 100)).buildTicks(20)
             .build();
 
@@ -123,9 +124,9 @@ public final class UnitStats {
      */
     public static final UnitStat OVERLORD = UnitStat.builder("overlord")
             .health(100.0).armor(0.0).speed(0.15)
-            // Slower and higher than the Mutalisk's 0.6/6: a drifting sac, not a raider. The extra
-            // block of altitude is what keeps it above the fight it is spotting for.
-            .flight(0.35, 7, 64.0f)
+            // Slower than the Mutalisk's 0.6: a drifting sac, not a raider. Same hover height as
+            // every other flyer, so a Zerg player learns one altitude, not two.
+            .flight(0.35, HOVER_HEIGHT, 64.0f)
             // The same envelope as the mod's other two detectors, so a race's mobile detector and
             // its rooted one see equally far and a player learns one radius, not two.
             .detector(16.0, 20, 60)
