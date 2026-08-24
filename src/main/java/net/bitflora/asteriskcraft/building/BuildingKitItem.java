@@ -1,7 +1,9 @@
 package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.command.ControlledFaction;
+import net.bitflora.asteriskcraft.command.ControlledRace;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.GameBootstrap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -15,6 +17,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -94,8 +97,8 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
     }
 
     @Override
-    public Faction placingFaction(Level level, Player player) {
-        return ControlledFaction.of(player);
+    public @Nullable Race placingRace(Level level, Player player) {
+        return ControlledRace.of(player);
     }
 
     @Override
@@ -118,7 +121,7 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
             overlay(player, Component.translatable("message.asteriskcraft.kit.no_pylon", PsiField.RADIUS));
             return InteractionResult.FAIL;
         }
-        if (this.requiresCreep && !CreepField.covered(serverLevel, origin, ControlledFaction.of(player))) {
+        if (this.requiresCreep && !CreepField.covered(serverLevel, origin, ControlledRace.of(player))) {
             overlay(player, Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS));
             return InteractionResult.FAIL;
         }
@@ -140,7 +143,7 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
             building.setFaction(faction);
         }
         if (this.spreadsCreep) {
-            GameBootstrap.spreadCreep(serverLevel, placed.core(), faction);
+            GameBootstrap.spreadCreep(serverLevel, placed.core(), ControlledRace.of(player));
         }
         // Start the warp explicitly rather than trusting the stamped core to arrive mid-warp: the
         // template carries the block-entity NBT captured from a finished building, spent countdown

@@ -44,76 +44,76 @@ class CloakingTest {
     void anUncloakedUnitIsAlwaysVisible() {
         // The overwhelmingly common case, and the one that must never cost anything: cloak is opt-in
         // and an ordinary unit is seen by everyone regardless of who detects what.
-        assertTrue(Cloaking.isVisibleTo(false, Faction.PROTOSS, Faction.ZERG, NOBODY));
-        assertTrue(Cloaking.isVisibleTo(false, Faction.ZERG, Faction.PROTOSS, NOBODY));
-        assertTrue(Cloaking.isVisibleTo(false, Faction.NEUTRAL, Faction.PROTOSS, NOBODY));
+        assertTrue(Cloaking.isVisibleTo(false, Faction.BLUE, Faction.RED, NOBODY));
+        assertTrue(Cloaking.isVisibleTo(false, Faction.RED, Faction.BLUE, NOBODY));
+        assertTrue(Cloaking.isVisibleTo(false, Faction.NEUTRAL, Faction.BLUE, NOBODY));
     }
 
     @Test
     void anUndetectedCloakedUnitIsInvisibleToTheEnemy() {
-        assertFalse(Cloaking.isVisibleTo(true, Faction.PROTOSS, Faction.ZERG, NOBODY),
+        assertFalse(Cloaking.isVisibleTo(true, Faction.BLUE, Faction.RED, NOBODY),
                 "an undetected cloaked unit must not exist as far as the enemy is concerned");
-        assertFalse(Cloaking.isVisibleTo(true, Faction.ZERG, Faction.PROTOSS, NOBODY),
-                "the rule is faction-generic, not Protoss-only");
+        assertFalse(Cloaking.isVisibleTo(true, Faction.RED, Faction.BLUE, NOBODY),
+                "the rule is side-generic, not one-sided");
     }
 
     @Test
     void aCloakedUnitIsAlwaysVisibleToItsOwnSide() {
         // This is what keeps a cloaked unit commandable: the player never loses track of their own.
-        assertTrue(Cloaking.isVisibleTo(true, Faction.PROTOSS, Faction.PROTOSS, NOBODY));
-        assertTrue(Cloaking.isVisibleTo(true, Faction.ZERG, Faction.ZERG, NOBODY));
+        assertTrue(Cloaking.isVisibleTo(true, Faction.BLUE, Faction.BLUE, NOBODY));
+        assertTrue(Cloaking.isVisibleTo(true, Faction.RED, Faction.RED, NOBODY));
     }
 
     @Test
     void aDetectedCloakedUnitIsVisibleToTheDetectingFaction() {
-        byte detectedByZerg = Cloaking.with(NOBODY, Faction.ZERG);
-        assertTrue(Cloaking.isVisibleTo(true, Faction.PROTOSS, Faction.ZERG, detectedByZerg));
+        byte detectedByRed = Cloaking.with(NOBODY, Faction.RED);
+        assertTrue(Cloaking.isVisibleTo(true, Faction.BLUE, Faction.RED, detectedByRed));
     }
 
     @Test
     void detectionIsPerFactionNotGlobal() {
-        // A Zerg Spore Colony revealing a cloaked Protoss unit must not reveal it to a third party.
+        // One side's Spore Colony revealing a cloaked enemy must not reveal it to a third party.
         // Nothing in the MVP has three sides, which is exactly why this needs a test rather than a
         // playtest: a single-Faction field instead of a mask would pass every game played today.
-        byte detectedByZerg = Cloaking.with(NOBODY, Faction.ZERG);
-        assertTrue(Cloaking.isDetectedBy(detectedByZerg, Faction.ZERG));
-        assertFalse(Cloaking.isDetectedBy(detectedByZerg, Faction.NEUTRAL));
-        assertFalse(Cloaking.isDetectedBy(detectedByZerg, Faction.PROTOSS));
+        byte detectedByRed = Cloaking.with(NOBODY, Faction.RED);
+        assertTrue(Cloaking.isDetectedBy(detectedByRed, Faction.RED));
+        assertFalse(Cloaking.isDetectedBy(detectedByRed, Faction.NEUTRAL));
+        assertFalse(Cloaking.isDetectedBy(detectedByRed, Faction.BLUE));
     }
 
     @Test
     void neutralsAreBlindToCloakedUnits() {
         // A wandering zombie carries no faction and no detector, so cloak works against the world
         // too. NEUTRAL is nobody else's own side, so the own-faction branch must not let it through.
-        assertFalse(Cloaking.isVisibleTo(true, Faction.PROTOSS, Faction.NEUTRAL, NOBODY));
+        assertFalse(Cloaking.isVisibleTo(true, Faction.BLUE, Faction.NEUTRAL, NOBODY));
     }
 
     // --- The bitmask, since more than one faction may detect the same unit at once ---
 
     @Test
     void twoDetectingFactionsCoexistInTheMask() {
-        byte mask = Cloaking.with(Cloaking.with(NOBODY, Faction.ZERG), Faction.PROTOSS);
-        assertTrue(Cloaking.isDetectedBy(mask, Faction.ZERG));
-        assertTrue(Cloaking.isDetectedBy(mask, Faction.PROTOSS));
+        byte mask = Cloaking.with(Cloaking.with(NOBODY, Faction.RED), Faction.BLUE);
+        assertTrue(Cloaking.isDetectedBy(mask, Faction.RED));
+        assertTrue(Cloaking.isDetectedBy(mask, Faction.BLUE));
     }
 
     @Test
     void clearingOneFactionLeavesTheOther() {
         // The failure this guards: one detector's reveal timing out and un-revealing the unit for
         // everybody, including a second detector still standing right next to it.
-        byte both = Cloaking.with(Cloaking.with(NOBODY, Faction.ZERG), Faction.PROTOSS);
-        byte onlyProtoss = Cloaking.without(both, Faction.ZERG);
-        assertFalse(Cloaking.isDetectedBy(onlyProtoss, Faction.ZERG));
-        assertTrue(Cloaking.isDetectedBy(onlyProtoss, Faction.PROTOSS));
+        byte both = Cloaking.with(Cloaking.with(NOBODY, Faction.RED), Faction.BLUE);
+        byte onlyBlue = Cloaking.without(both, Faction.RED);
+        assertFalse(Cloaking.isDetectedBy(onlyBlue, Faction.RED));
+        assertTrue(Cloaking.isDetectedBy(onlyBlue, Faction.BLUE));
     }
 
     @Test
     void maskOperationsAreIdempotent() {
         // A reveal re-arms on every sweep and the countdown runs every tick, so both operations run
         // far more often than the state actually changes; neither may accumulate.
-        byte once = Cloaking.with(NOBODY, Faction.ZERG);
-        assertEquals(once, Cloaking.with(once, Faction.ZERG));
-        assertEquals(NOBODY, Cloaking.without(Cloaking.without(once, Faction.ZERG), Faction.ZERG));
+        byte once = Cloaking.with(NOBODY, Faction.RED);
+        assertEquals(once, Cloaking.with(once, Faction.RED));
+        assertEquals(NOBODY, Cloaking.without(Cloaking.without(once, Faction.RED), Faction.RED));
     }
 
     @Test

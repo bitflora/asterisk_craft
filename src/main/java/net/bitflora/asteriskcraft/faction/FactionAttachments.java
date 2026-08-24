@@ -1,19 +1,25 @@
 package net.bitflora.asteriskcraft.faction;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Data attachment tagging any entity with the faction it fights for.
- * All targeting logic must resolve hostility through this, never through
- * entity class checks, so units can be swapped per race later.
+ * Data attachments tagging any entity with the army it fights for: its {@link Faction} — which
+ * <em>side</em> — and its {@link Race} — what that army <em>is</em>. All targeting logic must
+ * resolve hostility through {@link #isHostile}, never through entity class checks.
+ *
+ * <p>The two are separate attachments, and both are needed, because a side no longer names a race:
+ * two sides may play the same one (a mirror match), so nothing can be recovered from the other.
  */
 public final class FactionAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
@@ -23,6 +29,26 @@ public final class FactionAttachments {
             "faction", () -> AttachmentType.builder(() -> Faction.NEUTRAL)
                     .serialize(Faction.CODEC.fieldOf("faction"))
                     .sync(Faction.STREAM_CODEC)
+                    .build());
+
+    /**
+     * Which race the army this entity fights for <em>is</em> — the other half of the pair
+     * {@link #FACTION} starts, and empty for everything the mod doesn't own.
+     *
+     * <p>It rides on the entity rather than being looked up from its side because a side no longer
+     * names a race: in a mirror match both sides play the same one, and in any match the assignment
+     * is per world ({@code game.MatchSetup}). Level attachments are not synced, so deriving it from
+     * the match would leave the client guessing — where this is synced, which
+     * {@code combat.ShieldAttachments.maxShieldFor} needs (the Jade tooltip asks for a max shield
+     * client-side) and the creep overlay wants.
+     *
+     * <p>Empty rather than a default race: {@link Faction#NEUTRAL} is nobody's army, and a wild cow
+     * that answered "Protoss" would carry shields.
+     */
+    public static final Supplier<AttachmentType<Optional<Race>>> RACE = ATTACHMENT_TYPES.register(
+            "race", () -> AttachmentType.<Optional<Race>>builder(Optional::empty)
+                    .serialize(Race.CODEC.optionalFieldOf("race"))
+                    .sync(ByteBufCodecs.optional(Race.STREAM_CODEC))
                     .build());
 
     /**
@@ -49,8 +75,24 @@ public final class FactionAttachments {
         return entity.getData(FACTION);
     }
 
-    public static void set(Entity entity, Faction faction) {
+    /**
+     * Tags {@code entity} with the army it fights for: a side and the race that side is playing.
+     * The two are set together because every rule that asks for one eventually asks for the other —
+     * hostility widens by race, shields and regen are race traits — and an entity carrying a side
+     * with no race is an army that is nothing.
+     */
+    public static void set(Entity entity, Faction faction, @Nullable Race race) {
         entity.setData(FACTION, faction);
+        entity.setData(RACE, Optional.ofNullable(race));
+    }
+
+    /**
+     * What this entity's army is, or null for the unfactioned world. Null rather than an Optional
+     * because every caller is a per-tick combat check or a null-safe trait lookup, exactly as
+     * {@code Faction.race()} was before a side stopped naming a race.
+     */
+    public static @Nullable Race raceOf(Entity entity) {
+        return entity.getData(RACE).orElse(null);
     }
 
     /** Records which side the human is playing; see {@link #COMMANDED}. */
@@ -88,14 +130,14 @@ public final class FactionAttachments {
      * deliberately says NEUTRAL fights no one — that invariant is what stops units attacking the
      * player and wild animals, so it must not be relaxed. Instead the neutral world is classified
      * once ({@link WildKind}) and each race declares which classes of it it picks a fight with
-     * ({@link Faction#attacksWild}), which is why the rule can differ per race without a single
+     * ({@link Race#attacksWild}), which is why the rule can differ per race without a single
      * race check appearing in targeting code. It stays gated twice:
      * <ul>
      *   <li>on {@code candidate} actually being NEUTRAL, since the mod's own combat units (Zealot,
      *       Zergling, Dragoon, Hydralisk...) implement {@code Enemy} themselves (via {@code
      *       Monster}) and must never be caught by a bare class check;</li>
-     *   <li>on {@code self}'s own set — NEUTRAL's is empty, so an unfactioned unit still fights
-     *       nobody.</li>
+     *   <li>on {@code self} having a race at all — the unfactioned world plays none, so an
+     *       unfactioned unit still fights nobody.</li>
      * </ul>
      *
      * <p>This is the one place the neutral-world carve-out lives. Targeting code calls this and
@@ -118,7 +160,7 @@ public final class FactionAttachments {
      */
     public static boolean isHostile(Entity self, Entity candidate) {
         Faction selfFaction = get(self);
-        return isHostile(selfFaction, get(candidate), WildKind.of(candidate),
+        return isHostile(selfFaction, raceOf(self), get(candidate), WildKind.of(candidate),
                 isCommanded(self.level(), selfFaction))
                 && Cloaking.isVisibleTo(candidate, selfFaction);
     }
@@ -126,13 +168,16 @@ public final class FactionAttachments {
     /**
      * The pure rule behind {@link #isHostile(Entity, Entity)}, free of any live entity.
      *
+     * @param selfRace      the race {@code self}'s army is, from {@link #RACE}; null for the
+     *                      unfactioned world, which hunts nothing
      * @param selfCommanded whether {@code self} is the side a human is playing — see
      *                      {@link #COMMANDED}. It only ever widens the wild carve-out; strict
      *                      cross-faction hostility does not depend on who is holding the reins.
      */
-    public static boolean isHostile(Faction self, Faction candidate, WildKind candidateKind,
-                                    boolean selfCommanded) {
+    public static boolean isHostile(Faction self, @Nullable Race selfRace, Faction candidate,
+                                    WildKind candidateKind, boolean selfCommanded) {
         return self.isEnemy(candidate)
-                || (candidate == Faction.NEUTRAL && self.attacksWild(candidateKind, selfCommanded));
+                || (candidate == Faction.NEUTRAL && selfRace != null
+                        && selfRace.attacksWild(candidateKind, selfCommanded));
     }
 }

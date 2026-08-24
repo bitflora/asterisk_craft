@@ -2,7 +2,9 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.faction.WildKind;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,20 +22,22 @@ public final class PhotonCannonTargeting {
 
     /**
      * A candidate is fair game if it's alive and hostile to the cannon. Hostility itself is the
-     * shared rule in {@link FactionAttachments#isHostile(Faction, Faction, WildKind, boolean)} —
+     * shared rule in {@link FactionAttachments#isHostile(Faction, Race, Faction, WildKind, boolean)} —
      * including the neutral-world carve-out, which started here but is what <em>every</em> combat
      * unit needs, so it lives with the faction code now rather than being the cannon's private
      * policy. This method remains as the cannon's "alive and targetable" wrapper.
      *
+     * @param cannonRace what the cannon's army is, which is what decides how much of the
+     *                   unfactioned world it picks a fight with — see {@link Race#attacksWild}.
      * @param targetKind what the candidate is if it turns out to be unfactioned — the caller's
      *                   {@link WildKind#of} classification, kept out of this pure rule.
      * @param cannonCommanded whether the cannon's side is the one a human is playing, which is what
      *                        widens the wild carve-out — see
      *                        {@link FactionAttachments#isCommanded}.
      */
-    public static boolean isTargetable(Faction cannon, Faction target, boolean alive, WildKind targetKind,
-                                       boolean cannonCommanded) {
-        return alive && FactionAttachments.isHostile(cannon, target, targetKind, cannonCommanded);
+    public static boolean isTargetable(Faction cannon, @Nullable Race cannonRace, Faction target,
+                                       boolean alive, WildKind targetKind, boolean cannonCommanded) {
+        return alive && FactionAttachments.isHostile(cannon, cannonRace, target, targetKind, cannonCommanded);
     }
 
     /** Returns the candidate with the smallest distance (empty if the list is empty). */

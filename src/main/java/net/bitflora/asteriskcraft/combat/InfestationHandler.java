@@ -8,6 +8,7 @@ import net.bitflora.asteriskcraft.command.CommandOrder;
 import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -55,10 +56,11 @@ public final class InfestationHandler {
             return;
         }
         Faction raiser = FactionAttachments.get(killer);
-        if (!Infestation.infests(raiser, victim.getClass(), level.getRandom().nextFloat())) {
+        Race raiserRace = FactionAttachments.raceOf(killer);
+        if (!Infestation.infests(raiserRace, victim.getClass(), level.getRandom().nextFloat())) {
             return;
         }
-        raise(level, victim.blockPosition(), raiser);
+        raise(level, victim.blockPosition(), raiser, raiserRace);
     }
 
     /**
@@ -66,7 +68,7 @@ public final class InfestationHandler {
      * side's opponent's nearest base — so a match with the sides swapped sends the bomber the other
      * way with no change here.
      */
-    private static void raise(ServerLevel level, BlockPos where, Faction raiser) {
+    private static void raise(ServerLevel level, BlockPos where, Faction raiser, Race raiserRace) {
         InfestedVillagerEntity bomber =
                 AsteriskCraft.INFESTED_VILLAGER.get().create(level, EntitySpawnReason.TRIGGERED);
         if (bomber == null) {
@@ -80,7 +82,7 @@ public final class InfestationHandler {
                 level.getRandom().nextFloat() * 360f, 0f);
         EventHooks.finalizeMobSpawn(bomber, level, level.getCurrentDifficultyAt(spot),
                 EntitySpawnReason.TRIGGERED, null);
-        FactionAttachments.set(bomber, raiser);
+        FactionAttachments.set(bomber, raiser, raiserRace);
         level.addFreshEntity(bomber);
 
         CoreCensus.nearest(level, MatchSetup.of(level).opponentOf(raiser), spot)

@@ -13,6 +13,7 @@ import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
@@ -130,7 +131,7 @@ public final class GameBootstrap {
         // Set on every login (not just first-join bootstrap) so players who joined before
         // enemy-vs-player combat existed also pick up their faction — and so a match whose sides
         // were set differently is picked up on the next login rather than only at bootstrap.
-        FactionAttachments.set(player, setup.playerFaction());
+        FactionAttachments.set(player, setup.playerFaction(), setup.playerRace());
         // The leaf-package projection of the same fact, for the one rule that needs it without
         // being allowed to see this package: what an army hunts in the wild depends on whether a
         // person is standing in it. See FactionAttachments.COMMANDED.
@@ -220,7 +221,7 @@ public final class GameBootstrap {
             // The starting base is simply standing there when the world begins (R1) — it was never
             // warped in from a kit, so it doesn't spend its first two minutes half-built and idle.
             base.skipWarpIn();
-            seedArmyBank(level, setup.playerFaction(), profile.playerBank());
+            seedArmyBank(level, setup.playerFaction(), profile, profile.playerBank());
         }
         spawnStartingWorkers(level, core, profile, setup.playerFaction());
         // Unlike baseDefences just above in placeAiBaseAt, the escort is spawned for the human's
@@ -316,7 +317,7 @@ public final class GameBootstrap {
             }
             seedMineralField(level, chosen.getX(), chosen.getZ(), true);
         }
-        seedArmyBank(level, setup.aiFaction(), profile.startingBank());
+        seedArmyBank(level, setup.aiFaction(), profile, profile.startingBank());
         AsteriskCraft.LOGGER.info("AsteriskCraft: placed {} {} bases scattered around {},{}",
                 cores.size(), profile.race(), playerX, playerZ);
     }
@@ -591,8 +592,8 @@ public final class GameBootstrap {
      * A race with no creep (Protoss) is a no-op, so every placement call site can call this
      * unconditionally rather than checking the race first.
      */
-    public static void spreadCreep(ServerLevel level, BlockPos pos, Faction faction) {
-        RaceProfile profile = Races.of(faction);
+    public static void spreadCreep(ServerLevel level, BlockPos pos, @Nullable Race race) {
+        RaceProfile profile = race == null ? null : Races.of(race);
         if (profile == null || profile.creep() == null) {
             return;
         }
@@ -657,7 +658,7 @@ public final class GameBootstrap {
             // even when the army is out on a wave. Which units, and how many, is the race's own.
             for (RaceProfile.BaseDefence defence : profile.baseDefences()) {
                 for (int i = 0; i < defence.count(); i++) {
-                    UnitSpawns.spawn(level, core, defence.type().get(), faction, false);
+                    UnitSpawns.spawn(level, core, defence.type().get(), faction, profile.race(), false);
                 }
             }
             spawnBaseEscort(level, core, profile, faction);
@@ -670,8 +671,9 @@ public final class GameBootstrap {
      * linked chest onto the same pool. Both sides come through here; what each is stocked with is
      * its own profile's ({@code startingBank} for the computer, {@code playerBank} for the human).
      */
-    private static void seedArmyBank(ServerLevel level, Faction faction, List<RaceProfile.StartingStack> stock) {
-        NonNullList<ItemStack> bank = ArmyBank.of(level, faction);
+    private static void seedArmyBank(ServerLevel level, Faction faction, RaceProfile profile,
+            List<RaceProfile.StartingStack> stock) {
+        NonNullList<ItemStack> bank = ArmyBank.of(level, faction, profile.race());
         int slot = 0;
         for (RaceProfile.StartingStack stack : stock) {
             slot = seedStacks(bank, slot, stack.item().get(), stack.amount());
@@ -738,7 +740,7 @@ public final class GameBootstrap {
     private static void spawnBaseEscort(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
         for (RaceProfile.BaseDefence escort : profile.baseEscort()) {
             for (int i = 0; i < escort.count(); i++) {
-                UnitSpawns.spawn(level, core, escort.type().get(), faction, false);
+                UnitSpawns.spawn(level, core, escort.type().get(), faction, profile.race(), false);
             }
         }
     }
@@ -746,7 +748,7 @@ public final class GameBootstrap {
     private static void spawnStartingWorkers(ServerLevel level, BlockPos core, RaceProfile profile,
             Faction faction, int count) {
         for (int i = 0; i < count; i++) {
-            Mob unit = UnitSpawns.spawn(level, core, profile.worker().type(), faction, false);
+            Mob unit = UnitSpawns.spawn(level, core, profile.worker().type(), faction, profile.race(), false);
             if (unit instanceof WorkerEntity worker) {
                 worker.setHomePos(core);
             }

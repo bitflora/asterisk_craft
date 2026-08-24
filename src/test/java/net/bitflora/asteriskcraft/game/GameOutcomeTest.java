@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * is — so each case is stated once and its mirror is the same call with the sides swapped.
  */
 class GameOutcomeTest {
-    private static final Faction PLAYER = Faction.PROTOSS;
-    private static final Faction AI = Faction.ZERG;
+    private static final Faction PLAYER = MatchSetup.PLAYER_SIDE;
+    private static final Faction AI = MatchSetup.AI_SIDE;
 
     @Test
     void losingTheLastPlayerBaseIsDefeat() {

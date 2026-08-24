@@ -392,7 +392,7 @@ public class BaseBlockEntity extends BlockEntity
 
     private void spawnUnit(ServerLevel level, BlockPos pos, String rosterId) {
         this.profile.roster().resolve(rosterId).ifPresent(def -> {
-            Mob unit = UnitSpawns.spawn(level, pos, def.type(), buildingFaction(), false);
+            Mob unit = UnitSpawns.spawn(level, pos, def.type(), buildingFaction(), this.profile.race(), false);
             if (unit instanceof WorkerEntity worker) {
                 worker.setHomePos(pos);
             }
@@ -403,6 +403,11 @@ public class BaseBlockEntity extends BlockEntity
 
     @Override
     public Faction buildingFaction() {
+        if (this.level == null) {
+            // Asked before the block entity has a level: answer, but don't cache it, or the base
+            // would be stuck belonging to nobody for the rest of its life.
+            return this.faction == null ? Faction.NEUTRAL : this.faction;
+        }
         if (this.faction == null) {
             this.faction = resolveFaction();
         }
@@ -415,21 +420,13 @@ public class BaseBlockEntity extends BlockEntity
     }
 
     /**
-     * Whichever side of this match plays this base's race. NEUTRAL when nobody does, which is the
-     * honest answer for a base of a race sitting out the match and keeps it out of both armies.
+     * Whichever side of this match plays this base's race — the fallback for a base placed by hand
+     * rather than warped in by an army. NEUTRAL when nobody plays it, which is the honest answer
+     * for a base of a race sitting out the match and keeps it out of both armies; in a mirror,
+     * where both sides play it, {@code MatchSetup.sidePlaying} hands it to the human.
      */
     private Faction resolveFaction() {
-        if (this.level == null) {
-            return Faction.NEUTRAL;
-        }
-        MatchSetup setup = MatchSetup.of(this.level);
-        if (setup.playerProfile().race() == this.profile.race()) {
-            return setup.playerFaction();
-        }
-        if (setup.aiProfile().race() == this.profile.race()) {
-            return setup.aiFaction();
-        }
-        return Faction.NEUTRAL;
+        return MatchSetup.of(this.level).sidePlaying(this.profile.race());
     }
 
     @Override
@@ -495,7 +492,7 @@ public class BaseBlockEntity extends BlockEntity
 
     @Override
     public NonNullList<ItemStack> armyItems() {
-        return ArmyBank.of(this.level, buildingFaction());
+        return ArmyBank.of(this.level, buildingFaction(), this.profile.race());
     }
 
     @Override

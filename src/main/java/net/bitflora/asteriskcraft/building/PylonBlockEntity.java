@@ -2,6 +2,8 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -10,6 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The Pylon: the cheapest Protoss building and the one every other Protoss building needs nearby.
@@ -35,7 +38,12 @@ public class PylonBlockEntity extends BlockEntity implements WarpInBuilding, Sie
 
     private final BuildingDefense defense = new BuildingDefense(MAX_HEALTH, SHIELD, WARP_TICKS);
     private final UnderAttackAlert alert = new UnderAttackAlert();
-    private Faction faction = Faction.PROTOSS;
+    /**
+     * Which side owns this building. Null until set at placement or resolved on first use — a
+     * Protoss building placed by hand (creative, {@code /setblock}) belongs to whichever side is
+     * playing the Protoss, which {@code MatchSetup.sidePlaying} answers even in a mirror.
+     */
+    private @Nullable Faction faction;
 
     public PylonBlockEntity(BlockPos pos, BlockState state) {
         super(AsteriskCraft.PYLON_BLOCK_ENTITY.get(), pos, state);
@@ -62,6 +70,14 @@ public class PylonBlockEntity extends BlockEntity implements WarpInBuilding, Sie
 
     @Override
     public Faction buildingFaction() {
+        if (this.level == null) {
+            // Asked before the block entity has a level (a freshly constructed one being loaded):
+            // answer, but don't cache it, or the building would be stuck belonging to nobody.
+            return this.faction == null ? Faction.NEUTRAL : this.faction;
+        }
+        if (this.faction == null) {
+            this.faction = MatchSetup.of(this.level).sidePlaying(Race.PROTOSS);
+        }
         return this.faction;
     }
 
@@ -89,13 +105,15 @@ public class PylonBlockEntity extends BlockEntity implements WarpInBuilding, Sie
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         this.defense.save(output);
-        output.store("Faction", Faction.CODEC, this.faction);
+        if (this.faction != null) {
+            output.store("Faction", Faction.CODEC, this.faction);
+        }
     }
 
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.defense.load(input);
-        this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.PROTOSS);
+        this.faction = input.read("Faction", Faction.CODEC).orElse(null);
     }
 }

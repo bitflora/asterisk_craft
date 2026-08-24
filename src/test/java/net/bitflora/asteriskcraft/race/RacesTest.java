@@ -1,15 +1,12 @@
 package net.bitflora.asteriskcraft.race;
 
 import net.bitflora.asteriskcraft.building.ProductionKind;
-import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -105,20 +102,5 @@ class RacesTest {
                 "the Protoss must not be able to build a Hydralisk");
         assertTrue(Races.ZERG.roster().resolve("zealot").isEmpty(),
                 "the Zerg must not be able to build a Zealot");
-    }
-
-    @Test
-    void everySideResolvesToItsRaceAndNeutralToNone() {
-        // The one bridge between "which side" and "which race". NEUTRAL is the unfactioned world:
-        // it is nobody's army, so it has no profile and every trait lookup on it must come back false.
-        for (Faction faction : Faction.values()) {
-            if (faction == Faction.NEUTRAL) {
-                assertNull(faction.race(), "NEUTRAL must play no race");
-                assertNull(Races.of(faction), "NEUTRAL must have no profile");
-            } else {
-                assertSame(Races.of(faction.race()), Races.of(faction),
-                        faction + " resolves to a different profile than its race does");
-            }
-        }
     }
 }

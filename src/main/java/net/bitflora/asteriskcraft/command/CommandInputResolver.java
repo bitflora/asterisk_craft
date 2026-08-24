@@ -84,7 +84,7 @@ public final class CommandInputResolver {
         if (units.isEmpty()) {
             return;
         }
-        LivingEntity attackTarget = enemyTargetAt(packet, level, owner);
+        LivingEntity attackTarget = enemyTargetAt(packet, level, player, owner);
         boolean issued = attackTarget != null
                 ? issueAttack(units, attackTarget, level)
                 : issueMove(units, packet, level);
@@ -182,12 +182,14 @@ public final class CommandInputResolver {
      * here; this used to carry its own {@code instanceof Monster} copy and so silently refused
      * attack orders on every hostile that isn't a {@code Monster} subclass.
      */
-    private static LivingEntity enemyTargetAt(CommandInputPacket packet, ServerLevel level, Faction owner) {
+    private static LivingEntity enemyTargetAt(CommandInputPacket packet, ServerLevel level,
+            ServerPlayer player, Faction owner) {
         if (packet.kind() != CommandInputPacket.HitKind.ENTITY) {
             return null;
         }
         if (level.getEntity(packet.entityId()) instanceof LivingEntity target && target.isAlive()
-                && FactionAttachments.isHostile(owner, FactionAttachments.get(target), WildKind.of(target),
+                && FactionAttachments.isHostile(owner, ControlledRace.of(player),
+                        FactionAttachments.get(target), WildKind.of(target),
                         FactionAttachments.isCommanded(level, owner))) {
             return target;
         }

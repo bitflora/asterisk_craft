@@ -91,10 +91,11 @@ public class PhotonCannonEntity extends Mob implements Shielded, Detector, Roote
         // pure PhotonCannonTargeting rule so the "also defend against wild hostiles" logic and its
         // unit test stay in one place. Follow range is the cannon's attack range, so it never
         // acquires anything it couldn't shoot. Which slice of the neutral world that second half
-        // covers is the race's, not the cannon's — see Faction.attacksWild and WildKind.
+        // covers is the race's, not the cannon's — see Race.attacksWild and WildKind.
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, true, false,
                 (target, level) -> PhotonCannonTargeting.isTargetable(
-                        FactionAttachments.get(this), FactionAttachments.get(target),
+                        FactionAttachments.get(this), FactionAttachments.raceOf(this),
+                        FactionAttachments.get(target),
                         target.isAlive(), WildKind.of(target),
                         FactionAttachments.isCommanded(this.level(), FactionAttachments.get(this)))
                         // The cannon is the one targeting site that doesn't route through

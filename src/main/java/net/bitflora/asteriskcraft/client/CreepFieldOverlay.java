@@ -3,7 +3,7 @@ package net.bitflora.asteriskcraft.client;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.CreepDependent;
 import net.bitflora.asteriskcraft.building.CreepField;
-import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -29,7 +29,7 @@ import java.util.List;
  * it appears, regardless of which faction spread it — {@link CreepField} is deliberately faction-blind
  * on both clauses, unlike psi.
  *
- * <p>{@link CreepDependent#placingFaction} still resolves which <em>race's</em> ground counts as
+ * <p>{@link CreepDependent#placingRace} still resolves whose ground counts as
  * creep for the on-creep clause (so a Protoss item, if one is ever gated, paints nothing), but source
  * ownership is never filtered on — an enemy colony egg's overlay lights up beside an ally's creep the
  * same as its own.
@@ -64,11 +64,11 @@ public final class CreepFieldOverlay {
         }
 
         BlockPos playerPos = player.blockPosition();
-        Faction faction = placing.placingFaction(level, player);
+        Race race = placing.placingRace(level, player);
         // Sources are looked up once for the whole grid, exactly like PsiField#onlinePylons — and for
         // any owner, since CreepField is deliberately faction-blind about whose creep counts.
         List<BlockPos> sources = CreepField.creepSources(level, playerPos, DISPLAY_RADIUS + CreepField.RADIUS, null);
-        GRID.refresh(level, playerPos, pos -> CreepField.covered(level, pos, faction, sources));
+        GRID.refresh(level, playerPos, pos -> CreepField.covered(level, pos, race, sources));
         GRID.submit(event);
     }
 

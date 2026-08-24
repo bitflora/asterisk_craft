@@ -49,7 +49,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
  * <p><b>Its targeting is the point of the unit, and it is deliberately asymmetric.</b> Acquisition is
  * narrowed to {@link FactionAttachments#areEnemies} — strict cross-faction, which is exactly "units
  * allied with the player" once you know {@code GameBootstrap} tags the player PROTOSS on every login.
- * That subtracts the villagers and golems {@code Faction.attacksWild(CIVILIAN)} would otherwise hand
+ * That subtracts the villagers and golems {@code Race.attacksWild(CIVILIAN)} would otherwise hand
  * any Zerg unit, so unlike the rest of the swarm this one walks past the village it was born in.
  * Retaliation is left <em>un</em>narrowed, which is how "unless attacked" is implemented. That is a
  * deliberate departure from the rule that a unit narrowing one narrows both (see CLAUDE.md): that rule

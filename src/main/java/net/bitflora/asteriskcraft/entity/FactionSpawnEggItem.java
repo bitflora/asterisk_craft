@@ -4,9 +4,10 @@ import net.bitflora.asteriskcraft.building.CreepDependent;
 import net.bitflora.asteriskcraft.building.CreepField;
 import net.bitflora.asteriskcraft.building.PsiDependent;
 import net.bitflora.asteriskcraft.building.PsiField;
-import net.bitflora.asteriskcraft.command.ControlledFaction;
+import net.bitflora.asteriskcraft.command.ControlledRace;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.GameBootstrap;
 import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
@@ -66,6 +67,12 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
         Faction resolve(Level level) {
             MatchSetup setup = MatchSetup.of(level);
             return this == ALLY ? setup.playerFaction() : setup.aiFaction();
+        }
+
+        /** The race that side drew in this match — what the mob's army <em>is</em>. */
+        Race resolveRace(Level level) {
+            MatchSetup setup = MatchSetup.of(level);
+            return this == ALLY ? setup.playerRace() : setup.aiRace();
         }
     }
 
@@ -128,28 +135,22 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
     }
 
     /**
-     * Resolves the faction for {@link CreepDependent}'s client-side overlay — deliberately
-     * <em>not</em> {@code this.side.resolve(level)}: {@code MatchSetup.of} answers with its
-     * hardcoded default on the client (the level-scoped match setup isn't synced), which is fine for
-     * {@link #spawnMob}'s authoritative server-side check but would silently paint the wrong
-     * player's creep on the client whenever the human isn't playing the default's race. The player's
-     * own faction is instead read off {@code command.ControlledFaction}, a synced per-player
-     * attachment that answers correctly on both sides; the ENEMY case has no equivalent synced
-     * source, so it falls back to "whichever playable faction isn't the human's", which matches every
-     * match today (exactly two playable factions, never both the same).
+     * Resolves the race for {@link CreepDependent}'s client-side overlay — deliberately <em>not</em>
+     * {@code this.side.resolveRace(level)}: {@code MatchSetup.of} answers with its hardcoded default
+     * on the client (the level-scoped match setup isn't synced), which is fine for {@link #spawnMob}'s
+     * authoritative server-side check but would silently paint the wrong army's creep whenever the
+     * human isn't playing the default's race. The player's own race is instead read off
+     * {@code command.ControlledRace}, a synced per-player attachment that answers correctly on both
+     * sides.
+     *
+     * <p>The ENEMY case has no synced source of its own and answers with the player's race too. That
+     * is exact in a mirror match and an approximation otherwise — and it only decides which ground
+     * block the overlay paints as creep for an enemy-side testing egg, never what the server will
+     * accept.
      */
     @Override
-    public Faction placingFaction(Level level, Player player) {
-        Faction human = ControlledFaction.of(player);
-        if (this.side == Side.ALLY) {
-            return human;
-        }
-        for (Faction candidate : Faction.values()) {
-            if (candidate != Faction.NEUTRAL && candidate != human) {
-                return candidate;
-            }
-        }
-        return human;
+    public @Nullable Race placingRace(Level level, Player player) {
+        return ControlledRace.of(player);
     }
 
     @Override
@@ -192,8 +193,10 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
 
     private InteractionResult spawnMob(@Nullable LivingEntity user, ItemStack stack, ServerLevel level,
                                         BlockPos pos, boolean tryMoveDown, boolean movedUp) {
-        // The faction the mob is about to join is the one that has to own the Pylon powering it.
+        // The army the mob is about to join: the side that has to own the Pylon powering it, and
+        // the race whose creep it may be rooted in.
         Faction faction = this.side.resolve(level);
+        Race race = this.side.resolveRace(level);
         if (this.requiresPylon && !PsiField.covered(level, pos, faction)) {
             if (user instanceof ServerPlayer player) {
                 player.sendSystemMessage(
@@ -201,7 +204,7 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
             }
             return InteractionResult.FAIL;
         }
-        if (this.requiresCreep && !CreepField.covered(level, pos, faction)) {
+        if (this.requiresCreep && !CreepField.covered(level, pos, race)) {
             if (user instanceof ServerPlayer player) {
                 player.sendSystemMessage(
                         Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS), true);
@@ -217,9 +220,9 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
         EntityType<? extends Mob> type = entityType.get();
         Mob mob = type.spawn(level, stack, user, pos, EntitySpawnReason.SPAWN_ITEM_USE, tryMoveDown, movedUp);
         if (mob != null) {
-            FactionAttachments.set(mob, faction);
+            FactionAttachments.set(mob, faction, race);
             if (this.spreadsCreep) {
-                GameBootstrap.spreadCreep(level, mob.blockPosition(), faction);
+                GameBootstrap.spreadCreep(level, mob.blockPosition(), race);
             }
             stack.consume(1, user);
             level.gameEvent(user, GameEvent.ENTITY_PLACE, pos);

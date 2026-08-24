@@ -320,6 +320,7 @@ and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/clie
   `CycleButton.java`: it moves `index`, then calls the private `updateValue`, which only rewrites the
   message/tooltip/value — the listener is invoked from `cycleValue`, i.e. only by a click or a
   scroll). So two buttons can be wired to push each other off a shared choice with no re-entrancy
-  guard at all — but whatever the listener would have done (here: writing the game rule) has to be
-  done by hand at the same time, or the widget and the value it stands for silently disagree. Used by
-  `client/RacePickerOverlay` to keep the Race and Enemy Race pickers off the same race.
+  guard at all — but whatever the listener would have done (e.g. writing a game rule) has to be done
+  by hand at the same time, or the widget and the value it stands for silently disagree. Recorded
+  because `client/RacePickerOverlay` used to push its two pickers off a shared race this way; the two
+  are independent now (a mirror match is a real match), so nothing in the mod calls it today.

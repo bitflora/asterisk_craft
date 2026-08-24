@@ -11,12 +11,13 @@ import java.util.Set;
 
 /**
  * Which race an army is playing, as opposed to {@link Faction}, which is which <em>side</em> it is
- * on. The two are one-to-one today and {@link Faction#race} is the bridge, but they are separate
- * concepts: whether a unit has shields is a fact about its race, whether it will shoot at you is a
- * fact about its side. Either race can be the human's — {@code game.MatchSetup} decides.
+ * on. They are independent: whether a unit has shields is a fact about its race, whether it will
+ * shoot at you is a fact about its side. Either race can be the human's, either can be the
+ * computer's, and both sides may play the same one — {@code game.MatchSetup} decides, and
+ * {@link FactionAttachments#RACE} carries the answer on every unit beside its side.
  *
- * <p>The cheap racial traits live here as a per-race table, the same way
- * {@link Faction#attacksWild} holds the targeting one — a bare enum with no dependencies, so a
+ * <p>The cheap racial traits live here as a per-race table, including the targeting one
+ * ({@link #attacksWild}) — a bare enum with no dependencies, so a
  * pure rule like {@code combat.Infestation} can consult it with no live level. Everything a race
  * needs that is bound to the registries (its base block and template, its roster, its build script)
  * is too heavy for a leaf package and lives in {@code race.RaceProfile} instead.
@@ -105,7 +106,7 @@ public enum Race implements StringRepresentable {
 
     /**
      * Which parts of the unfactioned world this race picks a fight with — reached through
-     * {@link Faction#attacksWild}, which is the only caller and adds the NEUTRAL handling.
+     * {@link FactionAttachments#isHostile}, which is the only caller and adds the NEUTRAL handling.
      *
      * <p>Two sets rather than one because what an army hunts depends on whether a human is
      * commanding it (see {@link #ZERG}). {@code commanded} comes from

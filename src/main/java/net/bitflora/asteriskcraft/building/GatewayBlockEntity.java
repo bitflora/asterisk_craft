@@ -3,6 +3,8 @@ package net.bitflora.asteriskcraft.building;
 import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.bitflora.asteriskcraft.stats.CostPayment;
 import net.bitflora.asteriskcraft.stats.CostText;
 import net.bitflora.asteriskcraft.stats.UnitStat;
@@ -80,7 +82,12 @@ public class GatewayBlockEntity extends BlockEntity
     private int buildTicksRemaining = 0;
     private final BuildingDefense defense = new BuildingDefense(MAX_HEALTH, SHIELD, WARP_TICKS);
     private final UnderAttackAlert alert = new UnderAttackAlert();
-    private Faction faction = Faction.PROTOSS;
+    /**
+     * Which side owns this building. Null until set at placement or resolved on first use — a
+     * Protoss building placed by hand (creative, {@code /setblock}) belongs to whichever side is
+     * playing the Protoss, which {@code MatchSetup.sidePlaying} answers even in a mirror.
+     */
+    private @Nullable Faction faction;
 
     private final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -160,6 +167,14 @@ public class GatewayBlockEntity extends BlockEntity
 
     @Override
     public Faction buildingFaction() {
+        if (this.level == null) {
+            // Asked before the block entity has a level (a freshly constructed one being loaded):
+            // answer, but don't cache it, or the building would be stuck belonging to nobody.
+            return this.faction == null ? Faction.NEUTRAL : this.faction;
+        }
+        if (this.faction == null) {
+            this.faction = MatchSetup.of(this.level).sidePlaying(Race.PROTOSS);
+        }
         return this.faction;
     }
 
@@ -259,7 +274,7 @@ public class GatewayBlockEntity extends BlockEntity
             case SCOUT -> AsteriskCraft.SCOUT.get();
             case DARK_TEMPLAR -> AsteriskCraft.DARK_TEMPLAR.get();
         };
-        UnitSpawns.spawn(level, pos, entityType, this.faction, false);
+        UnitSpawns.spawn(level, pos, entityType, buildingFaction(), Race.PROTOSS, false);
     }
 
     // --- MenuProvider ---
@@ -290,7 +305,7 @@ public class GatewayBlockEntity extends BlockEntity
 
     @Override
     public NonNullList<ItemStack> armyItems() {
-        return ArmyBank.of(this.level, this.faction);
+        return ArmyBank.of(this.level, buildingFaction(), Race.PROTOSS);
     }
 
     @Override
@@ -308,7 +323,9 @@ public class GatewayBlockEntity extends BlockEntity
         super.saveAdditional(output);
         output.putInt("BuildTicks", this.buildTicksRemaining);
         this.defense.save(output);
-        output.store("Faction", Faction.CODEC, this.faction);
+        if (this.faction != null) {
+            output.store("Faction", Faction.CODEC, this.faction);
+        }
         output.store("Queue", UnitType.LIST_CODEC, List.copyOf(this.queue));
     }
 
@@ -316,7 +333,7 @@ public class GatewayBlockEntity extends BlockEntity
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.defense.load(input);
-        this.faction = input.read("Faction", Faction.CODEC).orElse(Faction.PROTOSS);
+        this.faction = input.read("Faction", Faction.CODEC).orElse(null);
         this.queue.clear();
         this.queue.addAll(input.read("Queue", UnitType.LIST_CODEC).orElse(List.of()));
         // Read after the queue: the fallback for a save with no BuildTicks is now the head unit's own

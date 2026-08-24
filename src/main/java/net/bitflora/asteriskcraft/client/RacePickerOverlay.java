@@ -19,7 +19,6 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * The race pickers on the world-creation screen: two cycle buttons, {@code Race} and
@@ -33,11 +32,10 @@ import java.util.function.Supplier;
  * edits, and the two can never disagree. Recreating a world seeds that state from the old world's
  * rules, so the buttons come up showing the matchup that world was played as with no handling here.
  *
- * <p>The pair also owns the "the two sides may not be the same race" invariant at the point of
- * choosing: setting one to what the other already shows pushes the other off it. That is a
- * convenience, not the guarantee — a rule is an int that a command can set, and a dedicated server
- * has no screen at all — so {@code MatchSetup.forRaces} re-derives the opponent server-side and is
- * where the reasoning for the invariant lives.
+ * <p>The two are independent, and deliberately so: either picker may show any race, including the
+ * one the other is showing. A mirror match is an ordinary match — {@code faction.Faction} is a side
+ * rather than a race, so two armies of one race still bank separately and still fight each other —
+ * and nothing here, or in {@code MatchSetup.forRaces}, corrects the pair.
  *
  * <p>{@link ScreenEvent.Init.Post} is the only seam: {@code CreateWorldScreen}'s three tabs are
  * private inner classes with no NeoForge hook, so a widget cannot be added <em>to</em> the Game
@@ -94,9 +92,9 @@ public final class RacePickerOverlay {
         }
         GameRules rules = created.getUiState().getGameRules();
         CycleButton<Race> player = picker(rules, "gamerule.asteriskcraft.player_race",
-                AsteriskCraftGameRules.PLAYER_RACE.get(), () -> aiPicker);
+                AsteriskCraftGameRules.PLAYER_RACE.get());
         CycleButton<Race> ai = picker(rules, "gamerule.asteriskcraft.ai_race",
-                AsteriskCraftGameRules.AI_RACE.get(), () -> playerPicker);
+                AsteriskCraftGameRules.AI_RACE.get());
 
         screen = created;
         playerPicker = player;
@@ -110,41 +108,16 @@ public final class RacePickerOverlay {
     }
 
     /**
-     * One picker: it writes its own rule, then shoves the other one off the race it just took.
-     *
-     * <p>{@code other} is a supplier because the two buttons refer to each other and one has to be
-     * built first. The nudge writes the other rule explicitly: {@code CycleButton.setValue} updates
-     * the value and the label but does <em>not</em> fire its {@code OnValueChange} (verified
-     * against the decompiled 26.1.2 source), which is what keeps this from recursing and what makes
-     * the second {@code rules.set} necessary rather than redundant.
+     * One picker: it writes its own rule and nothing else. What the other one is showing is none of
+     * its business — the two rules are independent, and every pair of them, mirror included, is a
+     * match the game can run.
      */
-    private static CycleButton<Race> picker(GameRules rules, String nameKey, GameRule<Integer> rule,
-            Supplier<CycleButton<Race>> other) {
+    private static CycleButton<Race> picker(GameRules rules, String nameKey, GameRule<Integer> rule) {
         return CycleButton
                 .builder(RacePickerOverlay::label, AsteriskCraftGameRules.raceOf(rules.get(rule)))
                 .withValues(Race.values())
                 .create(0, 0, FALLBACK_WIDTH, HEIGHT, Component.translatable(nameKey),
-                        (widget, race) -> {
-                            rules.set(rule, race.ordinal(), null);
-                            displace(rules, other.get(), race);
-                        });
-    }
-
-    /** Moves {@code button} off {@code taken} if it is showing it, keeping its rule in step. */
-    private static void displace(GameRules rules, @Nullable CycleButton<Race> button, Race taken) {
-        if (button == null || button.getValue() != taken) {
-            return;
-        }
-        GameRule<Integer> rule = button == playerPicker
-                ? AsteriskCraftGameRules.PLAYER_RACE.get()
-                : AsteriskCraftGameRules.AI_RACE.get();
-        for (Race race : Race.values()) {
-            if (race != taken) {
-                button.setValue(race);
-                rules.set(rule, race.ordinal(), null);
-                return;
-            }
-        }
+                        (widget, race) -> rules.set(rule, race.ordinal(), null));
     }
 
     /**

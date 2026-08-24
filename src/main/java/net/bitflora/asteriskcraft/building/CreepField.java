@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.building;
 import net.bitflora.asteriskcraft.entity.CreepSource;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.core.BlockPos;
@@ -117,14 +118,14 @@ public final class CreepField {
     }
 
     /**
-     * Whether the ground {@code origin} sits on is {@code faction}'s own creep block. Reads the block
+     * Whether the ground {@code origin} sits on is {@code race}'s own creep block. Reads the block
      * directly below {@code origin}, which is correct for both placement call sites and the overlay:
      * all three hand in the position <em>above</em> the surface, exactly what
      * {@code Heightmap.Types.MOTION_BLOCKING_NO_LEAVES} reports. Unowned deliberately — creep left
      * behind by a fallen base stays buildable for whoever reaches it.
      */
-    public static boolean onCreep(BlockGetter level, BlockPos origin, Faction faction) {
-        RaceProfile profile = Races.of(faction);
+    public static boolean onCreep(BlockGetter level, BlockPos origin, @Nullable Race race) {
+        RaceProfile profile = race == null ? null : Races.of(race);
         if (profile == null || profile.creep() == null) {
             return false;
         }
@@ -133,20 +134,21 @@ public final class CreepField {
     }
 
     /**
-     * The authoritative test: either clause. {@code faction} only picks which race's ground counts
-     * as creep for the {@link #onCreep} clause — sources are searched for {@code any} owner, since
-     * creep coverage doesn't care whose colony or Hive spread it.
+     * The authoritative test: either clause. {@code race} only picks whose ground counts as creep
+     * for the {@link #onCreep} clause — sources are searched for {@code any} owner, since creep
+     * coverage doesn't care which army's colony or Hive spread it.
      */
-    public static boolean covered(Level level, BlockPos origin, Faction faction) {
-        if (onCreep(level, origin, faction)) {
+    public static boolean covered(Level level, BlockPos origin, @Nullable Race race) {
+        if (onCreep(level, origin, race)) {
             return true;
         }
         return inRange(origin, creepSources(level, origin, RADIUS, null));
     }
 
     /** Column test for the overlay, given a pre-fetched source list — see {@link #creepSources}. */
-    public static boolean covered(BlockGetter level, BlockPos origin, Faction faction, Collection<BlockPos> sources) {
-        if (onCreep(level, origin, faction)) {
+    public static boolean covered(BlockGetter level, BlockPos origin, @Nullable Race race,
+            Collection<BlockPos> sources) {
+        if (onCreep(level, origin, race)) {
             return true;
         }
         return inRange(origin, sources);

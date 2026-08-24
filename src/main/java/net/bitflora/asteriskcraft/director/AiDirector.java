@@ -119,7 +119,8 @@ public final class AiDirector {
             if (base == null || !CostPayment.payAny(base, profile.worker().cost())) {
                 break; // no awake base, or can't afford another worker right now
             }
-            Mob unit = UnitSpawns.spawn(level, base.getBlockPos(), profile.worker().type(), faction, false);
+            Mob unit = UnitSpawns.spawn(level, base.getBlockPos(), profile.worker().type(), faction,
+                    profile.race(), false);
             if (!(unit instanceof WorkerEntity worker)) {
                 break;
             }
@@ -190,7 +191,8 @@ public final class AiDirector {
                 return SpawnResult.UNAFFORDABLE;
             }
             BlockPos basePos = spawnBase.getBlockPos();
-            Mob unit = UnitSpawns.spawn(this.level, basePos, def.get().type(), this.aiFaction, false);
+            Mob unit = UnitSpawns.spawn(this.level, basePos, def.get().type(), this.aiFaction,
+                    this.profile.race(), false);
             if (unit == null) {
                 AsteriskCraft.LOGGER.warn("AI director paid for {} but failed to spawn it", unitName);
                 return SpawnResult.UNAFFORDABLE;

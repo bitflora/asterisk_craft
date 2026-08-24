@@ -1,6 +1,6 @@
 package net.bitflora.asteriskcraft.combat;
 
-import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.animal.golem.IronGolem;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pins which kills raise an Infested Villager. The rule spans three things that are easy to widen by
- * accident — the killer's faction, the victim's class, and the die roll — and getting any of them
+ * accident — the killer's race, the victim's class, and the die roll — and getting any of them
  * wrong is close to invisible in play: a rule that is slightly too broad just looks like the swarm
  * getting lucky, and one slightly too narrow looks like it getting unlucky.
  *
@@ -29,15 +29,15 @@ class InfestationTest {
     private static final float ALWAYS = 0.0f;
 
     private static boolean zergKills(Class<? extends Entity> victim) {
-        return Infestation.infests(Faction.ZERG, victim, ALWAYS);
+        return Infestation.infests(Race.ZERG, victim, ALWAYS);
     }
 
     @Test
     void onlyTheZergInfest() {
         assertTrue(zergKills(Villager.class), "the Zerg are what infestation is for");
-        assertFalse(Infestation.infests(Faction.PROTOSS, Villager.class, ALWAYS),
+        assertFalse(Infestation.infests(Race.PROTOSS, Villager.class, ALWAYS),
                 "a Protoss unit that killed a villager has not recruited it");
-        assertFalse(Infestation.infests(Faction.NEUTRAL, Villager.class, ALWAYS),
+        assertFalse(Infestation.infests(null, Villager.class, ALWAYS),
                 "an unfactioned killer — a zombie, a fall, a cactus — raises nothing");
     }
 
@@ -66,11 +66,11 @@ class InfestationTest {
     @Test
     void theChanceGateIsHalfOpen() {
         assertTrue(zergKills(Villager.class), "a roll of 0 always infests");
-        assertTrue(Infestation.infests(Faction.ZERG, Villager.class, Math.nextDown(Infestation.CHANCE)),
+        assertTrue(Infestation.infests(Race.ZERG, Villager.class, Math.nextDown(Infestation.CHANCE)),
                 "the last roll below the chance still infests");
-        assertFalse(Infestation.infests(Faction.ZERG, Villager.class, Infestation.CHANCE),
+        assertFalse(Infestation.infests(Race.ZERG, Villager.class, Infestation.CHANCE),
                 "the chance itself does not infest — the comparison is strictly less-than");
-        assertFalse(Infestation.infests(Faction.ZERG, Villager.class, 1.0f),
+        assertFalse(Infestation.infests(Race.ZERG, Villager.class, 1.0f),
                 "the top of the range never infests");
     }
 }

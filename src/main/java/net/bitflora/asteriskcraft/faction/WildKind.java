@@ -11,7 +11,7 @@ import net.minecraft.world.entity.npc.villager.AbstractVillager;
  * <p>Everything the mod does not own defaults to NEUTRAL, and "NEUTRAL fights no one" is the
  * invariant that keeps units off the player and the wildlife. But the races don't agree on which
  * parts of that neutral world they pick a fight with, so the carve-out can't be a single boolean:
- * this classifies the candidate, and {@link Faction#attacksWild} decides — one table, per race,
+ * this classifies the candidate, and {@link Race#attacksWild} decides — one table, per race,
  * instead of race checks scattered through targeting.
  *
  * <p>The classification is deliberately the <em>only</em> place entity classes are tested; it is

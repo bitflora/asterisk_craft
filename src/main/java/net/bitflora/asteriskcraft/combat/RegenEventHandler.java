@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.combat;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -23,10 +24,16 @@ public final class RegenEventHandler {
     private RegenEventHandler() {
     }
 
+    /** Whether this unit's army is a race that heals itself — see {@code faction.Race.regen()}. */
+    private static boolean regenerates(LivingEntity entity) {
+        Race race = FactionAttachments.raceOf(entity);
+        return race != null && race.regen();
+    }
+
     @SubscribeEvent
     public static void onIncomingDamage(LivingIncomingDamageEvent event) {
         LivingEntity entity = event.getEntity();
-        if (FactionAttachments.get(entity).hasRegen()) {
+        if (regenerates(entity)) {
             entity.setData(RegenAttachments.REGEN_DELAY, REGEN_DELAY_TICKS);
         }
     }
@@ -36,7 +43,7 @@ public final class RegenEventHandler {
         if (event.getEntity().level().isClientSide() || !(event.getEntity() instanceof LivingEntity living)) {
             return;
         }
-        if (!FactionAttachments.get(living).hasRegen() || !living.isAlive()) {
+        if (!regenerates(living) || !living.isAlive()) {
             return;
         }
         // heal() rather than setHealth() so any heal listeners still fire; the helper hands us the

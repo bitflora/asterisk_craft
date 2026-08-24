@@ -9,7 +9,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
 
 /**
- * Faction team colors: the packed RGB via {@link #factionColor} still drives visible team identity
+ * Side team colors — a colour per {@link Faction}, not per race, which is the whole point of the
+ * pair: in a mirror match the two armies look identical, and the beam over a base is the only thing
+ * that says whose it is. The packed RGB via {@link #factionColor} still drives visible team identity
  * (e.g. the Nexus/Hive beacon beam sections). {@link #dyeArmor} dyes a leather chestplate onto a
  * unit, but every unit now has a bespoke {@code MobRenderer}/model (no reused vanilla
  * Zombie/Skeleton renderer), and those custom models don't render the armor slot — so {@code dyeArmor}
@@ -18,9 +20,8 @@ import net.minecraft.world.item.component.DyedItemColor;
  * team color into the renderers.
  */
 public final class TeamColors {
-    private static final int PROTOSS_COLOR = 0x2050C8; // blue
-    private static final int ZERG_COLOR = 0x8A1030; // dark red
-    private static final int TERRAN_COLOR = 0x2E8B2E; // steel green
+    private static final int BLUE_COLOR = 0x2050C8;
+    private static final int RED_COLOR = 0x8A1030;
 
     private TeamColors() {
     }
@@ -28,9 +29,8 @@ public final class TeamColors {
     /** Faction team color as a packed RGB int, or {@code -1} for factions with no color (NEUTRAL). */
     public static int factionColor(Faction faction) {
         return switch (faction) {
-            case PROTOSS -> PROTOSS_COLOR;
-            case ZERG -> ZERG_COLOR;
-            case TERRAN -> TERRAN_COLOR;
+            case BLUE -> BLUE_COLOR;
+            case RED -> RED_COLOR;
             case NEUTRAL -> -1;
         };
     }
