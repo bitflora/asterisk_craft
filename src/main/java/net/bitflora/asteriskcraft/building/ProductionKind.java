@@ -171,12 +171,14 @@ public enum ProductionKind {
      * {@link #PROTOSS_BASE} split: an SCV costs 50 of <em>either</em> resource, and the pair is what
      * turns that into a choice the player makes rather than one the payment code guesses.
      * Alternative 0 is Wood and 1 is Stone, matching the order in {@code UnitStats.SCV}'s cost. The
-     * Marine gets a single button, because {@link Action.TrainUnit} pays through
+     * army column gets a single button per unit, because {@link Action.TrainUnit} pays through
      * {@code CostPayment.payAny} — the Wood/Stone split is a worker-only affordance, and a combat
-     * unit takes whichever the army has.
+     * unit takes whichever the army has. That holds even for the Firebat, whose cost is a bundle of
+     * both resources rather than a choice between them: {@code payAny} walks alternatives, and a
+     * bundle is one alternative with two lines in it.
      *
      * <p>The third column is the Bunker, and it is the race's one structure: the Terran plant nothing
-     * rooted that shoots, so what they buy instead is somewhere to put the Marines from column two.
+     * rooted that shoots, so what they buy instead is somewhere to put the infantry from column two.
      */
     TERRAN_BASE(() -> AsteriskCraft.COMMAND_CENTER_CORE.get(), Races.TERRAN.bankSlots(), List.of(
             new OptionView(
@@ -191,6 +193,10 @@ public enum ProductionKind {
                     Icon.ofIcon("marine"),
                     CostText.tooltip(UnitStats.MARINE.cost(), 0), 1,
                     new Action.TrainUnit(UnitStats.MARINE.id())),
+            new OptionView(
+                    Icon.ofIcon("firebat"),
+                    CostText.tooltip(UnitStats.FIREBAT.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.FIREBAT.id())),
             // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
             // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
             // building's price. A single button, because its cost names one resource.

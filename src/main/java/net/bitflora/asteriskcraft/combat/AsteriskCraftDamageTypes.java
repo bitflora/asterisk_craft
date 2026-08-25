@@ -27,12 +27,18 @@ import java.util.List;
  * {@code #minecraft:panic_causes}, which magic also was; dropping out of it would have stopped animals
  * fleeing from combat.
  *
- * <p>{@code #minecraft:no_knockback} is the one tag they split on, and the line is <b>melee versus
- * ranged</b>. The shove is worth keeping when a unit closes to arm's length and connects, so the four
- * melee types and the two fanged ones stay out of the tag. Every type dealt by
- * {@link net.bitflora.asteriskcraft.entity.ai.HitscanAttacks} is in it: a shooter that pushed its
- * target back a little on each shot was kiting it by accident, which turns a firing line holding
- * ground into a bumper and stops an assault ever arriving. Membership is declared in
+ * <p>{@code #minecraft:no_knockback} is the one tag they split on, and the line is <b>whether the
+ * attack needs its target to stay put</b>. The shove is worth keeping when a unit closes to arm's
+ * length and connects once, so the four melee types and the two fanged ones stay out of the tag.
+ * Every type dealt by {@link net.bitflora.asteriskcraft.entity.ai.HitscanAttacks} is in it: a shooter
+ * that pushed its target back a little on each shot was kiting it by accident, which turns a firing
+ * line holding ground into a bumper and stops an assault ever arriving.
+ *
+ * <p>{@code flame_thrower} is in it too, and is why that line is not simply "melee versus ranged".
+ * It is dealt at two blocks — melee distance by any reading — but it is dealt into a
+ * {@link net.bitflora.asteriskcraft.combat.FlameCone}, a fixed volume the victims have to still be
+ * standing in when the next sweep lands. Shoving them would push them out of the attacker's own
+ * cone, which is the same bumper problem arriving from the other end. Membership is declared in
  * {@code data/minecraft/tags/damage_type/no_knockback.json} (additively — vanilla's own members are
  * kept), and the shove itself comes from {@code hurtServer} gated on that tag, so nothing in the
  * attack code decides it. See docs/neoforge-api-notes.md.
@@ -63,12 +69,15 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> FUSION_CUTTER = key("fusion_cutter");
     /** The Marine's rifle. */
     public static final ResourceKey<DamageType> GAUSS_RIFLE = key("gauss_rifle");
+    /** The Firebat's flamethrower. The mod's only attack that hurts several targets at once
+     * without being a bounce chain or a detonation. */
+    public static final ResourceKey<DamageType> FLAME_THROWER = key("flame_thrower");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
-            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE);
+            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER);
 
     private AsteriskCraftDamageTypes() {
     }

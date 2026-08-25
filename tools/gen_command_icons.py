@@ -68,7 +68,7 @@ TRAINED = [
     # The Hive's card (ProductionKind.ZERG_BASE) morphs every Zerg unit itself - the swarm has no
     # factory building - so all of them need a train button once a human can play Zerg.
     "drone", "zergling", "hydralisk", "mutalisk", "lurker", "ultralisk", "overlord",
-    "scv", "marine",
+    "scv", "marine", "firebat",
 ]
 
 # Building kit items -> the building's icon. These double as the base command card's buttons for
@@ -87,7 +87,7 @@ EGGS = [
     "probe", "zealot", "dragoon", "scout", "dark_templar",
     "drone", "zergling", "ultralisk", "hydralisk", "mutalisk", "lurker", "overlord",
     "infested_villager", "sunken_colony", "spore_colony",
-    "scv", "marine", "bunker",
+    "scv", "marine", "firebat", "bunker",
 ]
 
 

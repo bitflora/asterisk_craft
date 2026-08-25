@@ -55,6 +55,7 @@ public final class UnitLabels {
             // Terran
             Map.entry("scv", "S"),
             Map.entry("marine", "M"),
+            Map.entry("firebat", "F"),
             Map.entry("bunker", "B"));
 
     private UnitLabels() {

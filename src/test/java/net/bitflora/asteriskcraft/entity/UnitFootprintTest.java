@@ -58,6 +58,7 @@ class UnitFootprintTest {
                 new Ground(AsteriskCraft.ULTRALISK.get(), UnitStats.ULTRALISK),
                 new Ground(AsteriskCraft.INFESTED_VILLAGER.get(), UnitStats.INFESTED_VILLAGER),
                 new Ground(AsteriskCraft.MARINE.get(), UnitStats.MARINE),
+                new Ground(AsteriskCraft.FIREBAT.get(), UnitStats.FIREBAT),
         };
     }
 

@@ -259,6 +259,31 @@ public final class UnitStats {
             .build();
 
     /**
+     * The Firebat: the Terran answer to a <em>clump</em>, where the Marine is the answer to a body.
+     *
+     * <p>Everything in these numbers is the trade for that. It has to stand at two blocks, which is
+     * inside a Zergling's reach and well inside a Hydralisk's, so it is given 25 HP and the armour 1
+     * a Bunker has — flat reduction, worth most against exactly the massed small hits it walks into.
+     * In return, 8 damage on a 1.5-second cadence lands on <em>everything</em> in the cone rather
+     * than on one target, so a Firebat that reaches a pack out-trades its own cost several times
+     * over and one that is kited never gets to swing.
+     *
+     * <p>Twice the Marine's price, in both resources rather than either — the first Terran cost that
+     * is a bundle rather than a choice, which is what says this is a specialist and not a body.
+     * Same 24 seconds, so the two come off one Command Center at the same rate.
+     *
+     * <p>The 2-block {@code ranged} envelope is not a misnomer: {@link UnitStat.Ranged} is "how far
+     * it holds at, and how often it fires", which is exactly true of a flamethrower, and it is what
+     * lets the unit reuse {@code entity.ai.UnitRangedAttackGoal} and pick up the Bunker firing-slit
+     * bonus for free.
+     */
+    public static final UnitStat FIREBAT = UnitStat.builder("firebat")
+            .health(25.0).shield(0).armor(1.0).speed(0.25).followRange(48.0)
+            .attackDamage(8.0).ranged(2.0f, 30).attackAnimTicks(12)
+            .cost(UnitCost.all(line(STONE, 50), line(WOOD, 25))).buildTicks(480)
+            .build();
+
+    /**
      * The Bunker. The first unit in the mod that holds other units, and the only structure with no
      * weapon of its own: everything it does to an enemy is done by whatever is inside it.
      *
@@ -289,10 +314,10 @@ public final class UnitStats {
                     SPORE_COLONY, INFESTED_VILLAGER);
 
     /**
-     * The Terran roster. A worker and one soldier, and it holds the same "names a real resource,
+     * The Terran roster. A worker and two soldiers, and it holds the same "names a real resource,
      * never ANY" invariant the Protoss one does.
      */
-    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, BUNKER);
+    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, FIREBAT, BUNKER);
 
     private UnitStats() {
     }

@@ -1,0 +1,1313 @@
+{
+  "meta": {
+    "format_version": "4.5",
+    "model_format": "modded_entity",
+    "box_uv": true
+  },
+  "name": "firebat",
+  "model_identifier": "firebat",
+  "modded_entity_version": "1.17",
+  "modded_entity_flip_y": true,
+  "modded_entity_entity_class": "Entity",
+  "visible_box": [
+    2,
+    2,
+    0
+  ],
+  "variable_placeholders": "",
+  "resolution": {
+    "width": 128,
+    "height": 128
+  },
+  "elements": [
+    {
+      "name": "arm_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -8.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        -4.0,
+        23.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        19,
+        27
+      ],
+      "uuid": "5c225d5c-f399-544c-8591-40df55f422fa"
+    },
+    {
+      "name": "arm_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        4.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        8.0,
+        23.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        36,
+        27
+      ],
+      "uuid": "b4ec1827-d0d8-56da-94e8-7631592fe68d"
+    },
+    {
+      "name": "arms_folded_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        15.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        19.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        33,
+        40
+      ],
+      "uuid": "7e3ff8b9-875c-5958-bd66-928011bb505e"
+    },
+    {
+      "name": "flamer_barrel_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -2.3,
+        15.89,
+        -13.78
+      ],
+      "to": [
+        -0.5,
+        17.69,
+        -7.779999999999999
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        58,
+        40
+      ],
+      "uuid": "d854a487-a8a1-51d8-af6a-7566afa82268"
+    },
+    {
+      "name": "flamer_barrel_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.4999999999999998,
+        15.89,
+        -13.78
+      ],
+      "to": [
+        2.3,
+        17.69,
+        -7.779999999999999
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        75,
+        40
+      ],
+      "uuid": "51fec47a-6c46-5d86-99c3-1419cc84fb5f"
+    },
+    {
+      "name": "flamer_body_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -2.5,
+        15.090000000000003,
+        -7.779999999999999
+      ],
+      "to": [
+        2.5,
+        18.290000000000003,
+        -1.7799999999999994
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        79,
+        27
+      ],
+      "uuid": "3d0403ee-8896-551f-a3ef-4b1e98665e93"
+    },
+    {
+      "name": "flamer_feed_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -1.1,
+        15.690000000000001,
+        -1.7799999999999998
+      ],
+      "to": [
+        1.1,
+        17.89,
+        2.22
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        92,
+        40
+      ],
+      "uuid": "2e6b6bde-2eb7-5ea9-8b2a-5a489e14092b"
+    },
+    {
+      "name": "flamer_grip_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -1.0,
+        11.690000000000001,
+        -6.279999999999999
+      ],
+      "to": [
+        1.0,
+        15.090000000000002,
+        -3.7799999999999994
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        118,
+        40
+      ],
+      "uuid": "72de980e-5f9a-5b62-b3be-67f8faaa44d3"
+    },
+    {
+      "name": "pilot_light_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -2.45,
+        15.74,
+        -14.68
+      ],
+      "to": [
+        -0.35,
+        17.84,
+        -13.68
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        19,
+        50
+      ],
+      "uuid": "7c960cf8-8c7b-58c6-9e59-da480a1075f4"
+    },
+    {
+      "name": "pilot_light_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.3500000000000001,
+        15.74,
+        -14.68
+      ],
+      "to": [
+        2.45,
+        17.84,
+        -13.68
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        16.69,
+        -3.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        27,
+        50
+      ],
+      "uuid": "9b686e30-a6c3-50b1-b562-6eb8de0b8e4b"
+    },
+    {
+      "name": "body_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        12.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        24.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        29,
+        0
+      ],
+      "uuid": "c3ea50f8-ea39-5600-a7fb-51cee955bf46"
+    },
+    {
+      "name": "fuel_hose_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        3.3999999999999995,
+        19.8,
+        0.0
+      ],
+      "to": [
+        4.6,
+        21.0,
+        4.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        22.0,
+        3.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        106,
+        40
+      ],
+      "uuid": "4831fe8b-0857-5451-a052-3c19ec25fa64"
+    },
+    {
+      "name": "tank_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -3.4,
+        14.0,
+        3.0
+      ],
+      "to": [
+        -0.4,
+        22.0,
+        6.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        22.0,
+        3.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        53,
+        27
+      ],
+      "uuid": "579c20d1-fd04-5461-ac88-01723440407e"
+    },
+    {
+      "name": "tank_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.3999999999999999,
+        14.0,
+        3.0
+      ],
+      "to": [
+        3.4,
+        22.0,
+        6.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        22.0,
+        3.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        66,
+        27
+      ],
+      "uuid": "bc4839a0-bc62-5098-863e-cb0ce6897e07"
+    },
+    {
+      "name": "tank_yoke_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -3.4,
+        21.799999999999997,
+        3.4
+      ],
+      "to": [
+        3.4,
+        23.4,
+        5.6
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        22.0,
+        3.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        50
+      ],
+      "uuid": "ce0dae83-fa87-5bc6-af59-c8800406ca4b"
+    },
+    {
+      "name": "neck_ring_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.5,
+        23.0,
+        -3.5
+      ],
+      "to": [
+        4.5,
+        25.0,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        40
+      ],
+      "uuid": "15ba10d4-edcf-5b17-819c-8e4919380eb9"
+    },
+    {
+      "name": "pauldron_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -5.5,
+        18.5,
+        -3.5
+      ],
+      "to": [
+        -3.5,
+        23.5,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        92,
+        0
+      ],
+      "uuid": "72381919-8d13-5ae0-8339-ced37e2d9b9e"
+    },
+    {
+      "name": "pauldron_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        3.5,
+        18.5,
+        -3.5
+      ],
+      "to": [
+        5.5,
+        23.5,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        27
+      ],
+      "uuid": "003b8d65-465b-58ea-b313-beb4e0b230ec"
+    },
+    {
+      "name": "robe_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        4.0,
+        -3.0
+      ],
+      "to": [
+        4.0,
+        24.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.5,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        0
+      ],
+      "uuid": "35c113f3-e7a7-565b-81da-9a3300f00fea"
+    },
+    {
+      "name": "leg_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -4.0,
+        0.0,
+        -2.0
+      ],
+      "to": [
+        0.0,
+        12.0,
+        2.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        58,
+        0
+      ],
+      "uuid": "f162f208-685d-59e1-a3bb-a00d5529537c"
+    },
+    {
+      "name": "leg_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        0.0,
+        0.0,
+        -2.0
+      ],
+      "to": [
+        4.0,
+        12.0,
+        2.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        75,
+        0
+      ],
+      "uuid": "86642071-c733-5eda-a641-3119a96cbe7b"
+    }
+  ],
+  "outliner": [
+    {
+      "name": "arms",
+      "origin": [
+        -0.0,
+        21.0,
+        -1.0
+      ],
+      "rotation": [
+        42.97183463481174,
+        -0.0,
+        0.0
+      ],
+      "uuid": "3e28917d-e041-5c9b-a3d6-fae807344712",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        {
+          "name": "arm_left",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "3cbd78a2-ffa0-50eb-ae3b-beb1e5068fc1",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "5c225d5c-f399-544c-8591-40df55f422fa"
+          ]
+        },
+        {
+          "name": "arm_right",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "b51b5bff-9e02-5946-832b-c54428654a9d",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "b4ec1827-d0d8-56da-94e8-7631592fe68d"
+          ]
+        },
+        {
+          "name": "arms_folded",
+          "origin": [
+            -0.0,
+            21.0,
+            -1.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "e3b283e1-3197-56cf-a69d-c39b78facdb6",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "7e3ff8b9-875c-5958-bd66-928011bb505e"
+          ]
+        },
+        {
+          "name": "flamer",
+          "origin": [
+            -0.0,
+            16.69,
+            -3.28
+          ],
+          "rotation": [
+            -42.97183463481174,
+            -0.0,
+            0.0
+          ],
+          "uuid": "538e1071-5e0a-5ce1-9a62-c1f072eac0f8",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            {
+              "name": "flamer_barrel_left",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "ca97fad3-6bb9-5e55-837f-93795790b25a",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "d854a487-a8a1-51d8-af6a-7566afa82268"
+              ]
+            },
+            {
+              "name": "flamer_barrel_right",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "0603bb0b-a570-548a-8a37-8714d152f6a7",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "51fec47a-6c46-5d86-99c3-1419cc84fb5f"
+              ]
+            },
+            {
+              "name": "flamer_body",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "e04ebccc-7a27-51b6-81b0-da7c85a0054c",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "3d0403ee-8896-551f-a3ef-4b1e98665e93"
+              ]
+            },
+            {
+              "name": "flamer_feed",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "419e38a9-35ed-5840-9d2a-db8d650fb67b",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "2e6b6bde-2eb7-5ea9-8b2a-5a489e14092b"
+              ]
+            },
+            {
+              "name": "flamer_grip",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "b21215ff-89ba-5003-b7bc-4428e0b3e035",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "72de980e-5f9a-5b62-b3be-67f8faaa44d3"
+              ]
+            },
+            {
+              "name": "pilot_light_left",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "f67c4fc5-afad-5f7b-b4a7-4b377615f7c0",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "7c960cf8-8c7b-58c6-9e59-da480a1075f4"
+              ]
+            },
+            {
+              "name": "pilot_light_right",
+              "origin": [
+                -0.0,
+                16.69,
+                -3.28
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "d8704adc-d13d-5d01-b6d0-92a41e73a027",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "9b686e30-a6c3-50b1-b562-6eb8de0b8e4b"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "body",
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "9948178c-2221-50cb-95e2-23a91d2f3834",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "c3ea50f8-ea39-5600-a7fb-51cee955bf46",
+        {
+          "name": "fuel_tank",
+          "origin": [
+            -0.0,
+            22.0,
+            3.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "86718460-196d-5064-850f-9dbd9118c037",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            {
+              "name": "fuel_hose",
+              "origin": [
+                -0.0,
+                22.0,
+                3.0
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "3c07b60f-f859-5c47-bbf4-9208712bcc24",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "4831fe8b-0857-5451-a052-3c19ec25fa64"
+              ]
+            },
+            {
+              "name": "tank_left",
+              "origin": [
+                -0.0,
+                22.0,
+                3.0
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "633bc7d4-d325-5311-b04e-f3c5a4c28a2f",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "579c20d1-fd04-5461-ac88-01723440407e"
+              ]
+            },
+            {
+              "name": "tank_right",
+              "origin": [
+                -0.0,
+                22.0,
+                3.0
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "b96ff594-2acb-542f-9940-a39b2206ca4f",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "bc4839a0-bc62-5098-863e-cb0ce6897e07"
+              ]
+            },
+            {
+              "name": "tank_yoke",
+              "origin": [
+                -0.0,
+                22.0,
+                3.0
+              ],
+              "rotation": [
+                -0.0,
+                -0.0,
+                0.0
+              ],
+              "uuid": "c1ea2b90-d186-5499-b117-32eab9cc20b5",
+              "export": true,
+              "isOpen": true,
+              "visibility": true,
+              "children": [
+                "ce0dae83-fa87-5bc6-af59-c8800406ca4b"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "neck_ring",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "994ac4f0-c886-5607-9aa9-764b6a8cc566",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "15ba10d4-edcf-5b17-819c-8e4919380eb9"
+          ]
+        },
+        {
+          "name": "pauldron_left",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "f18bbd5f-e412-5d0f-bdda-8d9c9a659f53",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "72381919-8d13-5ae0-8339-ced37e2d9b9e"
+          ]
+        },
+        {
+          "name": "pauldron_right",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "6eb4ee6f-30d4-5eda-a557-b97fd7a24354",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "003b8d65-465b-58ea-b313-beb4e0b230ec"
+          ]
+        },
+        {
+          "name": "robe",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "1e323c43-747c-5ff3-b96c-4c834acc5d2c",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "35c113f3-e7a7-565b-81da-9a3300f00fea"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "head",
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "231c39b2-1357-5a89-872c-a4264529d01d",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": []
+    },
+    {
+      "name": "leg_left",
+      "origin": [
+        -2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "e46a5ee8-eacd-527a-978b-44e5db66bb84",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "f162f208-685d-59e1-a3bb-a00d5529537c"
+      ]
+    },
+    {
+      "name": "leg_right",
+      "origin": [
+        2.0,
+        12.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "3441977d-0bf0-5c9b-9a62-c5e644f399e1",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        "86642071-c733-5eda-a641-3119a96cbe7b"
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\firebat.png",
+      "name": "firebat.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "0",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "08fb0b3d-3c98-54ce-86cd-32b66264d75a",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    },
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\firebat_glow.png",
+      "name": "firebat_glow.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "1",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "3f1c7055-859e-5789-b1d4-5584e8a2bbf9",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    }
+  ]
+}

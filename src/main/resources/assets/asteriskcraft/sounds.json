@@ -171,6 +171,31 @@
       "asteriskcraft:mob/marine/marine-attack"
     ]
   },
+  "entity.firebat.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.firebat.ambient",
+    "sounds": [
+      "asteriskcraft:mob/firebat/firebat-live1",
+      "asteriskcraft:mob/firebat/firebat-live2"
+    ]
+  },
+  "entity.firebat.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.firebat.death",
+    "sounds": [
+      "asteriskcraft:mob/firebat/firebat-death1",
+      "asteriskcraft:mob/firebat/firebat-death2",
+      "asteriskcraft:mob/firebat/firebat-death3"
+    ]
+  },
+  "entity.firebat.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.firebat.attack",
+    "sounds": [
+      "asteriskcraft:mob/firebat/firebat-attack1",
+      "asteriskcraft:mob/firebat/firebat-attack2"
+    ]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

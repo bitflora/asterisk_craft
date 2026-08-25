@@ -32,6 +32,7 @@ import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
+import net.bitflora.asteriskcraft.entity.terran.FirebatEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
@@ -230,6 +231,15 @@ public class AsteriskCraft {
                     .sized(0.6f, 1.95f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("marine"))));
+
+    // The Marine's footprint exactly, because it is the Marine's frame: vanilla's villager, so 1.95
+    // keeps floor(height + 1) at two nodes tall and 0.6 at one node wide. The flamethrower's barrels
+    // overhang the front by about the same margin the Marine's rifle does, and are left to.
+    public static final DeferredHolder<EntityType<?>, EntityType<FirebatEntity>> FIREBAT =
+            ENTITY_TYPES.register("firebat", () -> EntityType.Builder.of(FirebatEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("firebat"))));
 
     // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
     // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
@@ -438,6 +448,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> MARINE_SPAWN_EGG_ENEMY = ITEMS.registerItem("marine_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, MARINE, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> FIREBAT_SPAWN_EGG_ALLY = ITEMS.registerItem("firebat_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, FIREBAT, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> FIREBAT_SPAWN_EGG_ENEMY = ITEMS.registerItem("firebat_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, FIREBAT, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
@@ -591,6 +605,15 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.marine.death", () -> SoundEvent.createVariableRangeEvent(id("entity.marine.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> MARINE_ATTACK =
             SOUND_EVENTS.register("entity.marine.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.marine.attack")));
+
+    // No FIREBAT_HURT, for the third time and the same reason: the archive has two acknowledgement
+    // lines, three death lines and two attack lines for the Firebat, and no pain line.
+    public static final DeferredHolder<SoundEvent, SoundEvent> FIREBAT_AMBIENT =
+            SOUND_EVENTS.register("entity.firebat.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.firebat.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> FIREBAT_DEATH =
+            SOUND_EVENTS.register("entity.firebat.death", () -> SoundEvent.createVariableRangeEvent(id("entity.firebat.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> FIREBAT_ATTACK =
+            SOUND_EVENTS.register("entity.firebat.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.firebat.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
             SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
@@ -650,6 +673,8 @@ public class AsteriskCraft {
                 output.accept(SCV_SPAWN_EGG_ENEMY.get());
                 output.accept(MARINE_SPAWN_EGG_ALLY.get());
                 output.accept(MARINE_SPAWN_EGG_ENEMY.get());
+                output.accept(FIREBAT_SPAWN_EGG_ALLY.get());
+                output.accept(FIREBAT_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
@@ -735,6 +760,7 @@ public class AsteriskCraft {
         event.put(PROBE.get(), ProbeEntity.createAttributes().build());
         event.put(SCV.get(), ScvEntity.createAttributes().build());
         event.put(MARINE.get(), MarineEntity.createAttributes().build());
+        event.put(FIREBAT.get(), FirebatEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());

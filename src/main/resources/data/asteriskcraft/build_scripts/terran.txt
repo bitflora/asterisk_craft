@@ -11,12 +11,13 @@
 #   Repeat N              loop the previous N commands endlessly (put it last)
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
-#   Units: Marine (ranged infantry), SCV (worker). That is the whole Terran roster today.
+#   Units: Marine (ranged infantry), Firebat (short-range flamethrower), SCV (worker).
 #
-# The Terran push with counts rather than with variety. A Marine is the cheapest combat unit in the
-# mod, comes out in 24 seconds, and dies to almost anything on its own — so the waves below grow in
-# size where the Zerg script grows in kind, and the interval between them is what the human is
-# actually racing.
+# The Terran open with counts and close with a mix. A Marine is the cheapest combat unit in the mod,
+# comes out in 24 seconds, and dies to almost anything on its own — so the early waves below grow in
+# size. A Firebat costs twice as much, in both resources rather than either, and burns everything in
+# a cone two blocks in front of it: it is worthless alone and vicious against a wall of Zerglings, so
+# it arrives once the waves are big enough for a human to be massing something to meet them with.
 #
 # Two Marines are already standing on every Command Center at world start (RaceProfile.baseDefences),
 # so the opening Defence below is reinforcement, not the first guard.
@@ -25,7 +26,8 @@
 
 Workers: 9
 
-# Opening: post a squad while the economy ramps up.
+# Opening: post a squad while the economy ramps up. Rifles only — a Firebat this early is two
+# Marines' worth of resources that cannot shoot back at anything holding its ground.
 Defence: 3 Marine
 Wait 70
 
@@ -36,14 +38,16 @@ Wait 170
 Wave: 6 Marine
 Wait 200
 
-Defence: 2 Marine
-Wave: 8-10 Marine
+# The mix starts here, and it is what the race did not have before. A defender who has answered the
+# waves above by massing cheap melee is now walking that mass into a flamethrower.
+Defence: 2 Marine, 1 Firebat
+Wave: 8-10 Marine, 2 Firebat
 Wait 200
 
-# Endless massed pushes from here on. Note what the race still cannot do: nothing here detects, so a
-# Dark Templar or a burrowed Lurker walks through a Terran army untouched, and nothing here shoots
-# down a Mutalisk that stays high. Those are real holes in the roster, deliberately left standing
-# until the race has more in it.
-Wave: 10-14 Marine
+# Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes
+# on them. Note what the race still cannot do — nothing here detects, so a Dark Templar or a burrowed
+# Lurker walks through a Terran army untouched, and nothing here shoots down a Mutalisk that stays
+# high. Those are real holes in the roster, deliberately left standing until the race has more in it.
+Wave: 10-14 Marine, 3-4 Firebat
 Wait 220
 Repeat 2

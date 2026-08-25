@@ -181,6 +181,7 @@ public final class Races {
                     // trained. Listing it would let a build script name it and get one for nothing,
                     // since a kit-bought unit carries UnitCost.NONE and no build time.
                     .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
+                    .unit(UnitStats.FIREBAT, AsteriskCraft.FIREBAT)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),

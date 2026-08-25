@@ -92,6 +92,7 @@ UNITS = {
     "spore_colony": ("zerg", "SporeColonyModel"),
     "scv": ("terran", "ScvModel"),
     "marine": ("terran", "MarineModel"),
+    "firebat": ("terran", "FirebatModel"),
     "bunker": ("terran", "BunkerModel"),
 }
 
