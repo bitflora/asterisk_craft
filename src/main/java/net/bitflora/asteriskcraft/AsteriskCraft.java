@@ -133,11 +133,40 @@ public class AsteriskCraft {
             props -> new BaseBlock(Race.TERRAN, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
+    // Visual-only cores for the next wave of unit-factory buildings (Stargate, Spawning Pool, Spire,
+    // Barracks, Factory) — plain blocks with no BlockEntity yet, staged ahead of the production-menu
+    // wiring (ProductionKind card, BlockEntity, .nbt template, BuildingKitItem) that will follow the
+    // Gateway's shape. Appearance is borrowed via the block model's "parent", not copied pixels.
+    public static final DeferredBlock<Block> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
+            Block::new,
+            p -> p.mapColor(MapColor.COLOR_CYAN).strength(15.0f, 1200.0f).lightLevel(s -> 8));
+
+    public static final DeferredBlock<Block> SPAWNING_POOL_CORE = BLOCKS.registerBlock("spawning_pool_core",
+            Block::new,
+            p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 15));
+
+    public static final DeferredBlock<Block> SPIRE_CORE = BLOCKS.registerBlock("spire_core",
+            Block::new,
+            p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
+
+    public static final DeferredBlock<Block> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
+            Block::new,
+            p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
+
+    public static final DeferredBlock<Block> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
+            Block::new,
+            p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
+
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
     public static final DeferredItem<BlockItem> GATEWAY_CORE_ITEM = ITEMS.registerSimpleBlockItem("gateway_core", GATEWAY_CORE);
     public static final DeferredItem<BlockItem> HIVE_CORE_ITEM = ITEMS.registerSimpleBlockItem("hive_core", HIVE_CORE);
     public static final DeferredItem<BlockItem> COMMAND_CENTER_CORE_ITEM = ITEMS.registerSimpleBlockItem("command_center_core", COMMAND_CENTER_CORE);
     public static final DeferredItem<BlockItem> PYLON_CORE_ITEM = ITEMS.registerSimpleBlockItem("pylon_core", PYLON_CORE);
+    public static final DeferredItem<BlockItem> STARGATE_CORE_ITEM = ITEMS.registerSimpleBlockItem("stargate_core", STARGATE_CORE);
+    public static final DeferredItem<BlockItem> SPAWNING_POOL_CORE_ITEM = ITEMS.registerSimpleBlockItem("spawning_pool_core", SPAWNING_POOL_CORE);
+    public static final DeferredItem<BlockItem> SPIRE_CORE_ITEM = ITEMS.registerSimpleBlockItem("spire_core", SPIRE_CORE);
+    public static final DeferredItem<BlockItem> BARRACKS_CORE_ITEM = ITEMS.registerSimpleBlockItem("barracks_core", BARRACKS_CORE);
+    public static final DeferredItem<BlockItem> FACTORY_CORE_ITEM = ITEMS.registerSimpleBlockItem("factory_core", FACTORY_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE,
@@ -665,6 +694,11 @@ public class AsteriskCraft {
                 output.accept(HIVE_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CENTER_CORE_ITEM.get());
+                output.accept(STARGATE_CORE_ITEM.get());
+                output.accept(SPAWNING_POOL_CORE_ITEM.get());
+                output.accept(SPIRE_CORE_ITEM.get());
+                output.accept(BARRACKS_CORE_ITEM.get());
+                output.accept(FACTORY_CORE_ITEM.get());
                 output.accept(BUNKER_KIT.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
