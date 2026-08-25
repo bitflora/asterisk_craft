@@ -56,6 +56,7 @@ public final class UnitLabels {
             Map.entry("scv", "S"),
             Map.entry("marine", "M"),
             Map.entry("firebat", "F"),
+            Map.entry("ghost", "G"),
             Map.entry("bunker", "B"));
 
     private UnitLabels() {

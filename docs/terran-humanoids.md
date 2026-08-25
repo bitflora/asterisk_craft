@@ -10,6 +10,7 @@ Worked examples, in the order they are useful:
 |---|---|
 | `client/terran/MarineModel` + `MarineHeadLayer` | the reference humanoid — adult villager head under a helmet |
 | `client/terran/FirebatModel` + `FirebatHeadLayer` | the second one — pillager head, bare, red plate |
+| `client/terran/GhostModel` + `GhostHeadLayer` | the third — villager head wearing **two** vanilla profession overlays |
 | `client/terran/ScvModel` + `ScvPilotLayer` | the **counter-example**: a mech, deliberately not this pose |
 
 `entity/terran/MarineEntity` and `entity/terran/FirebatEntity` are the matching entity classes, and the
@@ -135,6 +136,21 @@ floating face.
 | `VILLAGER_BABY` | `textures/entity/villager/villager_baby.png` | 8x8x7 | keeps hat + 14x1x12 straw brim — a genuinely different head, not a scaled adult |
 | `PILLAGER` | `textures/entity/illager/pillager.png` | 8x10x8 | **keep `nose`** (2x4x2 to z=-6); hide `hat` (8x12x8 inflated shell) |
 
+**Headgear is another texture, not another mesh.** `VillagerProfessionLayer` adds no geometry for a
+profession — it re-submits the *same* villager model with `profession/<name>.png` — so any vanilla
+villager profession's headgear is available as one extra `entityCutout` draw of the head you already
+baked, and several can be stacked. `GhostHeadLayer` draws three (`villager.png`, then
+`profession/armorer.png` for the welding mask, then `profession/cartographer.png` for the eyepiece),
+which is a face no real villager could wear. Two things to know before doing it again:
+
+- Most of that headgear lives on the **`hat`** cube, so it needs `hat.visible = true` — the opposite
+  of what the Marine does. That is safe because `villager.png` is fully transparent across the hat
+  cube's whole UV region (u32–64, v0–18). Hide only the nested `hat_rim` (the 16x16 straw brim).
+- To light part of a borrowed head, author a mod PNG **on vanilla's UV layout** and submit it as a
+  further draw — cutout first if it must cover opaque vanilla pixels, then `RenderTypes.eyes`.
+  `ghost_visor.png` is six texels doing exactly that; `tools/gen_ghost_visor.py` records where those
+  coordinates were measured from, since nothing enforces them.
+
 Two traps, both verified against the decompiled 26.1.2 source and recorded in
 [neoforge-api-notes.md](neoforge-api-notes.md):
 
@@ -229,6 +245,8 @@ Data and assets:
 - `tools/gen_command_icons.py` — add the unit to `TRAINED` and `EGGS`, then re-run it
 - `tools/blockbench_export.py` — add it to `UNITS`
 - `tools/gen_<unit>_texture.py` — a new generator, modelled on `gen_marine_texture.py`
+- `command/UnitLabels` letters and command-card **columns** are both per-race scarce: a card column
+  holds two buttons (`ProductionCardLayoutTest`), so a third combat unit opens a new one
 
 Tests (each fails the build if missed, which is the point):
 

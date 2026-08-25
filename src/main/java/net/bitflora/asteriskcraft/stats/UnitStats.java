@@ -284,6 +284,30 @@ public final class UnitStats {
             .build();
 
     /**
+     * The Ghost: the Terran answer to being <em>out-ranged</em>, where the Marine answers a body and
+     * the Firebat answers a clump.
+     *
+     * <p>It is the most expensive thing the race trains and the flimsiest — 23 HP and no armour at
+     * all, so anything that reaches it kills it — and it buys two things with that. Seven blocks is
+     * two further than a rifle, which is the difference between trading with a Hydralisk and being
+     * shot at by one. And it cloaks the instant it is hit (see {@code entity.terran.CloakClock}),
+     * which means the first Ghost in a fight usually gets to walk out of it.
+     *
+     * <p>Five damage on a 1.5-second cadence is deliberately <em>worse</em> per second than a
+     * Marine's three on 1.0 — it is not a damage unit, it is a reach unit, and one that traded its
+     * survivability for that reach has to lose the damage race to something standing in the open.
+     *
+     * <p>The first Terran cost naming three resources, and the only unit in the mod that costs iron
+     * — a metal the player has to go underground for, on a unit that also takes 50 seconds to come
+     * out of a Command Center. Both are the same statement: a Ghost is a decision, not a body.
+     */
+    public static final UnitStat GHOST = UnitStat.builder("ghost")
+            .health(23.0).shield(0).armor(0.0).speed(0.25).followRange(48.0)
+            .attackDamage(5.0).ranged(7.0f, 30).attackAnimTicks(8)
+            .cost(UnitCost.all(line(STONE, 25), line(WOOD, 75), line(IRON, 3))).buildTicks(20 * 50)
+            .build();
+
+    /**
      * The Bunker. The first unit in the mod that holds other units, and the only structure with no
      * weapon of its own: everything it does to an enemy is done by whatever is inside it.
      *
@@ -317,7 +341,7 @@ public final class UnitStats {
      * The Terran roster. A worker and two soldiers, and it holds the same "names a real resource,
      * never ANY" invariant the Protoss one does.
      */
-    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, FIREBAT, BUNKER);
+    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, FIREBAT, GHOST, BUNKER);
 
     private UnitStats() {
     }

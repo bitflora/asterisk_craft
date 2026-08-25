@@ -182,6 +182,7 @@ public final class Races {
                     // since a kit-bought unit carries UnitCost.NONE and no build time.
                     .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
                     .unit(UnitStats.FIREBAT, AsteriskCraft.FIREBAT)
+                    .unit(UnitStats.GHOST, AsteriskCraft.GHOST)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),

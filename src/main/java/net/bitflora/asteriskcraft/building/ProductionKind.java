@@ -197,12 +197,16 @@ public enum ProductionKind {
                     Icon.ofIcon("firebat"),
                     CostText.tooltip(UnitStats.FIREBAT.cost(), 0), 1,
                     new Action.TrainUnit(UnitStats.FIREBAT.id())),
+            new OptionView(
+                    Icon.ofIcon("ghost"),
+                    CostText.tooltip(UnitStats.GHOST.cost(), 0), 2,
+                    new Action.TrainUnit(UnitStats.GHOST.id())),
             // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
             // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
             // building's price. A single button, because its cost names one resource.
             new OptionView(
                     Icon.ofItem(AsteriskCraft.BUNKER_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUNKER_COST, Resource.STONE), 2,
+                    CostText.tooltip(BaseBlockEntity.BUNKER_COST, Resource.STONE), 3,
                     new Action.GiveKit(AsteriskCraft.BUNKER_KIT::get, Resource.STONE,
                             BaseBlockEntity.BUNKER_COST, "message.asteriskcraft.base.bunker_ready"))));
 

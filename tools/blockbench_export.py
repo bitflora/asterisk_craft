@@ -93,6 +93,7 @@ UNITS = {
     "scv": ("terran", "ScvModel"),
     "marine": ("terran", "MarineModel"),
     "firebat": ("terran", "FirebatModel"),
+    "ghost": ("terran", "GhostModel"),
     "bunker": ("terran", "BunkerModel"),
 }
 

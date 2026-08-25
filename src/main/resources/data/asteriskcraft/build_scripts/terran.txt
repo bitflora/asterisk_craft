@@ -11,7 +11,8 @@
 #   Repeat N              loop the previous N commands endlessly (put it last)
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
-#   Units: Marine (ranged infantry), Firebat (short-range flamethrower), SCV (worker).
+#   Units: Marine (ranged infantry), Firebat (short-range flamethrower), Ghost (long-range
+#          marksman that cloaks when hit), SCV (worker).
 #
 # The Terran open with counts and close with a mix. A Marine is the cheapest combat unit in the mod,
 # comes out in 24 seconds, and dies to almost anything on its own — so the early waves below grow in
@@ -44,10 +45,18 @@ Defence: 2 Marine, 1 Firebat
 Wave: 8-10 Marine, 2 Firebat
 Wait 200
 
+# The Ghost arrives last and in ones, which is what its price says it should: 50 seconds and the
+# only iron the race spends. It out-ranges everything the waves above walk into, and it cloaks the
+# moment something reaches it — so a defender with no detector loses whichever Ghost got shot at
+# first, rather than killing it.
+Wave: 8-10 Marine, 2 Firebat, 1 Ghost
+Wait 200
+
 # Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes
-# on them. Note what the race still cannot do — nothing here detects, so a Dark Templar or a burrowed
-# Lurker walks through a Terran army untouched, and nothing here shoots down a Mutalisk that stays
-# high. Those are real holes in the roster, deliberately left standing until the race has more in it.
-Wave: 10-14 Marine, 3-4 Firebat
+# on them, and a Ghost or two behind both. Note what the race still cannot do — nothing here detects,
+# so a Dark Templar or a burrowed Lurker walks through a Terran army untouched, and nothing here
+# shoots down a Mutalisk that stays high. Those are real holes in the roster, deliberately left
+# standing until the race has more in it.
+Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost
 Wait 220
 Repeat 2

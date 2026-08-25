@@ -72,12 +72,15 @@ public final class AsteriskCraftDamageTypes {
     /** The Firebat's flamethrower. The mod's only attack that hurts several targets at once
      * without being a bounce chain or a detonation. */
     public static final ResourceKey<DamageType> FLAME_THROWER = key("flame_thrower");
+    /** The Ghost's C-10 canister rifle. The longest reach the Terran have on foot. */
+    public static final ResourceKey<DamageType> C10_CANISTER_RIFLE = key("c10_canister_rifle");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
-            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER);
+            SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER,
+            C10_CANISTER_RIFLE);
 
     private AsteriskCraftDamageTypes() {
     }

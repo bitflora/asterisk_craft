@@ -196,6 +196,24 @@
       "asteriskcraft:mob/firebat/firebat-attack2"
     ]
   },
+  "entity.ghost.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ghost.ambient",
+    "sounds": [
+      "asteriskcraft:mob/ghost/ghost-live1",
+      "asteriskcraft:mob/ghost/ghost-live2"
+    ]
+  },
+  "entity.ghost.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ghost.death",
+    "sounds": ["asteriskcraft:mob/ghost/ghost-death1"]
+  },
+  "entity.ghost.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.ghost.attack",
+    "sounds": ["asteriskcraft:mob/ghost/ghost-attack"]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

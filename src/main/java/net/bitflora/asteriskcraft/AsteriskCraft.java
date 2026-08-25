@@ -33,6 +33,7 @@ import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ProbeEntity;
 import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
 import net.bitflora.asteriskcraft.entity.terran.FirebatEntity;
+import net.bitflora.asteriskcraft.entity.terran.GhostEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
@@ -270,6 +271,14 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("firebat"))));
 
+    // The Marine's footprint again, and for the third time the same reason: it is the Marine's
+    // frame. The canister rifle overhangs the front no further than the Marine's does.
+    public static final DeferredHolder<EntityType<?>, EntityType<GhostEntity>> GHOST =
+            ENTITY_TYPES.register("ghost", () -> EntityType.Builder.of(GhostEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("ghost"))));
+
     // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
     // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
     // behind rather than a tower. Rooted, so none of the pathfinder footprint reasoning above applies.
@@ -481,6 +490,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, FIREBAT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> FIREBAT_SPAWN_EGG_ENEMY = ITEMS.registerItem("firebat_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, FIREBAT, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> GHOST_SPAWN_EGG_ALLY = ITEMS.registerItem("ghost_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, GHOST, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> GHOST_SPAWN_EGG_ENEMY = ITEMS.registerItem("ghost_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, GHOST, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
@@ -643,6 +656,15 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.firebat.death", () -> SoundEvent.createVariableRangeEvent(id("entity.firebat.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> FIREBAT_ATTACK =
             SOUND_EVENTS.register("entity.firebat.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.firebat.attack")));
+
+    // No GHOST_HURT, for the fourth time and the same reason: the archive has two acknowledgement
+    // lines, one death line and one attack line for the Ghost, and no pain line.
+    public static final DeferredHolder<SoundEvent, SoundEvent> GHOST_AMBIENT =
+            SOUND_EVENTS.register("entity.ghost.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GHOST_DEATH =
+            SOUND_EVENTS.register("entity.ghost.death", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GHOST_ATTACK =
+            SOUND_EVENTS.register("entity.ghost.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
             SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
@@ -709,6 +731,8 @@ public class AsteriskCraft {
                 output.accept(MARINE_SPAWN_EGG_ENEMY.get());
                 output.accept(FIREBAT_SPAWN_EGG_ALLY.get());
                 output.accept(FIREBAT_SPAWN_EGG_ENEMY.get());
+                output.accept(GHOST_SPAWN_EGG_ALLY.get());
+                output.accept(GHOST_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
@@ -795,6 +819,7 @@ public class AsteriskCraft {
         event.put(SCV.get(), ScvEntity.createAttributes().build());
         event.put(MARINE.get(), MarineEntity.createAttributes().build());
         event.put(FIREBAT.get(), FirebatEntity.createAttributes().build());
+        event.put(GHOST.get(), GhostEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
