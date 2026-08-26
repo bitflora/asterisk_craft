@@ -15,9 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * design rules a malformed entry could silently violate (a rooted unit that forgot {@code .rooted()},
  * a flyer whose path length is too short, a Protoss unit that snuck in an any-item cost).
  *
- * <p>Cross-unit balance relations (Scout vs Mutalisk, cannon out-ranging everything, etc.) live in
- * {@link UnitBalanceTest} instead — this class is about the shape of the table, not the design
- * choices behind individual numbers.
+ * <p>This class is about the shape of the table, not the design choices behind individual numbers.
+ * Since the numbers moved into {@code asteriskcraft/balance/unit_stats.csv} it is also what proves
+ * the shipped file parses at all: every test here reads the real table through {@link UnitStats}.
+ * The <em>format</em> those numbers are written in is {@link UnitStatCsvTest}'s subject instead.
  */
 class UnitStatsTest {
 
@@ -85,6 +86,20 @@ class UnitStatsTest {
                     - (double) flight.hoverHeight() * flight.hoverHeight());
             assertTrue(horizontal >= 6.0,
                     stat.id() + ": engaging from altitude must leave a proper ranged stand-off");
+        }
+    }
+
+    @Test
+    void everyFlyerSharesTheOneHoverHeight() {
+        // A rule about the set rather than about any row: a Zerg player learns one altitude, not
+        // one per unit. It used to hold because every entry interpolated the same constant; in a
+        // grid each flyer writes its own cell, so the agreement has to be asserted.
+        for (UnitStat stat : UnitStats.all()) {
+            if (stat.flight().isEmpty()) {
+                continue;
+            }
+            assertEquals(UnitStats.HOVER_HEIGHT, stat.flightOrThrow().hoverHeight(),
+                    stat.id() + ": every flyer cruises at the one shared altitude");
         }
     }
 

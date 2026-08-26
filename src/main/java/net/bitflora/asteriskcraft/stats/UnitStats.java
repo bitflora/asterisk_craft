@@ -1,17 +1,29 @@
 package net.bitflora.asteriskcraft.stats;
 
+import net.bitflora.asteriskcraft.faction.Race;
+
 import java.util.List;
 import java.util.stream.Stream;
 
-import static net.bitflora.asteriskcraft.stats.Resource.ANY;
-import static net.bitflora.asteriskcraft.stats.Resource.IRON;
-import static net.bitflora.asteriskcraft.stats.Resource.STONE;
-import static net.bitflora.asteriskcraft.stats.Resource.WOOD;
-import static net.bitflora.asteriskcraft.stats.UnitCost.line;
-
 /**
- * The single balance table for every unit in the mod: combat stats and production cost. Edit this
- * file, {@code ./gradlew compileJava}, relaunch — this is the whole tweak loop.
+ * The single balance table for every unit in the mod: combat stats and production cost.
+ *
+ * <p><b>The numbers are not here.</b> They live one row per unit in
+ * {@code src/main/resources/asteriskcraft/balance/unit_stats.csv}, read at this class's init by
+ * {@link UnitStatTable} — because a balance pass is a question about a <em>column</em> ("what does
+ * every ranged unit cost per point of damage?") and a builder chain per unit can only be read a
+ * unit at a time. Open the CSV in a spreadsheet, sort by whatever you are comparing, save. Edit the
+ * file, relaunch — nothing recompiles, and an installed build can be tuned from
+ * {@code <gamedir>/config/asteriskcraft/unit_stats.csv} without being rebuilt at all.
+ *
+ * <p><b>docs/balance-table.md is the per-column reference</b>: what each field means, what it is
+ * measured in, which columns come in all-or-nothing groups, the cost syntax, and the numbers that
+ * deliberately live somewhere else.
+ *
+ * <p>What stays here is everything a grid cannot hold: the named constant each call site reaches
+ * for, and the design rationale for why a number is what it is. The two halves are checked against
+ * each other at startup — a field naming a row the CSV doesn't define fails immediately, and
+ * {@link UnitStat.Builder#build()} plus {@code UnitStatsTest} police the numbers themselves.
  *
  * <p>Attributes get registered from these entries via {@link UnitAttributes#apply}; costs get paid
  * via {@link CostPayment}. See each entity's {@code createAttributes()} for how it consumes its
@@ -20,40 +32,36 @@ import static net.bitflora.asteriskcraft.stats.UnitCost.line;
  */
 public final class UnitStats {
 
-    // --- Protoss ---
+    private static final UnitStatTable TABLE = UnitStatTable.load();
+
+    /**
+     * The one altitude every flyer in the mod cruises at, so a player learns a single number rather
+     * than one per unit. It stays a constant here rather than becoming only a column, because it is
+     * a rule about the set and not a fact about any one row; each flyer's {@code hover_height} cell
+     * must equal it, which {@code UnitStatsTest} enforces.
+     */
     public static final int HOVER_HEIGHT = 4;
 
-    public static final UnitStat PROBE = UnitStat.builder("probe")
-            .health(10.0).shield(10).speed(0.35).followRange(48.0)
-            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(200)
-            .build();
+    // --- Protoss ---
 
-    public static final UnitStat ZEALOT = UnitStat.builder("zealot")
-            .health(50.0).shield(30).armor(0.5).speed(0.25)
-            .attackDamage(4.0).attackAnimTicks(10)
-            .cost(UnitCost.all(line(WOOD, 50), line(STONE, 50))).buildTicks(200)
-            .build();
+    public static final UnitStat PROBE = TABLE.get("probe");
 
-    public static final UnitStat DRAGOON = UnitStat.builder("dragoon")
-            .health(50.0).shield(40).armor(0.5).speed(0.25)
-            // The mod's other two-node-wide unit, and it has the same problem the Ultralisk does:
-            // stopping 0.55 short of a ledge while MoveControl only fires a jump within sqrt(width)
-            // of the waypoint. The stalling that CommandedMoveGoal's detour rules and MoveFormation's
-            // spacing were both written against is partly this. A walker steps up a block anyway.
-            .stepHeight(1.1)
-            .attackDamage(10.0).ranged(8.0f, 40)
-            .cost(UnitCost.all(line(WOOD, 100), line(STONE, 50))).buildTicks(200)
-            .build();
+    public static final UnitStat ZEALOT = TABLE.get("zealot");
 
-    public static final UnitStat SCOUT = UnitStat.builder("scout")
-            .health(75.0).shield(50).armor(0.5).speed(0.25)
-            // Anti-air is what a Scout is for: 21 to a Mutalisk against 11 to anything on the
-            // ground, so a pair of Scouts out-trades the flock they intercept while staying an
-            // indifferent answer to a ground army the Zealots should be handling.
-            .attackDamage(11.0).antiAirBonus(10.0).ranged(9.0f, 30)
-            .flight(0.6, HOVER_HEIGHT, 64.0f)
-            .cost(UnitCost.all(line(STONE, 150), line(IRON, 20))).buildTicks(200)
-            .build();
+    /**
+     * The mod's other two-node-wide unit, and it has the same problem the Ultralisk does: stopping
+     * 0.55 short of a ledge while MoveControl only fires a jump within sqrt(width) of the waypoint.
+     * The stalling that CommandedMoveGoal's detour rules and MoveFormation's spacing were both
+     * written against is partly this. A walker steps up a block anyway — hence its step height.
+     */
+    public static final UnitStat DRAGOON = TABLE.get("dragoon");
+
+    /**
+     * Anti-air is what a Scout is for: 21 to a Mutalisk against 11 to anything on the ground, so a
+     * pair of Scouts out-trades the flock they intercept while staying an indifferent answer to a
+     * ground army the Zealots should be handling.
+     */
+    public static final UnitStat SCOUT = TABLE.get("scout");
 
     /**
      * The first unit in the mod to carry {@code faction.Cloaked}, and priced for it. Hits harder than
@@ -62,95 +70,62 @@ public final class UnitStats {
      * Colony spike (20) takes half of it, and the shield does not cover the gap. Expensive in build
      * time rather than in any one resource, so massing them costs tempo the player feels.
      */
-    public static final UnitStat DARK_TEMPLAR = UnitStat.builder("dark_templar")
-            .health(40.0).shield(20).armor(1.0).speed(0.25)
-            .attackDamage(20.0).attackAnimTicks(12)
-            .cost(UnitCost.all(line(STONE, 75), line(WOOD, 50), line(IRON, 2))).buildTicks(20 * 50)
-            .build();
+    public static final UnitStat DARK_TEMPLAR = TABLE.get("dark_templar");
 
-    /** Kit-bought at a base for {@code BaseBlockEntity.BUILDING_COST}, not trained directly — hence NONE. */
-    public static final UnitStat PHOTON_CANNON = UnitStat.builder("photon_cannon")
-            .health(50.0).shield(50).rooted()
-            .attackDamage(10.0).ranged(14.0f, 20)
-            .followRange(14.0) // == range: never acquire what it can't shoot
-            // Detection reaches two blocks past the gun on purpose: a cannon lights a cloaked
-            // attacker up for the whole base a moment before it can shoot at it itself.
-            .detector(16.0, 20, 60)
-            .cost(UnitCost.NONE) // never trained, so no buildTicks either
-            .build();
+    /**
+     * Kit-bought at a base for {@code BaseBlockEntity.BUILDING_COST}, not trained directly — hence a
+     * cost of none, and hence no build time either.
+     *
+     * <p>Its follow range equals its gun's, so it never acquires what it can't shoot. Detection
+     * reaches two blocks past the gun on purpose: a cannon lights a cloaked attacker up for the
+     * whole base a moment before it can shoot at it itself.
+     */
+    public static final UnitStat PHOTON_CANNON = TABLE.get("photon_cannon");
 
     // --- Zerg ---
 
     /**
-     * Transcribed from {@code UnitStats.PROBE} verbatim, including {@code shield(10)} — a Drone is never
-     * Protoss today, so {@code ShieldAttachments}' faction gate zeroes it in play regardless, but
-     * this pass is behaviour-preserving. Follow-up: drop to 0 once a Drone truly can't be Protoss.
+     * Transcribed from {@link #PROBE} verbatim, including its shield pool — a Drone is never Protoss
+     * today, so {@code ShieldAttachments}' faction gate zeroes it in play regardless, but that pass
+     * was behaviour-preserving. Follow-up: drop to 0 once a Drone truly can't be Protoss.
      */
-    public static final UnitStat DRONE = UnitStat.builder("drone")
-            .health(10.0).shield(10).speed(0.35).followRange(48.0)
-            .cost(UnitCost.of(ANY, 50)).buildTicks(20)
-            .build();
+    public static final UnitStat DRONE = TABLE.get("drone");
 
-    public static final UnitStat ZERGLING = UnitStat.builder("zergling")
-            .health(17.5).armor(0.0).speed(0.30)
-            .attackDamage(2.5)
-            .cost(UnitCost.of(ANY, 25)).buildTicks(20)
-            .build();
+    public static final UnitStat ZERGLING = TABLE.get("zergling");
 
-    public static final UnitStat HYDRALISK = UnitStat.builder("hydralisk")
-            .health(40.0).armor(0.0).speed(0.25)
-            .attackDamage(5.0).ranged(6.0f, 20).attackAnimTicks(10)
-            .cost(UnitCost.of(ANY, 100)).buildTicks(20)
-            .build();
+    public static final UnitStat HYDRALISK = TABLE.get("hydralisk");
 
-    public static final UnitStat MUTALISK = UnitStat.builder("mutalisk")
-            .health(60.0).armor(0.0).speed(0.25)
-            .attackDamage(4.5).ranged(9.0f, 30)
-            .bounce(3, 0.5f, 5.0f)
-            .flight(0.6, HOVER_HEIGHT, 64.0f)
-            .cost(UnitCost.of(ANY, 100)).buildTicks(20)
-            .build();
+    public static final UnitStat MUTALISK = TABLE.get("mutalisk");
 
     /**
      * The swarm's eye in the sky, and the mod's first <em>mobile</em> detector: everything that
      * detects before it — the Photon Cannon, the Spore Colony — is rooted, so detection could only
      * ever cover ground an army had already built on. An Overlord carries the same 16-block bubble
      * wherever it drifts, which is what lets the swarm push into a Dark Templar rather than wait for
-     * one to wander into a colony.
+     * one to wander into a colony. It shares that envelope with both rooted detectors, so a player
+     * learns one radius, not two.
      *
      * <p>It has no attack at all — the only unit besides the two workers that doesn't, which is the
      * rule {@code UnitStatsTest.onlyNonCombatUnitsLackAttackDamage} states. That is what it pays for
-     * its detection with: it is slow, huge and entirely dependent on an escort.
+     * its detection with: it is slow (well under the Mutalisk — a drifting sac, not a raider), huge
+     * and entirely dependent on an escort.
      */
-    public static final UnitStat OVERLORD = UnitStat.builder("overlord")
-            .health(100.0).armor(0.0).speed(0.15)
-            // Slower than the Mutalisk's 0.6: a drifting sac, not a raider. Same hover height as
-            // every other flyer, so a Zerg player learns one altitude, not two.
-            .flight(0.35, HOVER_HEIGHT, 64.0f)
-            // The same envelope as the mod's other two detectors, so a race's mobile detector and
-            // its rooted one see equally far and a player learns one radius, not two.
-            .detector(16.0, 20, 60)
-            .cost(UnitCost.of(ANY, 100)).buildTicks(20 * 40)
-            .build();
+    public static final UnitStat OVERLORD = TABLE.get("overlord");
 
     /**
      * The Zerg heavy: the only unit on either side that a Zealot ball can't simply out-trade, and the
      * reason to keep Dragoons or a Cannon around. Its minute-long build time is what keeps it rare —
      * a wave carrying one takes a minute longer to assemble than the same wave without.
      *
+     * <p>It steps over a full block instead of jumping it. Two pathfinding nodes wide, it stops 0.6
+     * short of a ledge, and MoveControl only fires a jump inside sqrt(width) of the waypoint — so on
+     * broken ground it would stall against every rise. See {@link UnitStat#stepHeight}.
+     *
      * <p>It reuses the Zergling's geometry, scaled up — broad and long far more than tall, and more
      * than its hitbox is: see its registration in {@code AsteriskCraft} for why the height stays
      * under 2.0, and {@code client.zerg.UltraliskRenderer} for the silhouette that sits over it.
      */
-    public static final UnitStat ULTRALISK = UnitStat.builder("ultralisk")
-            .health(200.0).armor(1.0).speed(0.28)
-            // Steps over a full block instead of jumping it. Two pathfinding nodes wide, it stops
-            // 0.6 short of a ledge, and MoveControl only fires a jump inside sqrt(width) of the
-            // waypoint — so on broken ground it would stall against every rise. See UnitStat.
-            .stepHeight(1.1)
-            .attackDamage(10.0).attackAnimTicks(12)
-            .cost(UnitCost.of(ANY, 200)).buildTicks(20 * 60)
-            .build();
+    public static final UnitStat ULTRALISK = TABLE.get("ultralisk");
 
     /**
      * The Zerg answer to the Dark Templar, and the roster's first <em>conditionally</em> cloaked unit:
@@ -164,40 +139,27 @@ public final class UnitStats {
      * is not reach but a row of spines that each land in full, so it out-trades anything that walks
      * up the line at it and loses to anything that shoots it from 8.
      */
-    public static final UnitStat LURKER = UnitStat.builder("lurker")
-            .health(63.0).armor(1.0).speed(0.25)
-            .attackDamage(10.0).ranged(6.0f, 40).attackAnimTicks(12)
-            .cost(UnitCost.of(ANY, 100)).buildTicks(20 * 40)
-            .build();
+    public static final UnitStat LURKER = TABLE.get("lurker");
 
-    /** Pre-placed by {@code GameBootstrap}, not trained — hence NONE. */
-    public static final UnitStat SUNKEN_COLONY = UnitStat.builder("sunken_colony")
-            .health(150.0).armor(0.0).rooted()
-            .attackDamage(20.0).ranged(11.0f, 32).attackAnimTicks(12)
-            .followRange(11.0) // == range: a rooted attacker can't close the gap
-            .cost(UnitCost.NONE) // never trained, so no buildTicks either
-            .build();
+    /** Pre-placed by {@code GameBootstrap}, not trained — hence no cost and no build time. Its follow
+     * range equals its reach: a rooted attacker can't close the gap. */
+    public static final UnitStat SUNKEN_COLONY = TABLE.get("sunken_colony");
 
     /**
      * The Zerg answer to the air, and the only thing on either side that fires <em>exclusively</em> at
      * it: acquisition is narrowed by {@code entity.Altitude#isAirborne} rather than by unit type, so
      * what it may shoot is decided by where a target is, not what it is. Pre-placed beside every Hive
-     * like the Sunken, hence NONE.
+     * like the Sunken, hence no cost.
      *
      * <p>Tuned as a wall rather than a gun: the toughest unit in the mod at 200 HP (a rooted structure
      * that cannot answer a ground army at all has to survive being ignored), but only 7.5 a shot on a
      * one-second cadence — 7.5 DPS, less than half the Sunken's, because a flyer it out-ranges cannot
      * shoot back at all and the exchange should still take a moment.
+     *
+     * <p>It is also the Zerg detector, on the shared 16-block envelope — a Hive perimeter lights up
+     * cloaked attackers from both of its rooted defences.
      */
-    public static final UnitStat SPORE_COLONY = UnitStat.builder("spore_colony")
-            .health(200.0).armor(0.0).rooted()
-            .attackDamage(7.5).ranged(14.0f, 20).attackAnimTicks(10)
-            .followRange(14.0) // == range: a rooted attacker can't close the gap
-            // The Zerg detector, on the shared envelope — a Hive perimeter now lights up
-            // cloaked attackers from both of its rooted defences.
-            .detector(16.0, 20, 60)
-            .cost(UnitCost.NONE) // never trained, so no buildTicks either
-            .build();
+    public static final UnitStat SPORE_COLONY = TABLE.get("spore_colony");
 
     /**
      * The swarm's dividend on an overrun village: raised from a villager's corpse rather than trained,
@@ -213,11 +175,7 @@ public final class UnitStats {
      * <p>It walks a little faster than a Zergling: a bomb that can be out-run is a bomb that never
      * goes off.
      */
-    public static final UnitStat INFESTED_VILLAGER = UnitStat.builder("infested_villager")
-            .health(30.0).armor(0.0).speed(0.32)
-            .attackDamage(250.0).blast(3.0f, 30)
-            .cost(UnitCost.NONE) // never trained, so no buildTicks either
-            .build();
+    public static final UnitStat INFESTED_VILLAGER = TABLE.get("infested_villager");
 
     // --- Terran ---
 
@@ -226,18 +184,13 @@ public final class UnitStats {
      * leaves it the cheapest thing in the mod that can still be killed by a single Zergling.
      * Deliberately priced identically to the other two workers: what a race differs in is what it
      * builds with its economy, not what the economy itself costs to staff.
-     */
-    /**
-     * The one worker in the mod that is armed. It never goes looking for a fight — see
+     *
+     * <p>It is also the one worker in the mod that is armed. It never goes looking for a fight — see
      * {@code entity.terran.ScvEntity} for the retaliate-only goal set — but a Terran economy that
      * can answer a stray Zergling is a real difference between the races, not a rounding error, and
      * it is paid for in the build time: an SCV takes twice as long to come out as a Probe.
      */
-    public static final UnitStat SCV = UnitStat.builder("scv")
-            .health(30.0).shield(0).armor(0.0).speed(0.35).followRange(48.0)
-            .attackDamage(3.0)
-            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(400)
-            .build();
+    public static final UnitStat SCV = TABLE.get("scv");
 
     /**
      * The Marine. The Terran line infantry, and the first thing the race has that goes looking for a
@@ -252,11 +205,7 @@ public final class UnitStats {
      * <p>An SCV's walk with the rifle's weight on it: a shade slower than the worker that built it,
      * matching the Hydralisk it will most often be shooting at.
      */
-    public static final UnitStat MARINE = UnitStat.builder("marine")
-            .health(20.0).shield(0).armor(0.0).speed(0.25).followRange(48.0)
-            .attackDamage(3.0).ranged(5.0f, 20).attackAnimTicks(6)
-            .cost(UnitCost.either(List.of(line(WOOD, 50)), List.of(line(STONE, 50)))).buildTicks(480)
-            .build();
+    public static final UnitStat MARINE = TABLE.get("marine");
 
     /**
      * The Firebat: the Terran answer to a <em>clump</em>, where the Marine is the answer to a body.
@@ -272,16 +221,12 @@ public final class UnitStats {
      * is a bundle rather than a choice, which is what says this is a specialist and not a body.
      * Same 24 seconds, so the two come off one Command Center at the same rate.
      *
-     * <p>The 2-block {@code ranged} envelope is not a misnomer: {@link UnitStat.Ranged} is "how far
-     * it holds at, and how often it fires", which is exactly true of a flamethrower, and it is what
-     * lets the unit reuse {@code entity.ai.UnitRangedAttackGoal} and pick up the Bunker firing-slit
-     * bonus for free.
+     * <p>The 2-block {@code range} is not a misnomer: {@link UnitStat.Ranged} is "how far it holds
+     * at, and how often it fires", which is exactly true of a flamethrower, and it is what lets the
+     * unit reuse {@code entity.ai.UnitRangedAttackGoal} and pick up the Bunker firing-slit bonus for
+     * free.
      */
-    public static final UnitStat FIREBAT = UnitStat.builder("firebat")
-            .health(25.0).shield(0).armor(1.0).speed(0.25).followRange(48.0)
-            .attackDamage(8.0).ranged(2.0f, 30).attackAnimTicks(12)
-            .cost(UnitCost.all(line(STONE, 50), line(WOOD, 25))).buildTicks(480)
-            .build();
+    public static final UnitStat FIREBAT = TABLE.get("firebat");
 
     /**
      * The Ghost: the Terran answer to being <em>out-ranged</em>, where the Marine answers a body and
@@ -301,11 +246,7 @@ public final class UnitStats {
      * — a metal the player has to go underground for, on a unit that also takes 50 seconds to come
      * out of a Command Center. Both are the same statement: a Ghost is a decision, not a body.
      */
-    public static final UnitStat GHOST = UnitStat.builder("ghost")
-            .health(23.0).shield(0).armor(0.0).speed(0.25).followRange(48.0)
-            .attackDamage(5.0).ranged(7.0f, 30).attackAnimTicks(8)
-            .cost(UnitCost.all(line(STONE, 25), line(WOOD, 75), line(IRON, 3))).buildTicks(20 * 50)
-            .build();
+    public static final UnitStat GHOST = TABLE.get("ghost");
 
     /**
      * The Bunker. The first unit in the mod that holds other units, and the only structure with no
@@ -315,38 +256,35 @@ public final class UnitStats {
      * and the armour 1 is the point of the building — it is flat reduction, so it is worth most
      * against exactly the massed small hits a Terran player is trying to survive. There is no
      * shield (the Terran carry none) and no attack damage, which makes it the first entry here that
-     * is both {@code rooted()} and unarmed; {@code UnitStatsTest} had to split those two ideas apart
-     * to say so.
+     * is both rooted and unarmed; {@code UnitStatsTest} had to split those two ideas apart to say so.
      *
      * <p>Kit-bought at a Command Center for {@code BaseBlockEntity.BUNKER_COST}, not trained — hence
-     * NONE, and hence no build ticks. The thirty seconds it takes to stand up is the construction
+     * no cost, and hence no build ticks. The thirty seconds it takes to stand up is the construction
      * countdown on {@code entity.terran.BunkerEntity} itself, the same place the Photon Cannon keeps
      * its ten.
      */
-    public static final UnitStat BUNKER = UnitStat.builder("bunker")
-            .health(175.0).shield(0).armor(1.0).rooted()
-            .cost(UnitCost.NONE) // never trained, so no buildTicks either
-            .build();
+    public static final UnitStat BUNKER = TABLE.get("bunker");
 
-    /** The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. */
-    public static final List<UnitStat> PROTOSS_ROSTER =
-            List.of(PROBE, ZEALOT, DRAGOON, SCOUT, DARK_TEMPLAR, PHOTON_CANNON);
+    /**
+     * The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. Derived
+     * from the CSV's {@code race} column rather than hand-listed, so a unit added to the file cannot
+     * be left out of its own race's roster.
+     */
+    public static final List<UnitStat> PROTOSS_ROSTER = TABLE.roster(Race.PROTOSS);
 
     /** The Zerg roster, for balance grouping and the "Zerg pays in any item" cost invariant. */
-    public static final List<UnitStat> ZERG_ROSTER =
-            List.of(DRONE, ZERGLING, HYDRALISK, MUTALISK, OVERLORD, ULTRALISK, LURKER, SUNKEN_COLONY,
-                    SPORE_COLONY, INFESTED_VILLAGER);
+    public static final List<UnitStat> ZERG_ROSTER = TABLE.roster(Race.ZERG);
 
     /**
      * The Terran roster. A worker and two soldiers, and it holds the same "names a real resource,
      * never ANY" invariant the Protoss one does.
      */
-    public static final List<UnitStat> TERRAN_ROSTER = List.of(SCV, MARINE, FIREBAT, GHOST, BUNKER);
+    public static final List<UnitStat> TERRAN_ROSTER = TABLE.roster(Race.TERRAN);
 
     private UnitStats() {
     }
 
-    /** The whole roster, for invariant tests and a future datapack override layer. */
+    /** The whole roster, for invariant tests. */
     public static List<UnitStat> all() {
         return Stream.of(PROTOSS_ROSTER, ZERG_ROSTER, TERRAN_ROSTER).flatMap(List::stream).toList();
     }
