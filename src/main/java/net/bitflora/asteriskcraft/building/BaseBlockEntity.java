@@ -87,6 +87,12 @@ public class BaseBlockEntity extends BlockEntity
      * what a player really pays for it is the four units they have to put inside.
      */
     public static final int BUNKER_COST = 100;
+    /**
+     * Cobblestone-only, and cheaper than a Bunker on purpose: unlike a Bunker, a Missile Turret is
+     * worth its price the moment it is standing, so what a player is buying is the whole answer to
+     * the air rather than a shell they still have to crew.
+     */
+    public static final int MISSILE_TURRET_COST = 75;
     public static final int MAX_QUEUE = 5;
     /** Pay with whichever cost alternative the army can afford - see {@link #queueUnit}. */
     private static final int ANY_COST = -1;

@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.faction;
 import net.bitflora.asteriskcraft.entity.Detector;
 import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
+import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.HydraliskEntity;
 import net.bitflora.asteriskcraft.entity.zerg.LurkerEntity;
@@ -183,6 +184,7 @@ class CloakingTest {
         // detector) is absent here.
         assertTrue(Detector.class.isAssignableFrom(PhotonCannonEntity.class), "the Protoss detector");
         assertTrue(Detector.class.isAssignableFrom(SporeColonyEntity.class), "the Zerg detector");
+        assertTrue(Detector.class.isAssignableFrom(MissileTurretEntity.class), "the Terran detector");
     }
 
     @Test
@@ -191,6 +193,7 @@ class CloakingTest {
         // entry would throw on the first sweep — in play, not here. Fail at build time instead.
         assertDetectorEnvelope(UnitStats.PHOTON_CANNON);
         assertDetectorEnvelope(UnitStats.SPORE_COLONY);
+        assertDetectorEnvelope(UnitStats.MISSILE_TURRET);
     }
 
     private static void assertDetectorEnvelope(UnitStat stat) {

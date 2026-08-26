@@ -24,7 +24,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(21, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(22, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -223,6 +223,7 @@ class UnitStatsTest {
         assertEquals(UnitCost.NONE, UnitStats.SUNKEN_COLONY.cost());
         assertEquals(UnitCost.NONE, UnitStats.SPORE_COLONY.cost());
         assertEquals(UnitCost.NONE, UnitStats.BUNKER.cost());
+        assertEquals(UnitCost.NONE, UnitStats.MISSILE_TURRET.cost());
     }
 
     /**
@@ -259,14 +260,17 @@ class UnitStatsTest {
     }
 
     /**
-     * The rooted defences that <em>shoot</em>: one per race for ground, plus the Zerg's anti-air
-     * Spore Colony. The Bunker is deliberately not among them — it is a rooted structure with no gun,
+     * The rooted defences that <em>shoot</em>: the Protoss Photon Cannon, which answers both layers
+     * of the sky on its own, and the two pairs the other races split that job across — the Zerg's
+     * Sunken and Spore Colonies, and the Terran's Bunker-and-turret, of which only the turret is a
+     * gun. The Bunker itself is deliberately not among them: it is a rooted structure with no weapon,
      * so it has no reach for {@link #staticDefenceNeverAcquiresBeyondItsReach} to check.
      */
     private static boolean isStaticDefence(UnitStat stat) {
         return stat == UnitStats.PHOTON_CANNON
                 || stat == UnitStats.SUNKEN_COLONY
-                || stat == UnitStats.SPORE_COLONY;
+                || stat == UnitStats.SPORE_COLONY
+                || stat == UnitStats.MISSILE_TURRET;
     }
 
     @Test

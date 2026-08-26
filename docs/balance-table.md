@@ -91,7 +91,7 @@ anything that should walk has either.
 
 ### `knockback_resistance` — fraction, 0.0 to 1.0
 `Attributes.KNOCKBACK_RESISTANCE`. `0.0` takes full knockback, `1.0` cannot be shoved at all. Only
-the four rooted structures use anything but `0.0`.
+the five rooted structures use anything but `0.0`.
 
 ### `step_height` — blocks
 `Attributes.STEP_HEIGHT`. How high a rise the unit walks up without jumping. `0.6` is vanilla's
@@ -201,7 +201,7 @@ Makes the unit a detector: it periodically lights up cloaked enemies around it, 
 
 **`detect_reveal` must exceed `detect_sweep`**, or consecutive sweeps leave a gap and a detected unit
 strobes in and out of view. The builder rejects it. The excess is also the tactical tail: a unit that
-has just slipped out of range stays lit for the difference. All three detectors share one envelope
+has just slipped out of range stays lit for the difference. All four detectors share one envelope
 (`16 / 20 / 60` — 16 blocks, once a second, three seconds of reveal), deliberately, so a player
 learns one radius rather than one per building.
 
@@ -280,10 +280,10 @@ Numbers a balance pass often goes looking for and will not find here:
 
 | Number | Where it lives |
 | --- | --- |
-| Building kit costs (base, Pylon, Photon Cannon, Bunker) | `building/BaseBlockEntity.BASE_KIT_COST` / `PYLON_COST` / `BUILDING_COST` / `BUNKER_COST` — a kit is not a unit and carries no `UnitCost` |
+| Building kit costs (base, Pylon, Photon Cannon, Bunker, Missile Turret) | `building/BaseBlockEntity.BASE_KIT_COST` / `PYLON_COST` / `BUILDING_COST` / `BUNKER_COST` / `MISSILE_TURRET_COST` — a kit is not a unit and carries no `UnitCost` |
 | A base's siege HP, shield buffer, warp-in duration, bank size | `race/RaceProfile`, per race |
 | Shield regen delay and rate | `combat/ShieldEventHandler.REGEN_DELAY_TICKS` (140) / `REGEN_PER_TICK` (0.05) — shared with building shields so there is one feel, not two |
-| Photon Cannon warp-in, Bunker construction | `PhotonCannonEntity.WARP_TICKS` (200) / `BunkerEntity.BUILD_TICKS` (600) — these are structures standing up, not units being trained |
+| Photon Cannon warp-in, Bunker and Missile Turret construction | `PhotonCannonEntity.WARP_TICKS` (200) / `BunkerEntity.BUILD_TICKS` (600) / `MissileTurretEntity.BUILD_TICKS` (600) — these are structures standing up, not units being trained |
 | Lurker burrow/surface transition | `entity/zerg/BurrowClock.TRANSITION_TICKS` (60) |
 | Ghost cloak duration and cooldown | `entity/terran/CloakClock.CLOAK_TICKS` / `COOLDOWN_TICKS` |
 | Bunker firing-slit range bonus | `BunkerEntity.rangeBonus()` — a property of the vehicle, added to a passenger's `range` at runtime |

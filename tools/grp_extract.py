@@ -76,6 +76,8 @@ ICON_NAMES = {
     131: "hatchery",        132: "lair",            133: "hive",
     137: "greater_spire",   141: "spire",           142: "spawning_pool",
     144: "spore_colony",    146: "sunken_colony",   149: "extractor",
+    # Terran
+    124: "missile_turret",
 }
 
 

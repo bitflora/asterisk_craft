@@ -208,7 +208,16 @@ public enum ProductionKind {
                     Icon.ofItem(AsteriskCraft.BUNKER_KIT),
                     CostText.tooltip(BaseBlockEntity.BUNKER_COST, Resource.STONE), 3,
                     new Action.GiveKit(AsteriskCraft.BUNKER_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BUNKER_COST, "message.asteriskcraft.base.bunker_ready"))));
+                            BaseBlockEntity.BUNKER_COST, "message.asteriskcraft.base.bunker_ready")),
+            // The Missile Turret shares the structure column with the Bunker, and the pairing is the
+            // point: the Bunker is what the race puts in front of the ground and the turret is what
+            // it puts under the air, and neither covers for the other.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.MISSILE_TURRET_KIT),
+                    CostText.tooltip(BaseBlockEntity.MISSILE_TURRET_COST, Resource.STONE), 3,
+                    new Action.GiveKit(AsteriskCraft.MISSILE_TURRET_KIT::get, Resource.STONE,
+                            BaseBlockEntity.MISSILE_TURRET_COST,
+                            "message.asteriskcraft.base.missile_turret_ready"))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

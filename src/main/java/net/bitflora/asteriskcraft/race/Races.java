@@ -152,18 +152,17 @@ public final class Races {
             List.of(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get));
 
     /**
-     * The Terran, as far as they go today: a Command Center, the SCVs that mine for it, and the
-     * Marines they build. The entries below that still read as "nothing" are genuinely nothing yet
-     * rather than omissions — there is no second Terran building to hand out as a starting kit, and
-     * no prerequisite of the Pylon/creep kind, so no ground cover to lay.
+     * The Terran: a Command Center, the SCVs that mine for it, the infantry they build, and the two
+     * structures those infantry are bought alongside. The entries below that still read as "nothing"
+     * are genuinely nothing rather than omissions — the race has no prerequisite of the Pylon/creep
+     * kind, so there is no ground cover to lay and no support to fill.
      *
-     * <p><b>Their base defence is a Bunker with a pair of live Marines in it</b>, and it is still the
-     * one place the race reads differently from the other two in this table. The Protoss plant a
-     * Photon Cannon and the Zerg a Sunken and a Spore — structures that <em>are</em> guns. The Terran
-     * plant a structure that is only a wall, and the guns are the same two Marines they always were:
-     * pull them out and the base is bare, exactly as before. So a Terran base is still held more
-     * loosely than either of the others, and is now also the only one whose defence can be dismantled
-     * by the defender.
+     * <p><b>Their base defence is a Bunker with a pair of live Marines in it, and a Missile Turret
+     * over the top of them</b> — and the split is the race, not an inconsistency with the other two.
+     * The Protoss plant a Photon Cannon that answers everything and the Zerg plant one colony per
+     * layer of the sky; the Terran answer the ground with a wall they have to crew and the air with a
+     * gun they do not. Pull the Marines out and the ground half of the defence leaves with them,
+     * which is still the only base in this table whose defence can be dismantled by the defender.
      */
     public static final RaceProfile TERRAN = new RaceProfile(
             Race.TERRAN,
@@ -192,9 +191,11 @@ public final class Races {
             // A Bunker and the two Marines that crew it. GameBootstrap puts the Marines inside once
             // both are standing (see its garrison pass) — order here is irrelevant, since it boards
             // afterwards rather than as it spawns.
-            List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2)),
-            // No escort: the Terran have no flyer and no detector, so there is nothing a Command
-            // Center wants hovering over it that the two Marines below it are not already doing.
+            List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2),
+                    new BaseDefence(AsteriskCraft.MISSILE_TURRET, 1)),
+            // No escort: the Terran have no flyer, so there is nothing a Command Center wants
+            // hovering over it. Their detection is the Missile Turret above, which is rooted — so
+            // unlike the swarm's Overlord, nothing carries it out with an army.
             List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),

@@ -214,6 +214,11 @@
     "subtitle": "subtitles.entity.asteriskcraft.ghost.attack",
     "sounds": ["asteriskcraft:mob/ghost/ghost-attack"]
   },
+  "entity.missile_turret.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.missile_turret.attack",
+    "sounds": ["asteriskcraft:mob/missile_turret/missile_turret-attack"]
+  },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",

@@ -266,6 +266,32 @@ public final class UnitStats {
     public static final UnitStat BUNKER = TABLE.get("bunker");
 
     /**
+     * The Missile Turret — the Terran answer to the two things the race could not do at all. It is
+     * their first detector, and their first weapon that reaches a flyer holding altitude; before it,
+     * a Terran base watched a Mutalisk flock and a cloaked Dark Templar with exactly the same
+     * helplessness.
+     *
+     * <p>Deliberately the Spore Colony's opposite number rather than its copy. The Zerg answer is a
+     * wall — 200 HP dribbling 7.5 a shot — while this is a gun with a thin skin: 100 HP, no armour,
+     * and 20 damage a second, the hardest-hitting static defence in the mod and the same DPS as a
+     * Dark Templar. It kills what it hits and dies to anything that reaches it, which is the whole
+     * reason the Bunker stands next to it: the turret handles the air and the infantry inside the
+     * Bunker handle the ground, and neither covers for the other.
+     *
+     * <p>Air-only, and "air" here is positional ({@code entity.Altitude}), not a unit type — the same
+     * rule the Spore Colony uses, so a Mutalisk that lands stops being a target mid-fight. Range 14
+     * and follow range 14, because a rooted attacker must never acquire past its own reach.
+     *
+     * <p>Detection is the shared 16 / 20 / 60 envelope every detector uses: a player learns one
+     * radius, not three.
+     *
+     * <p>Kit-bought at a Command Center for {@code BaseBlockEntity.MISSILE_TURRET_COST}, not trained
+     * — hence no cost and no build ticks. The thirty seconds it takes to stand up is the construction
+     * countdown on {@code entity.terran.MissileTurretEntity}, beside the Bunker's.
+     */
+    public static final UnitStat MISSILE_TURRET = TABLE.get("missile_turret");
+
+    /**
      * The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. Derived
      * from the CSV's {@code race} column rather than hand-listed, so a unit added to the file cannot
      * be left out of its own race's roster.
@@ -276,8 +302,8 @@ public final class UnitStats {
     public static final List<UnitStat> ZERG_ROSTER = TABLE.roster(Race.ZERG);
 
     /**
-     * The Terran roster. A worker and two soldiers, and it holds the same "names a real resource,
-     * never ANY" invariant the Protoss one does.
+     * The Terran roster. It holds the same "names a real resource, never ANY" invariant the Protoss
+     * one does.
      */
     public static final List<UnitStat> TERRAN_ROSTER = TABLE.roster(Race.TERRAN);
 

@@ -74,13 +74,16 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> FLAME_THROWER = key("flame_thrower");
     /** The Ghost's C-10 canister rifle. The longest reach the Terran have on foot. */
     public static final ResourceKey<DamageType> C10_CANISTER_RIFLE = key("c10_canister_rifle");
+    /** The Missile Turret's ordnance. The only Terran damage type that can only ever be dealt to
+     * something off the ground. */
+    public static final ResourceKey<DamageType> LONGBOLT_MISSILE = key("longbolt_missile");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
             SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER,
-            C10_CANISTER_RIFLE);
+            C10_CANISTER_RIFLE, LONGBOLT_MISSILE);
 
     private AsteriskCraftDamageTypes() {
     }

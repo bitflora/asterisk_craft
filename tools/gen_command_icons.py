@@ -80,6 +80,7 @@ KITS = {
     "hive_kit": "hive",
     "photon_cannon_kit": "photon_cannon",
     "bunker_kit": "bunker",
+    "missile_turret_kit": "missile_turret",
 }
 
 # Every unit with an ally/enemy spawn-egg pair registered in AsteriskCraft.java.
@@ -87,7 +88,7 @@ EGGS = [
     "probe", "zealot", "dragoon", "scout", "dark_templar",
     "drone", "zergling", "ultralisk", "hydralisk", "mutalisk", "lurker", "overlord",
     "infested_villager", "sunken_colony", "spore_colony",
-    "scv", "marine", "firebat", "ghost", "bunker",
+    "scv", "marine", "firebat", "ghost", "bunker", "missile_turret",
 ]
 
 

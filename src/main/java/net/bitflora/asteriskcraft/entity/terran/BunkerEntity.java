@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.terran;
 
+import net.bitflora.asteriskcraft.building.PrePlaced;
 import net.bitflora.asteriskcraft.building.SpawnSpots;
 import net.bitflora.asteriskcraft.building.WarpInVulnerability;
 import net.bitflora.asteriskcraft.entity.Organic;
@@ -64,7 +65,7 @@ import java.util.List;
  * stat. Half HP throughout ({@link WarpInVulnerability}), scaled back up on completion, so damage
  * landed on a half-built Bunker is sustained twice over.
  */
-public class BunkerEntity extends Mob implements Rooted, Garrison {
+public class BunkerEntity extends Mob implements Rooted, Garrison, PrePlaced {
     /** Four units, the StarCraft capacity. */
     public static final int CAPACITY = 4;
 
@@ -153,6 +154,7 @@ public class BunkerEntity extends Mob implements Rooted, Garrison {
      * exact counterpart of {@code BaseBlockEntity.skipWarpIn}: a Bunker placed by world generation was
      * never built by anyone, so it must not open the match half-built and refusing its own garrison.
      */
+    @Override
     public void skipConstruction() {
         if (this.isUnderConstruction()) {
             this.entityData.set(BUILD_TICKS_REMAINING, 0);

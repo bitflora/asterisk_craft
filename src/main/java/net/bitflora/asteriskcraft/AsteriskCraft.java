@@ -35,6 +35,7 @@ import net.bitflora.asteriskcraft.entity.terran.BunkerEntity;
 import net.bitflora.asteriskcraft.entity.terran.FirebatEntity;
 import net.bitflora.asteriskcraft.entity.terran.GhostEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
+import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
@@ -203,6 +204,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_KIT = ITEMS.registerItem("bunker_kit",
             props -> new FactionSpawnEggItem(props, AsteriskCraft.BUNKER, FactionSpawnEggItem.Side.ALLY));
 
+    // The Missile Turret's kit, and ungated for the Bunker's reason: the Terran have no Pylon and no
+    // creep, so there is no prerequisite to ask about.
+    public static final DeferredItem<FactionSpawnEggItem> MISSILE_TURRET_KIT = ITEMS.registerItem("missile_turret_kit",
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.MISSILE_TURRET, FactionSpawnEggItem.Side.ALLY));
+
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);
 
@@ -297,6 +303,17 @@ public class AsteriskCraft {
                             new Vec3(0.6, 0.9, -0.6), new Vec3(-0.6, 0.9, -0.6))
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("bunker"))));
+
+    // The Missile Turret is an iron golem with a missile rack on each shoulder, and it is the racks
+    // rather than the golem that size the box: held at 30 degrees they reach 1.50 blocks forward of
+    // the centre line and their muzzles top out at 2.91, both a shade past the golem's own
+    // 1.4 x 2.7. MISC rather than MONSTER for the reason the Photon Cannon and the Bunker are: a
+    // building is not a mob that wandered in.
+    public static final DeferredHolder<EntityType<?>, EntityType<MissileTurretEntity>> MISSILE_TURRET =
+            ENTITY_TYPES.register("missile_turret", () -> EntityType.Builder.of(MissileTurretEntity::new, MobCategory.MISC)
+                    .sized(3.2f, 3.0f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("missile_turret"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<ZealotEntity>> ZEALOT =
             ENTITY_TYPES.register("zealot", () -> EntityType.Builder.of(ZealotEntity::new, MobCategory.MONSTER)
@@ -500,6 +517,11 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ENEMY = ITEMS.registerItem("bunker_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ENEMY));
 
+    public static final DeferredItem<FactionSpawnEggItem> MISSILE_TURRET_SPAWN_EGG_ALLY = ITEMS.registerItem("missile_turret_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, MISSILE_TURRET, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> MISSILE_TURRET_SPAWN_EGG_ENEMY = ITEMS.registerItem("missile_turret_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, MISSILE_TURRET, FactionSpawnEggItem.Side.ENEMY));
+
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ALLY = ITEMS.registerItem("zealot_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, ZEALOT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> ZEALOT_SPAWN_EGG_ENEMY = ITEMS.registerItem("zealot_spawn_egg_enemy",
@@ -665,6 +687,12 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.ghost.death", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> GHOST_ATTACK =
             SOUND_EVENTS.register("entity.ghost.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.attack")));
+
+    // The Missile Turret's only sound. A structure has no ambient line, no pain line and no death
+    // cry — the Photon Cannon and the two colonies are the same, and only the shot makes noise.
+    public static final DeferredHolder<SoundEvent, SoundEvent> MISSILE_TURRET_ATTACK =
+            SOUND_EVENTS.register("entity.missile_turret.attack",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.missile_turret.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_AMBIENT =
             SOUND_EVENTS.register("entity.drone.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.drone.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> DRONE_HURT =
@@ -722,6 +750,7 @@ public class AsteriskCraft {
                 output.accept(BARRACKS_CORE_ITEM.get());
                 output.accept(FACTORY_CORE_ITEM.get());
                 output.accept(BUNKER_KIT.get());
+                output.accept(MISSILE_TURRET_KIT.get());
                 output.accept(CURSOR.get());
                 output.accept(PROBE_SPAWN_EGG_ALLY.get());
                 output.accept(PROBE_SPAWN_EGG_ENEMY.get());
@@ -735,6 +764,8 @@ public class AsteriskCraft {
                 output.accept(GHOST_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
+                output.accept(MISSILE_TURRET_SPAWN_EGG_ALLY.get());
+                output.accept(MISSILE_TURRET_SPAWN_EGG_ENEMY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ALLY.get());
                 output.accept(ZEALOT_SPAWN_EGG_ENEMY.get());
                 output.accept(DRAGOON_SPAWN_EGG_ALLY.get());
@@ -821,6 +852,7 @@ public class AsteriskCraft {
         event.put(FIREBAT.get(), FirebatEntity.createAttributes().build());
         event.put(GHOST.get(), GhostEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
+        event.put(MISSILE_TURRET.get(), MissileTurretEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());

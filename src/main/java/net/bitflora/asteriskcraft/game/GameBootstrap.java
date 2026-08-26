@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.building.ArmyBank;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.bitflora.asteriskcraft.building.CoreCensus;
+import net.bitflora.asteriskcraft.building.PrePlaced;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
@@ -662,6 +663,9 @@ public final class GameBootstrap {
                 for (int i = 0; i < defence.count(); i++) {
                     Mob spawned = UnitSpawns.spawn(level, core, defence.type().get(), faction, profile.race(), false);
                     if (spawned != null) {
+                        // Nobody built this one, so it must not spend the opening of the match
+                        // half-built at half health — see PrePlaced.
+                        PrePlaced.standUp(spawned);
                         defences.add(spawned);
                     }
                 }
@@ -755,16 +759,15 @@ public final class GameBootstrap {
      * a transport is anything that is a {@link Garrison}, a crew is anything that transport will take,
      * and a race that declared neither gets an empty loop.
      *
-     * <p>The transport is stood up first. A freshly spawned Bunker is thirty seconds from being
-     * finished and refuses passengers until it is — the same trap {@code BaseBlockEntity.skipWarpIn}
-     * exists for, since a building world generation placed was never built by anybody.
+     * <p>The transport is already standing by the time this runs: the spawn loop above puts every
+     * {@code PrePlaced} building up at once, which it has to, since a freshly spawned Bunker is
+     * thirty seconds from finished and refuses passengers until it is.
      */
     private static void crewDefences(List<Mob> defences) {
         for (Mob defence : defences) {
             if (!(defence instanceof BunkerEntity transport)) {
                 continue;
             }
-            transport.skipConstruction();
             for (Mob crew : defences) {
                 transport.board(crew);
             }

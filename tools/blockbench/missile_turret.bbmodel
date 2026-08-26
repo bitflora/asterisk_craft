@@ -1,0 +1,490 @@
+{
+  "meta": {
+    "format_version": "4.5",
+    "model_format": "modded_entity",
+    "box_uv": true
+  },
+  "name": "missile_turret",
+  "model_identifier": "missile_turret",
+  "modded_entity_version": "1.17",
+  "modded_entity_flip_y": true,
+  "modded_entity_entity_class": "Entity",
+  "visible_box": [
+    2,
+    2,
+    0
+  ],
+  "variable_placeholders": "",
+  "resolution": {
+    "width": 128,
+    "height": 128
+  },
+  "elements": [
+    {
+      "name": "missiles_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -12.0,
+        51.0,
+        -3.0
+      ],
+      "to": [
+        -10.0,
+        56.0,
+        -1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        100
+      ],
+      "uuid": "ced7d152-17c5-5dae-9892-68ec07bde440"
+    },
+    {
+      "name": "missiles_left_1",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -12.0,
+        51.0,
+        -1.0
+      ],
+      "to": [
+        -10.0,
+        57.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        10,
+        100
+      ],
+      "uuid": "6f5b7ee0-9b4b-5b1d-8fa6-a8ab89d8d227"
+    },
+    {
+      "name": "missiles_left_2",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -12.0,
+        51.0,
+        1.0
+      ],
+      "to": [
+        -10.0,
+        56.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        20,
+        100
+      ],
+      "uuid": "3e2f084d-1a27-54ed-99ae-6e45aab174bf"
+    },
+    {
+      "name": "shell_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -12.5,
+        22.0,
+        -3.5
+      ],
+      "to": [
+        -9.5,
+        51.0,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        60,
+        21
+      ],
+      "uuid": "b34bf87c-cd2e-5714-acde-f43cce2c6935"
+    },
+    {
+      "name": "missiles_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        10.0,
+        51.0,
+        -3.0
+      ],
+      "to": [
+        12.0,
+        56.0,
+        -1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        30,
+        100
+      ],
+      "uuid": "ad6d00ba-1682-58b9-bb04-55200e090d0c"
+    },
+    {
+      "name": "missiles_right_1",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        10.0,
+        51.0,
+        -1.0
+      ],
+      "to": [
+        12.0,
+        57.0,
+        1.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        40,
+        100
+      ],
+      "uuid": "dec289e2-1fa0-5954-a17e-5ffd83eea6a6"
+    },
+    {
+      "name": "missiles_right_2",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        10.0,
+        51.0,
+        1.0
+      ],
+      "to": [
+        12.0,
+        56.0,
+        3.0
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        50,
+        100
+      ],
+      "uuid": "d6f35a24-1fee-5cee-9338-f255317c688f"
+    },
+    {
+      "name": "shell_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        9.5,
+        22.0,
+        -3.5
+      ],
+      "to": [
+        12.5,
+        51.0,
+        3.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        60,
+        58
+      ],
+      "uuid": "649ef29f-9015-5c7d-b853-47c54e8fa8d2"
+    }
+  ],
+  "outliner": [
+    {
+      "name": "golem",
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        -0.0,
+        -0.0,
+        0.0
+      ],
+      "uuid": "2173d035-09b4-5a9c-b46f-d51d50fab2d2",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": []
+    },
+    {
+      "name": "rack_left",
+      "origin": [
+        -11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        -60.00000279622898,
+        -0.0,
+        0.0
+      ],
+      "uuid": "fc9dc698-65a8-5aff-a6f3-822ff668ef07",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        {
+          "name": "missiles_left",
+          "origin": [
+            -11.0,
+            31.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "76897f61-8771-5c5e-88c4-ee01aac35956",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "ced7d152-17c5-5dae-9892-68ec07bde440",
+            "6f5b7ee0-9b4b-5b1d-8fa6-a8ab89d8d227",
+            "3e2f084d-1a27-54ed-99ae-6e45aab174bf"
+          ]
+        },
+        {
+          "name": "shell_left",
+          "origin": [
+            -11.0,
+            31.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "90b54a37-7fd4-50e3-8ddc-531a16c80493",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "b34bf87c-cd2e-5714-acde-f43cce2c6935"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rack_right",
+      "origin": [
+        11.0,
+        31.0,
+        0.0
+      ],
+      "rotation": [
+        -60.00000279622898,
+        -0.0,
+        0.0
+      ],
+      "uuid": "e2adaea5-96cd-53e1-9959-b0ff106b7bb0",
+      "export": true,
+      "isOpen": true,
+      "visibility": true,
+      "children": [
+        {
+          "name": "missiles_right",
+          "origin": [
+            11.0,
+            31.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "02d2a7a3-5dda-5e67-81cc-f9bee215cda4",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "ad6d00ba-1682-58b9-bb04-55200e090d0c",
+            "dec289e2-1fa0-5954-a17e-5ffd83eea6a6",
+            "d6f35a24-1fee-5cee-9338-f255317c688f"
+          ]
+        },
+        {
+          "name": "shell_right",
+          "origin": [
+            11.0,
+            31.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "9d80721d-3ece-5ad9-86d5-39975b92b1c1",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "649ef29f-9015-5c7d-b853-47c54e8fa8d2"
+          ]
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\missile_turret.png",
+      "name": "missile_turret.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "0",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "4cda5d92-1f7f-5b86-af41-774d94cecf11",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    },
+    {
+      "path": "C:\\Users\\timja\\code\\asterisk-craft\\src\\main\\resources\\assets\\asteriskcraft\\textures\\entity\\missile_turret_glow.png",
+      "name": "missile_turret_glow.png",
+      "folder": "entity",
+      "namespace": "asteriskcraft",
+      "id": "1",
+      "particle": false,
+      "render_mode": "default",
+      "visible": true,
+      "mode": "link",
+      "saved": true,
+      "uuid": "86f1d721-6230-5d9c-be9b-3e7b7aaa64aa",
+      "width": 128,
+      "height": 128,
+      "uv_width": 128,
+      "uv_height": 128
+    }
+  ]
+}

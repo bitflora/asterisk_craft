@@ -95,6 +95,7 @@ UNITS = {
     "firebat": ("terran", "FirebatModel"),
     "ghost": ("terran", "GhostModel"),
     "bunker": ("terran", "BunkerModel"),
+    "missile_turret": ("terran", "MissileTurretModel"),
 }
 
 GUTTER = 1  # texels between islands, so painting can't bleed across and fractional sizes stay clear

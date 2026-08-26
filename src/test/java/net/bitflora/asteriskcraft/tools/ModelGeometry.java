@@ -26,6 +26,7 @@ import net.bitflora.asteriskcraft.client.terran.BunkerModel;
 import net.bitflora.asteriskcraft.client.terran.FirebatModel;
 import net.bitflora.asteriskcraft.client.terran.GhostModel;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
+import net.bitflora.asteriskcraft.client.terran.MissileTurretModel;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.zerg.ZerglingModel;
 import net.minecraft.client.model.geom.PartPose;
@@ -165,6 +166,7 @@ final class ModelGeometry {
         map.put("firebat", FirebatModel::createBodyLayer);
         map.put("ghost", GhostModel::createBodyLayer);
         map.put("bunker", BunkerModel::createBodyLayer);
+        map.put("missile_turret", MissileTurretModel::createBodyLayer);
         // Collections.unmodifiableMap, not Map.copyOf — the latter does not preserve insertion order.
         return Collections.unmodifiableMap(map);
     }

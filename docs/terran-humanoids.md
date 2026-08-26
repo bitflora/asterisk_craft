@@ -230,7 +230,7 @@ Java and tables:
 - `client/AsteriskCraftClient.java` — `ModelLayerLocation`, layer definition, renderer
 - `race/Races.TERRAN` — one `.unit(...)` line on the roster builder
 - `building/ProductionKind.TERRAN_BASE` — a command-card button
-- `command/UnitLabels` — a one-letter code (unique **within** the race; S/M/F/B are taken)
+- `command/UnitLabels` — a one-letter code (unique **within** the race; S/M/F/G/B/T are taken)
 
 Data and assets:
 
