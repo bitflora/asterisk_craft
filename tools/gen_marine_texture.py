@@ -62,6 +62,7 @@ PALETTE = {
     "body": SUIT,
     "robe": SUIT_DARK,
     "neck_ring": COLLAR,
+    "pauldron_left": SUIT, "pauldron_right": SUIT,
     "arm_left": SUIT, "arm_right": SUIT, "arms_folded": SUIT,
     "rifle_stock": GUN, "rifle_receiver": GUN, "rifle_barrel": GUN,
     "rifle_magazine": GUN_TRIM, "rifle_sight": GUN_TRIM, "rifle_muzzle": MUZZLE,

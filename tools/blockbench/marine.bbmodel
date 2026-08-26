@@ -417,6 +417,78 @@
       "uuid": "10e11bc2-4f66-5f85-a360-b57369f05788"
     },
     {
+      "name": "pauldron_left_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        -8.5,
+        20.4,
+        -4.5
+      ],
+      "to": [
+        -3.5,
+        26.4,
+        4.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        80
+      ],
+      "uuid": "7112279f-f1e9-5a86-8bb8-c5ac422d0d5c"
+    },
+    {
+      "name": "pauldron_right_0",
+      "box_uv": true,
+      "rescale": false,
+      "locked": false,
+      "type": "cube",
+      "from": [
+        3.5,
+        20.4,
+        -4.5
+      ],
+      "to": [
+        8.5,
+        26.4,
+        4.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "inflate": 0.0,
+      "mirror_uv": false,
+      "origin": [
+        -0.0,
+        24.0,
+        0.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        30,
+        80
+      ],
+      "uuid": "231d1252-69e0-50f0-8368-5649150abbc0"
+    },
+    {
       "name": "robe_0",
       "box_uv": true,
       "rescale": false,
@@ -1068,6 +1140,46 @@
           "visibility": true,
           "children": [
             "10e11bc2-4f66-5f85-a360-b57369f05788"
+          ]
+        },
+        {
+          "name": "pauldron_left",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "ca30d21d-cafe-578f-a52f-c33b0e6835d8",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "7112279f-f1e9-5a86-8bb8-c5ac422d0d5c"
+          ]
+        },
+        {
+          "name": "pauldron_right",
+          "origin": [
+            -0.0,
+            24.0,
+            0.0
+          ],
+          "rotation": [
+            -0.0,
+            -0.0,
+            0.0
+          ],
+          "uuid": "8377b6f7-ed42-500b-bdd9-bb79487438fd",
+          "export": true,
+          "isOpen": true,
+          "visibility": true,
+          "children": [
+            "231d1252-69e0-50f0-8368-5649150abbc0"
           ]
         },
         {

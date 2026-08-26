@@ -194,6 +194,29 @@ public class MarineModel extends EntityModel<MarineRenderState> {
         body.addOrReplaceChild("neck_ring",
                 CubeListBuilder.create().texOffs(34, 20).addBox(-4.5f, -1.0f, -3.5f, 9.0f, 2.0f, 7.0f),
                 PartPose.ZERO);
+        // Shoulder plates, resting on the collar and outboard of the torso. Hung off the body
+        // rather than off the arms: the arms are vanilla's folded pair and swing as one group on
+        // recoil, and armour bolted to a suit does not move with the limb inside it. Which means
+        // the plate has to be big enough to cover an upper arm that moves under it. Three bounds,
+        // none of them free:
+        //
+        //   y: -2.4 clears the helmet's ear covers, which reach down to -2.5; 3.6 is below every
+        //      corner of the arm's upper half, so no shoulder pokes out from under the plate.
+        //   z: +-4.5 stands proud of the robe's inflated +-3.5 front and back, and swallows the
+        //      arm's deepest corner (z=-3.8 at rest, and it only travels forward under recoil).
+        //   x: 8.5 clears the arm's outer face at 8.0, and 3.5 sits just inside the torso wall at
+        //      4.0 rather than flush with it, since coplanar faces z-fight.
+        //
+        // The origins are fractional and the <b>dimensions deliberately are not</b>: box UV is
+        // derived from the float dimensions, so a cube 8.4 deep starts sampling its side faces
+        // 0.6 of a texel above the whole-texel row anything can paint, and wears a transparent
+        // stripe around its shoulders. Sizes stay whole; only placement is free.
+        body.addOrReplaceChild("pauldron_left",
+                CubeListBuilder.create().texOffs(0, 80).addBox(3.5f, -2.4f, -4.5f, 5.0f, 6.0f, 9.0f),
+                PartPose.ZERO);
+        body.addOrReplaceChild("pauldron_right",
+                CubeListBuilder.create().texOffs(30, 80).addBox(-8.5f, -2.4f, -4.5f, 5.0f, 6.0f, 9.0f),
+                PartPose.ZERO);
 
         // --- Arms: folded across the belly, vanilla's pose -----------------------------------------
         // An empty container so the three cubes swing as one limb-group, as vanilla's single part
