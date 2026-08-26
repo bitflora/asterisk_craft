@@ -24,6 +24,16 @@ import java.util.function.Predicate;
  * inert against everything it <em>can</em> hit. Like there, the filter may only ever <em>narrow</em>
  * what {@code isHostile} already allowed.
  *
+ * <p>Retaliation is for a unit that is <em>not already fighting</em>. A unit that already holds a
+ * live target it can still answer — one that is alive, hostile, passes the same narrowing filter
+ * and is still inside follow range — keeps swinging at it rather than turning to face whoever last
+ * hit it; being shot in the back mid-fight must not walk a unit off the enemy in front of it, and a
+ * crossfire would otherwise flip its target every time a second attacker landed a shot. Only once
+ * that fight is over (or has run out of range) does the last attacker become the new target, which
+ * is the first thing {@code canUse} then finds. Note that engagement here means a targeted
+ * <em>unit</em>: a unit battering a building through {@link SiegeBlockGoal} holds no target and so
+ * still turns on an attacker.
+ *
  * <p>The one thing that outranks it is a fresh move order ({@link CommandAttachments#isMoveFocused}):
  * a retreat is ordered precisely when a unit is being shot at, so a unit that turned to fight back
  * every time it was hit could never be pulled out of a losing fight. Once that window lapses,
@@ -48,9 +58,24 @@ public class RetaliateGoal extends Goal {
         LivingEntity attacker = this.mob.getLastHurtByMob();
         return attacker != null && attacker.isAlive()
                 && !CommandAttachments.isMoveFocused(this.mob)
+                && !isEngaged()
                 && FactionAttachments.isHostile(this.mob, attacker)
                 && this.filter.test(attacker)
                 && withinFollowRange(attacker);
+    }
+
+    /**
+     * Whether the unit is already in a fight it can still prosecute — a target that is alive, still
+     * hostile, still one this unit may engage, and still in reach. A stale or unanswerable target
+     * (dead, out of follow range, or one the filter excludes) is not an engagement and does not hold
+     * retaliation off.
+     */
+    private boolean isEngaged() {
+        LivingEntity target = this.mob.getTarget();
+        return target != null && target.isAlive()
+                && FactionAttachments.isHostile(this.mob, target)
+                && this.filter.test(target)
+                && withinFollowRange(target);
     }
 
     @Override
