@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.race;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.ProductionKind;
+import net.bitflora.asteriskcraft.building.WarpScaffold;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile.BaseDefence;
 import net.bitflora.asteriskcraft.race.RaceProfile.StartingStack;
@@ -32,14 +33,17 @@ public final class Races {
 
     /**
      * Base staying power. The sturdiest buildings in the mod, as the thing you lose the game with
-     * should be. The Zerg base carries no shields (not a Zerg mechanic) and no warp-in, since it
-     * is pre-placed at world generation rather than raised from a kit.
+     * should be. The Zerg base carries no shields, which is not a Zerg mechanic; it does take just
+     * as long to grow as a Nexus takes to warp, since both are bought as an expansion kit and the
+     * one at world generation is stood up by {@code GameBootstrap} either way.
      */
     private static final int PROTOSS_BASE_HEALTH = 325;
     private static final int PROTOSS_BASE_SHIELD = 325;
     /** Two minutes — an expansion Nexus is a long commitment. */
     private static final int PROTOSS_BASE_WARP_TICKS = 20 * 120;
     private static final int ZERG_BASE_HEALTH = 300;
+    /** The Nexus's two minutes: an expansion Hive is the same size of commitment. */
+    private static final int ZERG_BASE_WARP_TICKS = 20 * 120;
 
     /** 3x a single building's original 9 slots. */
     private static final int PROTOSS_BANK_SLOTS = 27;
@@ -99,6 +103,8 @@ public final class Races {
             // No support fill either — the end-stone-brick platform is its own plinth, and nothing
             // foreign should be stamped under Protoss stonework.
             null,
+            // Warp glass, the look this whole mechanic was written for.
+            () -> WarpScaffold.PANE,
             List.of(new BaseDefence(AsteriskCraft.PHOTON_CANNON, 1)),
             // No escort: the Protoss detector is the Photon Cannon, which is already in the line
             // above, and nothing else about a Nexus wants a unit hovering over it at world start.
@@ -117,7 +123,7 @@ public final class Races {
             BuildingTemplates.HIVE,
             ZERG_BASE_HEALTH,
             0,
-            0,
+            ZERG_BASE_WARP_TICKS,
             ZERG_BANK_SLOTS,
             UnitRoster.builder()
                     .worker(UnitStats.DRONE, AsteriskCraft.DRONE)
@@ -136,6 +142,9 @@ public final class Races {
             // The mound keeps a mycelium footing under it — same material as the creep it sits in,
             // so unlike the Protoss stonework there is nothing foreign to see.
             () -> Blocks.MYCELIUM.defaultBlockState(),
+            // Purple rather than the Protoss blue: a Hive is grown, not warped in, and a Drone died
+            // to start it. Still glass, so an attacker can smash it for the same penalty.
+            () -> Blocks.PURPLE_STAINED_GLASS.defaultBlockState(),
             List.of(new BaseDefence(AsteriskCraft.SUNKEN_COLONY, 1),
                     new BaseDefence(AsteriskCraft.SPORE_COLONY, 1)),
             // One Overlord per Hive, on both sides. The Spore Colony above it detects too, but it is
@@ -188,6 +197,9 @@ public final class Races {
             // No creep, and no support fill: the Terran set down on the ground as they find it.
             null,
             null,
+            // Never raised today — no Terran kit stamps a template — but a profile has to name one,
+            // and the Command Center is a building like any other if one ever does.
+            () -> WarpScaffold.PANE,
             // A Bunker and the two Marines that crew it. GameBootstrap puts the Marines inside once
             // both are standing (see its garrison pass) — order here is irrelevant, since it boards
             // afterwards rather than as it spawns.

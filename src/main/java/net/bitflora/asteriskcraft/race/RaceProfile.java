@@ -46,6 +46,11 @@ import java.util.function.Supplier;
  * @param creep          ground cover spread around a new base, or null for a race that lays none
  * @param support        what a base's template fills gaps beneath it with, or null to leave the
  *                       ground as it lies (the Protoss stonework is its own plinth)
+ * @param scaffold       what this race's buildings stand as while they go up — see
+ *                       {@code building.WarpScaffold}, which hands the panes out over the countdown.
+ *                       Per race rather than one constant because it is the most visible thing about
+ *                       a building under construction, and a Hive growing out of Protoss warp glass
+ *                       reads as the wrong army's
  * @param baseDefences   static defence planted with each base at world generation. The
  *                       <em>computer's</em> only — the human's starting base deliberately plants
  *                       none and gets {@link #playerKit} instead, so it mines its own way up
@@ -77,6 +82,7 @@ public record RaceProfile(
         Identifier buildScript,
         @Nullable Supplier<BlockState> creep,
         @Nullable Supplier<BlockState> support,
+        Supplier<BlockState> scaffold,
         List<BaseDefence> baseDefences,
         List<BaseDefence> baseEscort,
         List<StartingStack> startingBank,

@@ -42,8 +42,13 @@ import java.util.List;
  * building has.
  */
 public final class WarpScaffold {
-    /** What an unfinished block of the layout looks like — Protoss blue, and cheap to smash. */
-    public static final Block PANE = Blocks.LIGHT_BLUE_STAINED_GLASS;
+    /**
+     * What an unfinished block of the layout looks like for a race that names nothing else — Protoss
+     * blue, and cheap to smash. Which block a given scaffold actually stands as is per race
+     * ({@code race.RaceProfile.scaffold}), handed in at {@link #raise} time: a Hive growing itself
+     * out of Protoss warp glass reads as the wrong army's building.
+     */
+    public static final BlockState PANE = Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState();
 
     /** What one smashed pane adds to the warp countdown. */
     public static final int BREAK_PENALTY_TICKS = 200; // 10 seconds
@@ -86,6 +91,11 @@ public final class WarpScaffold {
 
     /** Panes not yet materialised, in the order they will be; emptied as the warp runs. */
     private final List<Pane> pending = new ArrayList<>();
+    /**
+     * What this scaffold's unfinished blocks stand as. Saved, because {@link #collectSmashed} tests
+     * against it on every sweep and a warp routinely outlives a reload.
+     */
+    private BlockState pane = PANE;
     /** Running count of panes smashed this warp, owed as siege damage once the building stands up. */
     private int smashedPanes;
     private int ticksToNextPane;
@@ -96,8 +106,9 @@ public final class WarpScaffold {
      * a pane except the core itself, which has to stay real from the first tick — it is the block
      * entity running the countdown.
      */
-    public void raise(ServerLevel level, BuildingTemplates.Placed placed) {
+    public void raise(ServerLevel level, BuildingTemplates.Placed placed, BlockState pane) {
         this.pending.clear();
+        this.pane = pane;
         this.smashedPanes = 0;
         this.ticksToNextPane = 0;
         this.ticksToNextScan = 0;
@@ -115,8 +126,8 @@ public final class WarpScaffold {
             }
         }
         scramble(this.pending, level.getRandom());
-        for (Pane pane : this.pending) {
-            level.setBlock(pane.pos(), PANE.defaultBlockState(), SWAP_FLAGS);
+        for (Pane slot : this.pending) {
+            level.setBlock(slot.pos(), this.pane, SWAP_FLAGS);
         }
     }
 
@@ -177,9 +188,9 @@ public final class WarpScaffold {
      * read as a warp still in progress long after the core that was running it is gone.
      */
     public void collapse(ServerLevel level) {
-        for (Pane pane : this.pending) {
-            if (level.getBlockState(pane.pos()).is(PANE)) {
-                level.setBlock(pane.pos(), Blocks.AIR.defaultBlockState(), SWAP_FLAGS);
+        for (Pane slot : this.pending) {
+            if (level.getBlockState(slot.pos()).is(this.pane.getBlock())) {
+                level.setBlock(slot.pos(), Blocks.AIR.defaultBlockState(), SWAP_FLAGS);
             }
         }
         this.pending.clear();
@@ -195,7 +206,7 @@ public final class WarpScaffold {
         int penalty = 0;
         for (int i = 0; i < this.pending.size(); i++) {
             Pane pane = this.pending.get(i);
-            if (pane.smashed() || level.getBlockState(pane.pos()).is(PANE)) {
+            if (pane.smashed() || level.getBlockState(pane.pos()).is(this.pane.getBlock())) {
                 continue;
             }
             this.pending.set(i, pane.smash());
@@ -225,6 +236,7 @@ public final class WarpScaffold {
 
     public void save(ValueOutput output) {
         output.store("Scaffold", Pane.LIST_CODEC, List.copyOf(this.pending));
+        output.store("ScaffoldPane", BlockState.CODEC, this.pane);
         output.putInt("ScaffoldNextPane", this.ticksToNextPane);
         output.putInt("ScaffoldSmashed", this.smashedPanes);
     }
@@ -232,6 +244,7 @@ public final class WarpScaffold {
     public void load(ValueInput input) {
         this.pending.clear();
         this.pending.addAll(input.read("Scaffold", Pane.LIST_CODEC).orElse(List.of()));
+        this.pane = input.read("ScaffoldPane", BlockState.CODEC).orElse(PANE);
         this.ticksToNextPane = input.getIntOr("ScaffoldNextPane", 0);
         // The tally outlives the panes it came from: a pane smashed early is still owed for when the
         // building stands up, long after it materialised and left the list.

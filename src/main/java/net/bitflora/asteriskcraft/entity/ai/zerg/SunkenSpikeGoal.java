@@ -85,6 +85,12 @@ public class SunkenSpikeGoal extends Goal {
 
     @Nullable
     private LivingEntity inRangeTarget() {
+        // A colony still growing out of the ground has no weapon yet - the Missile Turret's
+        // rule, and checked here rather than in the target selector so a target acquired
+        // before the Drone morphed is refused too.
+        if (this.colony.isUnderConstruction()) {
+            return null;
+        }
         LivingEntity target = this.colony.getTarget();
         if (target == null || !target.isAlive() || Altitude.isAirborne(target)) {
             return null;

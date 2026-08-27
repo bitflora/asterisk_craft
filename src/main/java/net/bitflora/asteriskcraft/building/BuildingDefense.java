@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
@@ -137,17 +138,21 @@ public final class BuildingDefense {
      * it was standing finished (see docs/neoforge-api-notes.md). So a freshly warped-in building
      * arrives with a spent countdown and has to be told to warp, rather than being trusted to start
      * out that way.
+     *
+     * @param pane what the unfinished layout stands as — the placing race's own
+     *             ({@code race.RaceProfile.scaffold}), since a building under construction is the
+     *             most visible thing on the field and it should look like its own army's
      */
-    public void beginWarpIn(ServerLevel level, BuildingTemplates.Placed placed) {
+    public void beginWarpIn(ServerLevel level, BuildingTemplates.Placed placed, BlockState pane) {
         if (this.restartWarpIn()) {
-            this.scaffold.raise(level, placed);
+            this.scaffold.raise(level, placed, pane);
         }
     }
 
     /**
      * The state half of {@link #beginWarpIn} — countdown and pools, no world — split out so the reset
-     * is testable without a live level. False for a building with no warp phase at all (a Hive), which
-     * is also what keeps a scaffold from being raised with no countdown to run it down.
+     * is testable without a live level. False for a building with no warp phase at all, which is also
+     * what keeps a scaffold from being raised with no countdown to run it down.
      */
     boolean restartWarpIn() {
         if (this.warpDuration <= 0) {

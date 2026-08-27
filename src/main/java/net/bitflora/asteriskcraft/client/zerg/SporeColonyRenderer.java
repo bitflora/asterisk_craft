@@ -18,6 +18,13 @@ public class SporeColonyRenderer extends MobRenderer<SporeColonyEntity, SporeCol
     /** Grows the model to the Photon Cannon's footprint; see {@link #scale}. */
     private static final float SCALE = 1.95f;
 
+    /**
+     * How far the colony sits underground at the start of its growth. Comfortably taller than
+     * the scaled model, so nothing shows on the first tick and it breaks the surface partway
+     * through.
+     */
+    private static final float SINK_BLOCKS = 3.0f;
+
     public SporeColonyRenderer(EntityRendererProvider.Context context) {
         // Shadow sized to the scaled footprint below, which is the Photon Cannon's.
         super(context, new SporeColonyModel(context.bakeLayer(AsteriskCraftClient.SPORE_COLONY_LAYER)), 1.2f);
@@ -38,10 +45,15 @@ public class SporeColonyRenderer extends MobRenderer<SporeColonyEntity, SporeCol
         state.attackProgress = remaining <= 0
                 ? 0.0f
                 : 1.0f - Mth.clamp((remaining - partialTicks) / UnitStats.SPORE_COLONY.attackAnimTicks(), 0.0f, 1.0f);
+        state.buildProgress = colony.buildProgress();
     }
 
     @Override
     protected void scale(SporeColonyRenderState state, PoseStack poseStack) {
+        // Rises out of the ground as it grows, so the terrain hides what has not grown yet — the
+        // Bunker's trick, and +Y is down in this hook (see BunkerRenderer). Applied before the scale
+        // below, or the sink distance would be stretched by SCALE along with the model.
+        poseStack.translate(0.0f, (1.0f - state.buildProgress) * SINK_BLOCKS, 0.0f);
         // The colony is the swarm's counterpart to a Photon Cannon and was standing at half its
         // linear size. Uniform, because the Spore is already the same squat-and-broad shape the
         // Cannon is, so growing it needs no per-axis correction and the texels stay square: the

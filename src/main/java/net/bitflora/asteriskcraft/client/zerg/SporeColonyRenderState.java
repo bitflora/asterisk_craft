@@ -10,4 +10,10 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 public class SporeColonyRenderState extends LivingEntityRenderState {
     /** 0 when idle, otherwise 0→1 across one shot: 0 is the clench, 1 the spent recoil. */
     public float attackProgress;
+
+    /**
+     * 0 on the first tick of the colony growing, 1 once it is standing. Sinks the model into the
+     * ground so the terrain hides what has not grown yet.
+     */
+    public float buildProgress;
 }

@@ -189,10 +189,12 @@ public class AsteriskCraft {
 
     // The swarm's expansion kit, bought from the Hive's own command card exactly as the Nexus kit
     // is bought from the Nexus's. Exempt from the Pylon rule, which is a Protoss mechanic the Zerg
-    // have no equivalent of — see PsiField, which names no building.
+    // have no equivalent of — see PsiField, which names no building. Not exempt from the builder
+    // rule: a Drone is called to the site and dies there to start the growth, which is the swarm's
+    // whole construction doctrine (Race.consumesBuilders).
     public static final DeferredItem<BuildingKitItem> HIVE_KIT = ITEMS.registerItem("hive_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.HIVE, HIVE_CORE,
-                    BuildingTemplates.HIVE_FOOTPRINT, false, true));
+                    BuildingTemplates.HIVE_FOOTPRINT, false, true).requiringBuilder());
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
@@ -584,13 +586,18 @@ public class AsteriskCraft {
     public static final DeferredItem<FactionSpawnEggItem> INFESTED_VILLAGER_SPAWN_EGG_ENEMY = ITEMS.registerItem("infested_villager_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, INFESTED_VILLAGER, FactionSpawnEggItem.Side.ENEMY));
 
+    // The ally-side colony eggs are the real kits, bought off the Hive's card, so they carry the
+    // Drone requirement. Their enemy-side twins stay ungated: they are testing tools, and there is
+    // never an enemy Drone standing where a tester wants to plant one.
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("sunken_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true));
+            props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true)
+                    .requiringBuilder());
     public static final DeferredItem<FactionSpawnEggItem> SUNKEN_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("sunken_colony_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SUNKEN_COLONY, FactionSpawnEggItem.Side.ENEMY, false, true, true));
 
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ALLY = ITEMS.registerItem("spore_colony_spawn_egg_ally",
-            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true));
+            props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ALLY, false, true, true)
+                    .requiringBuilder());
     public static final DeferredItem<FactionSpawnEggItem> SPORE_COLONY_SPAWN_EGG_ENEMY = ITEMS.registerItem("spore_colony_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SPORE_COLONY, FactionSpawnEggItem.Side.ENEMY, false, true, true));
 

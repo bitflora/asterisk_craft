@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.building;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
+import net.bitflora.asteriskcraft.faction.Race;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.ParticleTypes;
@@ -41,6 +42,13 @@ import java.util.UUID;
  * has ({@link Progress#BUILDING} — <em>including</em> after it walks off again, so pulling a worker
  * away with a move order no longer stalls a build that has started), and the structure is
  * {@link Progress#ABANDONED} the moment the worker is killed, at any point before completion.
+ *
+ * <p><b>Unless the worker's race spends it.</b> A race that {@link Race#consumesBuilders} — the
+ * Zerg, whose Drone <em>becomes</em> the building — kills its worker the instant it arrives and
+ * drops it from the site, which puts the site straight back into the not-required state above. So
+ * the whole difference between welding a Bunker together and morphing a colony is which branch
+ * arrival takes; {@link #decide} does not know about it, because the state it lands in already
+ * existed.
  *
  * <p>"Killed" is deliberately "gone for {@value #LOST_TOLERANCE_TICKS} consecutive ticks" rather
  * than "gone this tick": {@code ServerLevel.getEntity} answers null for an entity whose chunk has
@@ -119,7 +127,17 @@ public final class ConstructionSite {
         Progress progress = decide(true, worker != null, inRange, this.started, this.missedTicks);
         if (inRange) {
             this.started = true;
-            weld(level, worker);
+            if (consumesBuilder(worker)) {
+                morph(level, worker);
+                // Nobody is on the hook from here on, and dropping the UUID in the same tick the
+                // worker dies is load-bearing rather than tidy: a dying entity stops answering
+                // isAlive(), so a site that kept it would count past LOST_TOLERANCE_TICKS and raze
+                // the structure the worker just paid for. Cleared, the next tick takes the
+                // no-builder early return above and the build runs to completion unattended.
+                this.builder = null;
+            } else {
+                weld(level, worker);
+            }
         }
         return progress;
     }
@@ -174,6 +192,32 @@ public final class ConstructionSite {
     private static void weld(ServerLevel level, WorkerEntity worker) {
         Vec3 origin = worker.getEyePosition().add(worker.getLookAngle().scale(0.6));
         level.sendParticles(ParticleTypes.WHITE_SMOKE, origin.x, origin.y, origin.z, 2, 0.1, 0.1, 0.1, 0.01);
+    }
+
+    /**
+     * Whether this worker is spent by arriving rather than putting the building up — asked of the
+     * worker's own race, the way {@code FactionAttachments.isHostile} asks an attacker's. That keeps
+     * the rule a per-race table entry ({@link Race#consumesBuilders}) rather than a flag every Zerg
+     * structure's item would have to remember to repeat.
+     */
+    private static boolean consumesBuilder(WorkerEntity worker) {
+        Race race = FactionAttachments.raceOf(worker);
+        return race != null && race.consumesBuilders();
+    }
+
+    /**
+     * Spends the worker into the building it walked to. Killed rather than discarded: it gets its
+     * own death sound and animation, which is what makes a Drone visibly <em>become</em> the colony
+     * rather than blinking out of existence beside it.
+     *
+     * <p>Safe to route through a real death — {@code combat.InfestationHandler} needs both a killer
+     * entity and a villager victim, and neither is present here.
+     */
+    private static void morph(ServerLevel level, WorkerEntity worker) {
+        level.sendParticles(ParticleTypes.SCULK_SOUL,
+                worker.getX(), worker.getY() + worker.getBbHeight() * 0.5, worker.getZ(),
+                24, 0.3, 0.4, 0.3, 0.02);
+        worker.kill(level);
     }
 
     /**

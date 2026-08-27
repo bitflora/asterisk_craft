@@ -6,6 +6,7 @@ import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.GameBootstrap;
+import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -182,7 +184,9 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
         // template carries the block-entity NBT captured from a finished building, spent countdown
         // and all. This is also what freezes the layout back into its glass scaffold.
         if (core instanceof SiegeTarget target) {
-            target.defense().beginWarpIn(serverLevel, placed);
+            // The scaffold stands in the placing race's own colours — a kit only ever places its own
+            // race's building, so the player's race is the building's.
+            target.defense().beginWarpIn(serverLevel, placed, scaffoldPane(ControlledRace.of(player)));
             // Only put the worker on the hook if there is actually a warp for it to see through:
             // a building with no warp phase came up finished, and a builder assigned to one would
             // never be released.
@@ -195,6 +199,15 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
         context.getItemInHand().shrink(1);
         overlay(player, Component.translatable("message.asteriskcraft.kit.warping"));
         return InteractionResult.SUCCESS;
+    }
+
+    /**
+     * What this kit's building stands as while it goes up. Falls back to the shared default for a
+     * player with no race yet — a placement outside a bootstrapped match, which has no army whose
+     * colours to borrow.
+     */
+    private static BlockState scaffoldPane(@Nullable Race race) {
+        return race == null ? WarpScaffold.PANE : Races.of(race).scaffold().get();
     }
 
     private static void overlay(Player player, Component message) {

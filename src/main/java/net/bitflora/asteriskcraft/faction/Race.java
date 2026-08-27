@@ -28,11 +28,16 @@ public enum Race implements StringRepresentable {
      * Protoss defend themselves against the wild hostiles whether or not a human is commanding
      * them, so both of their wild-target sets are the same.
      */
-    PROTOSS("protoss", true, false, false,
+    PROTOSS("protoss", true, false, false, false,
             Set.of(WildKind.HOSTILE),
             Set.of(WildKind.HOSTILE)),
     /**
      * No shields; HP itself regenerates out of combat; kills raise villagers as Infested.
+     *
+     * <p>A Drone does not put a building up, it <em>becomes</em> one: it walks to the site and dies
+     * there, and the structure grows out of it. That is the swarm's whole construction doctrine and
+     * it is a fact about the worker rather than about any one building, which is why it lives here
+     * rather than beside {@code building.BuilderDependent}'s per-item flag.
      *
      * <p>The swarm's doctrine is to overrun the settled world and ignore monsters — monsters are
      * not what a swarm is hunting, and a scripted opponent parked across the map is better off not
@@ -40,7 +45,7 @@ public enum Race implements StringRepresentable {
      * doctrine: you are standing in this army, and it would let a creeper walk into your Hive. So
      * a commanded swarm adds the wild hostiles to what it already hunts.
      */
-    ZERG("zerg", false, true, true,
+    ZERG("zerg", false, true, true, true,
             Set.of(WildKind.CIVILIAN),
             Set.of(WildKind.CIVILIAN, WildKind.HOSTILE)),
     /**
@@ -55,7 +60,7 @@ public enum Race implements StringRepresentable {
      * {@code asteriskcraft:player_race} and {@code asteriskcraft:ai_race} game rules persist, so
      * inserting a race would re-side every existing world.
      */
-    TERRAN("terran", false, false, false,
+    TERRAN("terran", false, false, false, false,
             Set.of(WildKind.HOSTILE),
             Set.of(WildKind.HOSTILE));
 
@@ -67,15 +72,17 @@ public enum Race implements StringRepresentable {
     private final boolean shields;
     private final boolean regen;
     private final boolean infests;
+    private final boolean consumesBuilders;
     private final Set<WildKind> wildTargets;
     private final Set<WildKind> commandedWildTargets;
 
-    Race(String name, boolean shields, boolean regen, boolean infests,
+    Race(String name, boolean shields, boolean regen, boolean infests, boolean consumesBuilders,
          Set<WildKind> wildTargets, Set<WildKind> commandedWildTargets) {
         this.name = name;
         this.shields = shields;
         this.regen = regen;
         this.infests = infests;
+        this.consumesBuilders = consumesBuilders;
         this.wildTargets = copy(wildTargets);
         this.commandedWildTargets = copy(commandedWildTargets);
     }
@@ -102,6 +109,16 @@ public enum Race implements StringRepresentable {
     /** Whether a kill by this race can raise its victim back up as one of its own. */
     public boolean infests() {
         return this.infests;
+    }
+
+    /**
+     * Whether this race's workers <em>become</em> the buildings they are called to rather than
+     * putting them up and walking away. Read off the worker in hand by
+     * {@code building.ConstructionSite}, which is the only caller: a race that consumes its builders
+     * spends one the instant it arrives, and the structure finishes with nobody on the hook for it.
+     */
+    public boolean consumesBuilders() {
+        return this.consumesBuilders;
     }
 
     /**

@@ -178,7 +178,22 @@ Production buildings share a common shape, factored into `building/`:
   carries a nullable build site and `WorkerEntity.ConstructGoal` walks there and holds (`MOVE`, at
   priority 1 *registered after* `CommandedMoveGoal`, so a player order preempts it), emitting nothing
   and never clearing its own assignment — whether it has arrived, whether the plume plays, and when
-  it is released are all decided off the building's tick, in one place.
+  it is released are all decided off the building's tick, in one place. **Whether the builder
+  survives arriving is the one thing that is a race trait rather than an item flag**
+  (`Race.consumesBuilders`, beside `shields`/`regen`/`infests`): an SCV welds a Bunker together and
+  walks away, a Drone *becomes* the colony — it is killed the instant it arrives and dropped from the
+  site, which is a fact about the worker's doctrine rather than about any one building, and every
+  Zerg structure's item would otherwise have to remember to repeat it. `ConstructionSite.tick` reads
+  it off the resolved worker the way `isHostile` reads a race off the attacker, so **neither
+  placement call site changed and `decide` gained no state** — a consumed builder lands the site back
+  in the not-required state world generation already used. Dropping the UUID in the same tick the
+  worker dies is load-bearing: a dying entity stops answering `isAlive()`, so a site that kept it
+  would count past `LOST_TOLERANCE_TICKS` and raze the structure the Drone just paid for.
+- **What a building stands as while it goes up is per race**, not one constant: `RaceProfile.scaffold`
+  supplies `WarpScaffold`'s pane (Protoss light-blue glass, Zerg purple), handed in at
+  `BuildingDefense.beginWarpIn` from `BuildingKitItem` and then **saved on the scaffold**, because
+  `collectSmashed` tests against it on every sweep and a warp routinely outlives a reload. A Hive
+  growing itself out of Protoss warp glass is the failure this prevents.
 - `building/CoreCensus` is the **only** answer to "where are this faction's bases". Every base enrols itself from its own tick, so it sees one warped in from a kit, and it is symmetric across the two sides in a way the old bootstrap-written position attachments never were. `game/GameOutcome.decide` is symmetric too: a side is out when its *last* base falls, whichever side that is — so an expansion base buys the player another life exactly the way a second Hive always bought the swarm one.
 - Each building is a `BaseEntityBlock` + `BlockEntity` pair (`BaseBlock`/`BaseBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`. A building's `preRemoveSideEffects` deliberately skips `super` (see `ArmyLinkedContainer`) so destroying one building never drops/clears the whole army's shared bank.
 

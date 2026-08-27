@@ -19,11 +19,23 @@ class ConstructionSiteTest {
 
     @Test
     void aBuildingNobodyWasAskedToPutUpJustGoesUp() {
-        // Every Protoss and Zerg warp-in, and every structure world generation stamps. The gate has
-        // to be free for them or adding it would change three races' behaviour to give one a feature.
+        // Every Protoss warp-in, and every structure world generation stamps. The gate has to be
+        // free for them or adding it would change three races' behaviour to give one a feature.
         assertEquals(Progress.BUILDING, ConstructionSite.decide(false, false, false, false, 0));
         assertEquals(Progress.BUILDING,
                 ConstructionSite.decide(false, false, false, false, ConstructionSite.LOST_TOLERANCE_TICKS * 10));
+    }
+
+    @Test
+    void aBuilderSpentByArrivingCannotThenRazeWhatItPaidFor() {
+        // A race that consumes its builders (the Zerg Drone) kills the worker on arrival and drops it
+        // from the site, which lands the site in the not-required state above. That state must never
+        // reach ABANDONED however long the worker stays unresolvable, or the swarm would lose a
+        // colony forty ticks after the Drone that became it died.
+        for (int missed = 0; missed <= ConstructionSite.LOST_TOLERANCE_TICKS * 2; missed++) {
+            assertEquals(Progress.BUILDING, ConstructionSite.decide(false, false, false, true, missed),
+                    "a consumed builder must leave the build running, not abandoned");
+        }
     }
 
     @Test

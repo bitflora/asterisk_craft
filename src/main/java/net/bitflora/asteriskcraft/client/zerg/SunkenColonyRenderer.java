@@ -33,6 +33,13 @@ public class SunkenColonyRenderer extends MobRenderer<SunkenColonyEntity, Sunken
      */
     private static final float HEIGHTEN = 1.55f;
 
+    /**
+     * How far the colony sits underground at the start of its growth. Comfortably taller than
+     * the scaled model, so nothing shows on the first tick and it breaks the surface partway
+     * through.
+     */
+    private static final float SINK_BLOCKS = 3.0f;
+
     public SunkenColonyRenderer(EntityRendererProvider.Context context) {
         // Shadow sized to the widened footprint above, which is the Photon Cannon's.
         super(context, new SunkenColonyModel(context.bakeLayer(AsteriskCraftClient.SUNKEN_COLONY_LAYER)), 1.2f);
@@ -53,10 +60,15 @@ public class SunkenColonyRenderer extends MobRenderer<SunkenColonyEntity, Sunken
         state.attackProgress = remaining <= 0
                 ? 0.0f
                 : 1.0f - Mth.clamp((remaining - partialTicks) / UnitStats.SUNKEN_COLONY.attackAnimTicks(), 0.0f, 1.0f);
+        state.buildProgress = colony.buildProgress();
     }
 
     @Override
     protected void scale(SunkenColonyRenderState state, PoseStack poseStack) {
+        // Rises out of the ground as it grows, so the terrain hides what has not grown yet — the
+        // Bunker's trick, and +Y is down in this hook (see BunkerRenderer). Applied before the scale
+        // below, or the sink distance would be stretched by HEIGHTEN along with the model.
+        poseStack.translate(0.0f, (1.0f - state.buildProgress) * SINK_BLOCKS, 0.0f);
         // Broad across the ground and only half as much again in height — the proportions of a
         // squat root mound grown to building scale, not of a stretched one. The mesh is untouched;
         // re-authoring it at this size would invalidate the hand-packed UV islands (see
