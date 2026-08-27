@@ -157,6 +157,28 @@ Production buildings share a common shape, factored into `building/`:
   (`game/GameBootstrap.spreadCreep`), which is what lets a chain of colonies push creep outward
   across the map. `client/PsiFieldOverlay` and `client/CreepFieldOverlay` share their grid/rendering
   mechanics through `client/GroundGridOverlay`; each still owns its coverage rule and colours.
+- **`building/ConstructionSite` is the only answer to "may this structure make progress this tick",
+  and it sits above *both* of the mod's construction mechanisms.** The Terran build rather than warp
+  in: a Bunker or Missile Turret kit calls the nearest **idle** worker within
+  `ConstructionSite.CALL_RADIUS` (32) and is refused outright if none answers, the countdown does not
+  start until that worker arrives, and the structure is razed if it is killed before the build
+  finishes. Once the worker has arrived the build runs to completion whether or not it stays, so
+  pulling one off with a move order is a redirection rather than a cancellation. It is its own object
+  and not a field on either mechanism because there are two: a building that is blocks counts down in
+  `BuildingDefense.tickWarpIn`, a building that is an entity (`building/PrePlaced`) in its own
+  `tick()`, and both consult one of these first — so a Terran structure later re-authored as an
+  `.nbt` template needs nothing new. It **names no race and no building**: who needs a builder is a
+  flag on the *placing item* (`building/BuilderDependent`, the third sibling of
+  `PsiDependent`/`CreepDependent`, set with a fluent `requiringBuilder()` at registration and read at
+  the same two placement call sites psi and creep are), and who may *be* one is `entity/WorkerEntity`,
+  not an SCV. "The builder is dead" is deliberately *forty consecutive ticks of not resolving* rather
+  than one — `ServerLevel.getEntity` answers null for an entity whose chunk hasn't caught up, so
+  razing on the first miss would demolish every site in progress across a world reload. The whole
+  transition table is the pure `ConstructionSite.decide`. **The worker side knows none of this**: it
+  carries a nullable build site and `WorkerEntity.ConstructGoal` walks there and holds (`MOVE`, at
+  priority 1 *registered after* `CommandedMoveGoal`, so a player order preempts it), emitting nothing
+  and never clearing its own assignment — whether it has arrived, whether the plume plays, and when
+  it is released are all decided off the building's tick, in one place.
 - `building/CoreCensus` is the **only** answer to "where are this faction's bases". Every base enrols itself from its own tick, so it sees one warped in from a kit, and it is symmetric across the two sides in a way the old bootstrap-written position attachments never were. `game/GameOutcome.decide` is symmetric too: a side is out when its *last* base falls, whichever side that is — so an expansion base buys the player another life exactly the way a second Hive always bought the swarm one.
 - Each building is a `BaseEntityBlock` + `BlockEntity` pair (`BaseBlock`/`BaseBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`. A building's `preRemoveSideEffects` deliberately skips `super` (see `ArmyLinkedContainer`) so destroying one building never drops/clears the whole army's shared bank.
 

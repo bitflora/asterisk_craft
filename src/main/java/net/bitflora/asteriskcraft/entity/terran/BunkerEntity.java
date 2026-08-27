@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.terran;
 
+import net.bitflora.asteriskcraft.building.ConstructionSite;
 import net.bitflora.asteriskcraft.building.PrePlaced;
 import net.bitflora.asteriskcraft.building.SpawnSpots;
 import net.bitflora.asteriskcraft.building.WarpInVulnerability;
@@ -86,6 +87,9 @@ public class BunkerEntity extends Mob implements Rooted, Garrison, PrePlaced {
     private static final EntityDataAccessor<Integer> BUILD_TICKS_REMAINING =
             SynchedEntityData.defineId(BunkerEntity.class, EntityDataSerializers.INT);
 
+    /** The SCV welding it together. Empty for one world generation stamped, which builds itself. */
+    private final ConstructionSite site = new ConstructionSite();
+
     public BunkerEntity(EntityType<? extends BunkerEntity> type, Level level) {
         super(type, level);
         this.setPersistenceRequired();
@@ -126,17 +130,47 @@ public class BunkerEntity extends Mob implements Rooted, Garrison, PrePlaced {
     }
 
     @Override
+    public ConstructionSite constructionSite() {
+        return this.site;
+    }
+
+    @Override
     public void tick() {
         super.tick();
         int buildTicks = this.buildTicksRemaining();
         if (this.level() instanceof ServerLevel level && buildTicks > 0) {
+            switch (this.site.tick(level, this.position())) {
+                case ABANDONED -> {
+                    ConstructionSite.razeUnbuilt(this, level);
+                    return;
+                }
+                // Nothing has been built yet: the SCV is still on its way over.
+                case WAITING -> {
+                    return;
+                }
+                case BUILDING -> {
+                }
+            }
             this.entityData.set(BUILD_TICKS_REMAINING, buildTicks - 1);
             level.sendParticles(ParticleTypes.SMOKE,
                     this.getX(), this.getY() + 0.6, this.getZ(), 4, 0.6, 0.5, 0.6, 0.01);
             if (buildTicks == 1) {
                 this.finishBuild(level);
+                this.site.release(level, this.blockPosition());
             }
         }
+    }
+
+    /**
+     * Lets the builder go if this Bunker is destroyed before it was finished — otherwise the SCV
+     * would stand welding a hole in the ground for the rest of the match.
+     */
+    @Override
+    public void remove(RemovalReason reason) {
+        if (this.level() instanceof ServerLevel level) {
+            this.site.release(level, this.blockPosition());
+        }
+        super.remove(reason);
     }
 
     /**
@@ -257,11 +291,13 @@ public class BunkerEntity extends Mob implements Rooted, Garrison, PrePlaced {
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.putInt("BuildTicks", this.buildTicksRemaining());
+        this.site.save(output);
     }
 
     @Override
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         this.entityData.set(BUILD_TICKS_REMAINING, input.getIntOr("BuildTicks", 0));
+        this.site.load(input);
     }
 }

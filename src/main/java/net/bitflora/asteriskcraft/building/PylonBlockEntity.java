@@ -97,7 +97,7 @@ public class PylonBlockEntity extends BlockEntity implements WarpInBuilding, Sie
     public void preRemoveSideEffects(BlockPos pos, BlockState state) {
         super.preRemoveSideEffects(pos, state);
         if (this.level != null) {
-            this.defense.collapseScaffold(this.level);
+            this.defense.collapseScaffold(this.level, pos);
         }
     }
 

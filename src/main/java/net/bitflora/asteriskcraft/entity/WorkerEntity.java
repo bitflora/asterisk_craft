@@ -146,6 +146,14 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
      */
     @Nullable
     private BlockPos pendingNodePos;
+    /**
+     * The construction site this worker has been called to, or {@code null} for a worker free to
+     * mine. Written by whichever placement called it (see {@code building/ConstructionSite}) and
+     * cleared by the building itself when it finishes or is destroyed — the worker never drops it on
+     * its own, because a build that has started still needs somebody on the hook for it.
+     */
+    @Nullable
+    private BlockPos buildSite;
 
     public WorkerEntity(EntityType<? extends WorkerEntity> type, Level level) {
         super(type, level);
@@ -163,6 +171,10 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
         // so a Terran player can pull their economy into a Bunker when a rush arrives. A worker whose
         // race has nothing to climb into simply never receives the order.
         this.goalSelector.addGoal(1, new BoardGoal(this, 1.1));
+        // Beside them, and registered after them on purpose: equal priorities resolve to whichever
+        // was added first, so an explicit player order pulls a worker off a site it was called to,
+        // while building still outranks delivering and mining.
+        this.goalSelector.addGoal(1, new ConstructGoal(this));
         this.goalSelector.addGoal(2, new DeliverGoal(this));
         this.goalSelector.addGoal(3, new HarvestGoal(this));
         // Below HarvestGoal, so the moment a node of the assigned resource regrows the worker is
@@ -194,6 +206,32 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
 
     public boolean isCarrying() {
         return !this.carried.isEmpty();
+    }
+
+    /** Calls this worker to a construction site — see {@code building/ConstructionSite}. */
+    public void setBuildSite(BlockPos pos) {
+        this.buildSite = pos.immutable();
+    }
+
+    @Nullable
+    public BlockPos getBuildSite() {
+        return this.buildSite;
+    }
+
+    /** Whether this worker is already spoken for; an idle one is what a placement goes looking for. */
+    public boolean hasBuildSite() {
+        return this.buildSite != null;
+    }
+
+    /**
+     * Releases this worker back to the economy. The site it is being released <em>from</em> is named
+     * so that a late release — a building razed long after its builder was reassigned — cannot strip
+     * an assignment it never made.
+     */
+    public void clearBuildSite(BlockPos site) {
+        if (site.equals(this.buildSite)) {
+            this.buildSite = null;
+        }
     }
 
     /**
@@ -249,6 +287,9 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
         if (this.lastMinedPos != null) {
             output.store("LastMinedPos", BlockPos.CODEC, this.lastMinedPos);
         }
+        if (this.buildSite != null) {
+            output.store("BuildSite", BlockPos.CODEC, this.buildSite);
+        }
     }
 
     @Override
@@ -258,6 +299,7 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
         this.carried = input.read("Carried", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         this.assignedType = input.read("AssignedResource", ResourceType.CODEC).orElse(null);
         this.lastMinedPos = input.read("LastMinedPos", BlockPos.CODEC).orElse(null);
+        this.buildSite = input.read("BuildSite", BlockPos.CODEC).orElse(null);
     }
 
     /**
@@ -655,6 +697,92 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
                 }
             } else {
                 // Arrived: stand over the node rather than shuffling around it.
+                this.worker.getNavigation().stop();
+            }
+        }
+    }
+
+    /**
+     * Walks a worker to the construction site it was called to and holds it there. The same
+     * walk-and-stand shape as {@link AwaitRegenGoal}, and for the same reason: holding {@code MOVE}
+     * is what stops the worker's own economy shuffling it off the spot.
+     *
+     * <p>It emits nothing itself. Whether the worker has actually <em>arrived</em> — and so whether
+     * the building may make progress and the welding plume should play — is decided in one place, by
+     * {@code building/ConstructionSite}, off the building's own tick; this goal only puts the worker
+     * where that question can answer yes.
+     *
+     * <p>It also never clears the assignment. A worker that cannot path to its site keeps trying,
+     * because the alternative is a structure frozen with nobody on the hook for it; the building
+     * releases the worker when it finishes or dies.
+     */
+    static class ConstructGoal extends Goal {
+        /**
+         * Where the worker stops walking, kept inside {@code ConstructionSite.STANDOFF} so arriving
+         * here is arriving there. It is short of the site on purpose: the site is the building's own
+         * position, which is solid, so a worker that insisted on reaching it would never stop.
+         */
+        private static final double WORK_RANGE_SQR = 16.0;
+        /**
+         * How often a worker that has not arrived may re-path. A site inside a footprint it cannot
+         * enter is genuinely unreachable, and re-issuing every tick would burn a full path search on
+         * a worker that is already close enough for the building's purposes.
+         */
+        private static final int REPATH_INTERVAL = 20;
+
+        private final WorkerEntity worker;
+        private int repathCooldown;
+
+        ConstructGoal(WorkerEntity worker) {
+            this.worker = worker;
+            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() {
+            // Not while riding: a passenger cannot walk anywhere, and a movement goal that holds
+            // MOVE from inside a Bunker only silences whatever sits below it (see the riding notes
+            // on StuckWanderGoal and SiegeBlockGoal, which refuse for the same reason). The building
+            // simply waits — or carries on, if this worker had already got there.
+            return this.worker.buildSite != null && !this.worker.isPassenger();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.worker.buildSite != null && !this.worker.isPassenger();
+        }
+
+        @Override
+        public void start() {
+            this.repathCooldown = 0;
+        }
+
+        @Override
+        public void stop() {
+            this.worker.getNavigation().stop();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            BlockPos pos = this.worker.buildSite;
+            if (pos == null) {
+                return;
+            }
+            this.worker.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (pos.distToCenterSqr(this.worker.position()) > WORK_RANGE_SQR) {
+                if (this.repathCooldown > 0) {
+                    this.repathCooldown--;
+                } else if (this.worker.getNavigation().isDone()) {
+                    this.repathCooldown = REPATH_INTERVAL;
+                    this.worker.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.0);
+                }
+            } else {
+                // Close enough to weld: stand and work rather than crowding the site.
                 this.worker.getNavigation().stop();
             }
         }

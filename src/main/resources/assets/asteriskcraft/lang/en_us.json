@@ -159,6 +159,7 @@
   "message.asteriskcraft.kit.no_pylon": "Needs a Pylon within %s blocks",
   "message.asteriskcraft.kit.no_creep": "Must be built on creep, or within %s blocks of a Hive or Colony",
   "message.asteriskcraft.kit.on_leaves": "Cannot be built on leaves",
+  "message.asteriskcraft.kit.no_builder": "No idle worker within %s blocks to build this",
   "key.category.asteriskcraft.main": "*Craft",
   "key.asteriskcraft.assign_group": "Assign Unit Group",
   "key.asteriskcraft.select_group": "Select Unit Group",

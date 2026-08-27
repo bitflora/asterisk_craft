@@ -507,7 +507,7 @@ public class BaseBlockEntity extends BlockEntity
         // dump/clear resources the army's other buildings still depend on. CoreSpoils knocks a
         // measured share of that pool loose instead.
         if (this.level != null) {
-            this.defense.collapseScaffold(this.level);
+            this.defense.collapseScaffold(this.level, pos);
         }
         CoreSpoils.spill(this.level, buildingFaction(), pos, this);
         GameOutcome.onCoreDestroyed(this.level, pos);

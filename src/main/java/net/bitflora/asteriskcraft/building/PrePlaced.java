@@ -23,6 +23,14 @@ public interface PrePlaced {
     /** Finishes the countdown at once and scales the halved pool back up. Idempotent. */
     void skipConstruction();
 
+    /**
+     * The worker that has to be standing over this building for its countdown to run — the same
+     * object a building that is <em>blocks</em> holds inside its {@code BuildingDefense}, which is
+     * what lets one rule cover both. A building world generation stamped is never assigned one and
+     * so is never gated by it.
+     */
+    ConstructionSite constructionSite();
+
     /** Stands {@code entity} up if it is one of these, and does nothing if it is not. */
     static void standUp(Entity entity) {
         if (entity instanceof PrePlaced building) {

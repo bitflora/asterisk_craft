@@ -297,7 +297,7 @@ public class GatewayBlockEntity extends BlockEntity
         // Container is the shared Protoss army bank (ArmyLinkedContainer) — one Gateway breaking
         // must not dump/clear resources the Nexus and other Gateways still depend on.
         if (this.level != null) {
-            this.defense.collapseScaffold(this.level);
+            this.defense.collapseScaffold(this.level, pos);
         }
     }
 

@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.command.ControlledFaction;
 import net.bitflora.asteriskcraft.command.ControlledRace;
+import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.GameBootstrap;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -31,7 +33,7 @@ import java.util.function.Supplier;
  * {@link PsiField}: the rule is "this building needs power", and a building that is exempt
  * (a Nexus, a Pylon itself) simply never asks. Nothing in {@code PsiField} names a building.
  */
-public class BuildingKitItem extends Item implements PsiDependent, CreepDependent {
+public class BuildingKitItem extends Item implements PsiDependent, CreepDependent, BuilderDependent {
     private final Identifier template;
     // A supplier, not the Block itself: kits are registered alongside the blocks they place, so
     // the block isn't resolvable yet at construction time.
@@ -40,6 +42,12 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
     private final boolean requiresPylon;
     private final boolean requiresCreep;
     private final boolean spreadsCreep;
+    /**
+     * Set once at registration through {@link #requiringBuilder()} rather than taken as a
+     * constructor argument: it would be a fifth boolean in a row on constructors that already
+     * telescope three deep, and every kit that has it also wants it read at the call site as a word.
+     */
+    private boolean requiresBuilder;
 
     public BuildingKitItem(Properties properties, Identifier template, Supplier<? extends Block> coreBlock,
             BuildingTemplates.Footprint footprint, boolean requiresPylon) {
@@ -96,6 +104,20 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
         return this.requiresCreep;
     }
 
+    /**
+     * Declares that this kit's building has to be built by a worker — see {@link ConstructionSite}.
+     * Meant to be chained onto the constructor at registration and never called again.
+     */
+    public BuildingKitItem requiringBuilder() {
+        this.requiresBuilder = true;
+        return this;
+    }
+
+    @Override
+    public boolean requiresBuilder() {
+        return this.requiresBuilder;
+    }
+
     @Override
     public @Nullable Race placingRace(Level level, Player player) {
         return ControlledRace.of(player);
@@ -125,6 +147,17 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
             overlay(player, Component.translatable("message.asteriskcraft.kit.no_creep", CreepField.RADIUS));
             return InteractionResult.FAIL;
         }
+        // Called before anything is stamped, so a refusal leaves the ground and the kit untouched.
+        WorkerEntity builder = null;
+        if (this.requiresBuilder) {
+            builder = ConstructionSite.callBuilder(serverLevel, Vec3.atCenterOf(origin),
+                    ControlledFaction.of(player));
+            if (builder == null) {
+                overlay(player, Component.translatable("message.asteriskcraft.kit.no_builder",
+                        ConstructionSite.CALL_RADIUS));
+                return InteractionResult.FAIL;
+            }
+        }
 
         // No support fill: the template's own stonework is the base, so a gap under a sloping
         // edge is left as a gap rather than plugged with a foreign block.
@@ -150,6 +183,14 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
         // and all. This is also what freezes the layout back into its glass scaffold.
         if (core instanceof SiegeTarget target) {
             target.defense().beginWarpIn(serverLevel, placed);
+            // Only put the worker on the hook if there is actually a warp for it to see through:
+            // a building with no warp phase came up finished, and a builder assigned to one would
+            // never be released.
+            if (builder != null && target.defense().isWarping()) {
+                target.defense().constructionSite().assign(builder.getUUID(),
+                        BuildingTemplates.footprintRadius(placed.size()) + ConstructionSite.STANDOFF);
+                builder.setBuildSite(placed.core());
+            }
         }
         context.getItemInHand().shrink(1);
         overlay(player, Component.translatable("message.asteriskcraft.kit.warping"));

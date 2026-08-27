@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * What it takes to bring a building down: its siege HP, its Protoss shield buffer, and the warp-in
@@ -52,6 +53,12 @@ public final class BuildingDefense {
     private int shieldRegenDelay;
     /** The glass layout that fills in over the warp. Empty for a building that was never warped in. */
     private final WarpScaffold scaffold = new WarpScaffold();
+    /**
+     * The worker that has to be present for the warp to run at all. Empty for every building that
+     * warps itself in — which today is all of them, since only the Terran kits ask for a builder —
+     * and in that state it costs one null check a tick and changes nothing.
+     */
+    private final ConstructionSite site = new ConstructionSite();
 
     /**
      * @param maxHealth    siege HP once fully warped in
@@ -152,13 +159,21 @@ public final class BuildingDefense {
         return true;
     }
 
+    /** The worker this building is waiting on, for a placement that had to call one. */
+    public ConstructionSite constructionSite() {
+        return this.site;
+    }
+
     /**
      * Clears the unfinished glass away when this building is destroyed — see
-     * {@link WarpScaffold#collapse}. A no-op for anything not caught mid-warp.
+     * {@link WarpScaffold#collapse} — and lets go of whoever was building it, who would otherwise
+     * stand welding a hole in the ground for the rest of the match. A no-op for anything not caught
+     * mid-warp.
      */
-    public void collapseScaffold(Level level) {
+    public void collapseScaffold(Level level, BlockPos pos) {
         if (level instanceof ServerLevel serverLevel) {
             this.scaffold.collapse(serverLevel);
+            this.site.release(serverLevel, pos);
         }
     }
 
@@ -169,11 +184,28 @@ public final class BuildingDefense {
      * open for business yet".
      *
      * <p>The scaffold is ticked before the countdown so panes smashed since the last sweep have
-     * already lengthened the warp they are being paced against.
+     * already lengthened the warp they are being paced against — and the {@link ConstructionSite}
+     * before both, because a building whose builder has not arrived has not started going up at all:
+     * no pane, no tick of the countdown, and nothing to look at.
      */
     public boolean tickWarpIn(Level level, BlockPos pos) {
         ServerLevel serverLevel = level instanceof ServerLevel server ? server : null;
         if (serverLevel != null && this.isWarping()) {
+            switch (this.site.tick(serverLevel, Vec3.atCenterOf(pos))) {
+                case ABANDONED -> {
+                    // The builder was killed mid-warp. Take the glass away and the core with it; the
+                    // block entity's own preRemoveSideEffects run from destroyBlock exactly as they
+                    // do for a building battered down.
+                    this.scaffold.collapse(serverLevel);
+                    serverLevel.destroyBlock(pos, false);
+                    return true;
+                }
+                case WAITING -> {
+                    return true;
+                }
+                case BUILDING -> {
+                }
+            }
             this.warpTicksRemaining += this.scaffold.tick(serverLevel, this.warpTicksRemaining);
         }
         boolean completed = this.tick();
@@ -181,6 +213,7 @@ public final class BuildingDefense {
             return this.isWarping();
         }
         if (completed) {
+            this.site.release(serverLevel, pos); // the builder goes back to the economy
             this.scaffold.finish(serverLevel); // nothing may still be glass once the building is open
             serverLevel.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0f, 1.0f);
             // Every pane an attacker smashed comes due now, against the pools the building actually
@@ -257,6 +290,7 @@ public final class BuildingDefense {
         output.putInt("ShieldDelay", this.shieldRegenDelay);
         output.putInt("WarpTicks", this.warpTicksRemaining);
         this.scaffold.save(output);
+        this.site.save(output);
     }
 
     /**
@@ -271,5 +305,6 @@ public final class BuildingDefense {
         this.shield = Math.min(this.maxShield(), input.getFloatOr("Shield", this.maxShield()));
         this.shieldRegenDelay = input.getIntOr("ShieldDelay", 0);
         this.scaffold.load(input);
+        this.site.load(input);
     }
 }

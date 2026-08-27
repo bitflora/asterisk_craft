@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.terran;
 
+import net.bitflora.asteriskcraft.building.ConstructionSite;
 import net.bitflora.asteriskcraft.building.PrePlaced;
 import net.bitflora.asteriskcraft.building.WarpInVulnerability;
 import net.bitflora.asteriskcraft.entity.Altitude;
@@ -74,6 +75,9 @@ public class MissileTurretEntity extends Mob implements Detector, Rooted, PrePla
     // just its start) and can't collide with a vanilla LivingEntity event byte.
     private static final EntityDataAccessor<Integer> ATTACK_TICKS =
             SynchedEntityData.defineId(MissileTurretEntity.class, EntityDataSerializers.INT);
+
+    /** The SCV welding it together. Empty for one world generation stamped, which builds itself. */
+    private final ConstructionSite site = new ConstructionSite();
 
     public MissileTurretEntity(EntityType<? extends MissileTurretEntity> type, Level level) {
         super(type, level);
@@ -169,13 +173,43 @@ public class MissileTurretEntity extends Mob implements Detector, Rooted, PrePla
         }
         int buildTicks = this.buildTicksRemaining();
         if (buildTicks > 0) {
+            switch (this.site.tick(level, this.position())) {
+                case ABANDONED -> {
+                    ConstructionSite.razeUnbuilt(this, level);
+                    return;
+                }
+                // Nothing has been built yet: the SCV is still on its way over.
+                case WAITING -> {
+                    return;
+                }
+                case BUILDING -> {
+                }
+            }
             this.entityData.set(BUILD_TICKS_REMAINING, buildTicks - 1);
             level.sendParticles(ParticleTypes.SMOKE,
                     this.getX(), this.getY() + 0.6, this.getZ(), 4, 0.5, 0.7, 0.5, 0.01);
             if (buildTicks == 1) {
                 this.finishBuild(level);
+                this.site.release(level, this.blockPosition());
             }
         }
+    }
+
+    @Override
+    public ConstructionSite constructionSite() {
+        return this.site;
+    }
+
+    /**
+     * Lets the builder go if this turret is destroyed before it was finished — otherwise the SCV
+     * would stand welding a hole in the ground for the rest of the match.
+     */
+    @Override
+    public void remove(RemovalReason reason) {
+        if (this.level() instanceof ServerLevel level) {
+            this.site.release(level, this.blockPosition());
+        }
+        super.remove(reason);
     }
 
     // --- Rooted: can't be pushed or knocked around ---
@@ -201,11 +235,13 @@ public class MissileTurretEntity extends Mob implements Detector, Rooted, PrePla
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.putInt("BuildTicks", this.buildTicksRemaining());
+        this.site.save(output);
     }
 
     @Override
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         this.entityData.set(BUILD_TICKS_REMAINING, input.getIntOr("BuildTicks", 0));
+        this.site.load(input);
     }
 }

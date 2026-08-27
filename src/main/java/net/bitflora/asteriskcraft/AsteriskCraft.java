@@ -200,14 +200,17 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, AsteriskCraft.PHOTON_CANNON, FactionSpawnEggItem.Side.ALLY, true));
 
     // The Bunker is an entity too, so its kit is a spawn item for the same reason the Photon Cannon's
-    // is. Ungated: the Terran have no Pylon and no creep, so there is no prerequisite to ask about.
+    // is. No Pylon and no creep to ask about — the Terran prerequisite is a worker instead: an SCV is
+    // called to the site and the Bunker only goes up while it is there (building/ConstructionSite).
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_KIT = ITEMS.registerItem("bunker_kit",
-            props -> new FactionSpawnEggItem(props, AsteriskCraft.BUNKER, FactionSpawnEggItem.Side.ALLY));
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.BUNKER, FactionSpawnEggItem.Side.ALLY)
+                    .requiringBuilder());
 
-    // The Missile Turret's kit, and ungated for the Bunker's reason: the Terran have no Pylon and no
-    // creep, so there is no prerequisite to ask about.
+    // The Missile Turret's kit, gated exactly as the Bunker's is: no ground prerequisite, but an SCV
+    // has to come and weld it together.
     public static final DeferredItem<FactionSpawnEggItem> MISSILE_TURRET_KIT = ITEMS.registerItem("missile_turret_kit",
-            props -> new FactionSpawnEggItem(props, AsteriskCraft.MISSILE_TURRET, FactionSpawnEggItem.Side.ALLY));
+            props -> new FactionSpawnEggItem(props, AsteriskCraft.MISSILE_TURRET, FactionSpawnEggItem.Side.ALLY)
+                    .requiringBuilder());
 
     public static final DeferredItem<CursorItem> CURSOR = ITEMS.registerItem("cursor",
             CursorItem::new);

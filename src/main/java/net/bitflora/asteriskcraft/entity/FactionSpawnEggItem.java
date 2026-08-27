@@ -1,8 +1,11 @@
 package net.bitflora.asteriskcraft.entity;
 
+import net.bitflora.asteriskcraft.building.BuilderDependent;
+import net.bitflora.asteriskcraft.building.ConstructionSite;
 import net.bitflora.asteriskcraft.building.CreepDependent;
 import net.bitflora.asteriskcraft.building.CreepField;
 import net.bitflora.asteriskcraft.building.PsiDependent;
+import net.bitflora.asteriskcraft.building.PrePlaced;
 import net.bitflora.asteriskcraft.building.PsiField;
 import net.bitflora.asteriskcraft.command.ControlledRace;
 import net.bitflora.asteriskcraft.faction.Faction;
@@ -34,6 +37,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -55,7 +59,7 @@ import java.util.function.Supplier;
  * placement call sites, and the reason for {@code requiresPylon}/{@code requiresCreep}. Both sites
  * ask {@code building/PsiField} and {@code building/CreepField} and nothing else.
  */
-public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDependent {
+public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDependent, BuilderDependent {
 
     /** Whose side an egg's mob joins, resolved against the match when the egg is used. */
     public enum Side {
@@ -81,6 +85,12 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
     private final boolean requiresPylon;
     private final boolean requiresCreep;
     private final boolean spreadsCreep;
+    /**
+     * Set once at registration through {@link #requiringBuilder()} rather than taken as a fifth
+     * boolean on constructors that already telescope four deep — and it reads as a word at the two
+     * call sites that want it, which is the whole difference between them and every other egg.
+     */
+    private boolean requiresBuilder;
 
     public FactionSpawnEggItem(Properties properties, Supplier<? extends EntityType<? extends Mob>> entityType, Side side) {
         this(properties, entityType, side, false);
@@ -132,6 +142,21 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
     @Override
     public boolean requiresCreep() {
         return this.requiresCreep;
+    }
+
+    /**
+     * Declares that this egg places a <em>building</em> a worker has to come and put up — see
+     * {@code building/ConstructionSite}. True for the Bunker and Missile Turret kits; a spawn egg
+     * for an actual unit is never gated.
+     */
+    public FactionSpawnEggItem requiringBuilder() {
+        this.requiresBuilder = true;
+        return this;
+    }
+
+    @Override
+    public boolean requiresBuilder() {
+        return this.requiresBuilder;
     }
 
     /**
@@ -217,10 +242,29 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
             }
             return InteractionResult.FAIL;
         }
+        // Called before anything is spawned, so a refusal leaves the kit in the player's hand.
+        WorkerEntity builder = null;
+        if (this.requiresBuilder) {
+            builder = ConstructionSite.callBuilder(level, Vec3.atCenterOf(pos), faction);
+            if (builder == null) {
+                if (user instanceof ServerPlayer player) {
+                    player.sendSystemMessage(Component.translatable("message.asteriskcraft.kit.no_builder",
+                            ConstructionSite.CALL_RADIUS), true);
+                }
+                return InteractionResult.FAIL;
+            }
+        }
         EntityType<? extends Mob> type = entityType.get();
         Mob mob = type.spawn(level, stack, user, pos, EntitySpawnReason.SPAWN_ITEM_USE, tryMoveDown, movedUp);
         if (mob != null) {
             FactionAttachments.set(mob, faction, race);
+            if (builder != null && mob instanceof PrePlaced building) {
+                // Standoff measured off the building's own half-width: an SCV cannot stand inside a
+                // Missile Turret, and the site position is the turret's centre.
+                building.constructionSite().assign(builder.getUUID(),
+                        mob.getBbWidth() / 2.0 + ConstructionSite.STANDOFF);
+                builder.setBuildSite(mob.blockPosition());
+            }
             if (this.spreadsCreep) {
                 GameBootstrap.spreadCreep(level, mob.blockPosition(), race);
             }
