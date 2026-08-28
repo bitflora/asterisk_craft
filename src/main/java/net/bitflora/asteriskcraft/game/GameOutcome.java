@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.game;
 
 import net.bitflora.asteriskcraft.building.CoreCensus;
+import net.bitflora.asteriskcraft.command.ControlledFaction;
 import net.bitflora.asteriskcraft.building.FactionCore;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.minecraft.core.BlockPos;
@@ -77,6 +78,7 @@ public final class GameOutcome {
                 overworld.setData(GameAttachments.GAME_OVER, true);
                 broadcast(overworld, Component.translatable("message.asteriskcraft.defeat"));
                 playOutcomeSound(overworld, false);
+                killCommanders(overworld, razed);
             }
             case BASE_RAZED -> broadcast(overworld, Component.translatable(
                     razed == playerFaction
@@ -89,6 +91,20 @@ public final class GameOutcome {
                 playOutcomeSound(overworld, true);
             }
             case NONE -> {
+            }
+        }
+    }
+
+    /**
+     * Kills every player commanding the side that just lost its last base. Keyed off
+     * {@link ControlledFaction} rather than "every player", so in a PvP match the winning side's
+     * commander is left standing. A player elsewhere in the dimension stack is killed in their own
+     * level, since {@link net.minecraft.world.entity.LivingEntity#kill} wants the one they're in.
+     */
+    private static void killCommanders(ServerLevel overworld, Faction defeated) {
+        for (ServerPlayer player : overworld.getServer().getPlayerList().getPlayers()) {
+            if (ControlledFaction.of(player) == defeated && player.level() instanceof ServerLevel level) {
+                player.kill(level);
             }
         }
     }
