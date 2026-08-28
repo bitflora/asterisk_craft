@@ -148,26 +148,34 @@ public class AsteriskCraft {
     // the kit itself is instant. Appearance is borrowed via the block model's "parent", not copied
     // pixels. The other two carry a command card, which is the same block plus that card
     // (FactoryBlock) rather than a case added here.
-    /** 70s, the quickest of the four: the Stargate is the priciest thing on any card already. */
+    /** 70s, the quickest of the five: the Stargate is the priciest thing on any card already. */
     private static final int STARGATE_BUILD_TICKS = 20 * 70;
     private static final int BARRACKS_BUILD_TICKS = 20 * 80;
+    /** The Barracks' time: nothing warps a Factory in yet, but a structure owes a build time. */
+    private static final int TERRAN_FACTORY_BUILD_TICKS = 20 * 80;
     private static final int SPAWNING_POOL_BUILD_TICKS = 20 * 80;
     /** Two minutes, the Spire and an expansion base — the two things you commit an army's time to. */
     private static final int SPIRE_BUILD_TICKS = 20 * 120;
-    /** A unit factory's staying power, the Gateway's numbers; a race without shields passes zero. */
-    private static final int FACTORY_HEALTH = 250;
-    private static final int PROTOSS_FACTORY_SHIELD = 250;
+    // Staying power is per building rather than one shared number: what a structure is worth in a
+    // fight is the same kind of fact as its build time, and the five differ. The Terran ones are the
+    // toughest and carry no shields; the Stargate is the only one of the five that has any.
+    private static final int STARGATE_HEALTH = 300;
+    private static final int STARGATE_SHIELD = 300;
+    private static final int SPAWNING_POOL_HEALTH = 375;
+    private static final int SPIRE_HEALTH = 300;
+    private static final int BARRACKS_HEALTH = 500;
+    private static final int TERRAN_FACTORY_HEALTH = 625;
 
     // A FactoryBlock, like the Barracks: the Protoss air unit is built here rather than at the
     // Gateway, so the Stargate is a structure plus a command card. The card is a supplier because
     // ProductionKind's constants name blocks.
     public static final DeferredBlock<FactoryBlock> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
-            props -> new FactoryBlock(new StructureBlock.Defence(Race.PROTOSS, FACTORY_HEALTH,
-                    PROTOSS_FACTORY_SHIELD, STARGATE_BUILD_TICKS), () -> ProductionKind.PROTOSS_STARGATE, props),
+            props -> new FactoryBlock(new StructureBlock.Defence(Race.PROTOSS, STARGATE_HEALTH,
+                    STARGATE_SHIELD, STARGATE_BUILD_TICKS), () -> ProductionKind.PROTOSS_STARGATE, props),
             p -> p.mapColor(MapColor.COLOR_CYAN).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
     public static final DeferredBlock<StructureBlock> SPAWNING_POOL_CORE = BLOCKS.registerBlock("spawning_pool_core",
-            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, FACTORY_HEALTH, 0,
+            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, SPAWNING_POOL_HEALTH, 0,
                     SPAWNING_POOL_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 15));
 
@@ -175,21 +183,24 @@ public class AsteriskCraft {
     // occlude: an opaque full-cube block wearing a partial model culls its neighbours' facing sides
     // and lights itself as solid, leaving holes in the ground around the spike.
     public static final DeferredBlock<StructureBlock> SPIRE_CORE = BLOCKS.registerBlock("spire_core",
-            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, FACTORY_HEALTH, 0,
+            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, SPIRE_HEALTH, 0,
                     SPIRE_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7)
                     .noOcclusion());
 
     // A FactoryBlock for the same reason the Stargate is: the same structure plus a command card.
     public static final DeferredBlock<FactoryBlock> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
-            props -> new FactoryBlock(new StructureBlock.Defence(Race.TERRAN, FACTORY_HEALTH, 0,
+            props -> new FactoryBlock(new StructureBlock.Defence(Race.TERRAN, BARRACKS_HEALTH, 0,
                     BARRACKS_BUILD_TICKS), () -> ProductionKind.TERRAN_BARRACKS, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
-    // No kit sells a Factory yet, so it is still the visual-only block the others started as: a
-    // StructureBlock would be claiming a build time nothing ever runs.
-    public static final DeferredBlock<Block> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
-            Block::new,
+    // No kit sells a Factory yet, so its build time is a number nothing runs down — but a building
+    // that can be placed at all can be shot at, and a block with no block entity behind it has no HP
+    // to shoot off. It is a plain StructureBlock and not a FactoryBlock because it produces nothing
+    // yet; that is a command card away, and it graduates the way the Barracks did.
+    public static final DeferredBlock<StructureBlock> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
+            props -> new StructureBlock(new StructureBlock.Defence(Race.TERRAN, TERRAN_FACTORY_HEALTH, 0,
+                    TERRAN_FACTORY_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
     public static final DeferredItem<BlockItem> NEXUS_CORE_ITEM = ITEMS.registerSimpleBlockItem("nexus_core", NEXUS_CORE);
@@ -310,7 +321,7 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StructureBlockEntity>> STRUCTURE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("structure",
                     () -> new BlockEntityType<>(StructureBlockEntity::new,
-                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get()));
+                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get(), FACTORY_CORE.get()));
 
     // One type for every unit factory, as BASE_BLOCK_ENTITY is one for every base. The Gateway keeps
     // its own — it predates the roster and dispatches its card positionally through an enum of

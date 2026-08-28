@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
  * thing that made a Pylon special (its {@code ONLINE} blockstate), which is why this is a table
  * entry rather than a fifth copy of that class.
  *
- * <p>Its numbers come off the block it was placed as, so the four buildings that share this class
+ * <p>Its numbers come off the block it was placed as, so the buildings that share this class
  * differ only in what {@code AsteriskCraft} registered them with. A {@link SiegeTarget} but
  * deliberately not a {@link FactionCore}: an enemy army can raze one, which costs the player what it
  * was going to produce, but the match is decided by bases alone.
@@ -123,8 +123,8 @@ public class StructureBlockEntity extends BlockEntity
     public void damageBuilding(int amount, ServerLevel level, BlockPos pos) {
         this.defense.damage(amount, level, pos);
         this.setChanged();
-        // Named from the block rather than from a per-building key: four buildings share this class,
-        // and the only thing that differs between their alerts is which of them is being hit.
+        // Named from the block rather than from a per-building key: every plain structure shares
+        // this class, and the only thing that differs between their alerts is which is being hit.
         this.alert.ping(level, buildingFaction(), Component.translatable(
                 "message.asteriskcraft.structure.under_attack", getBlockState().getBlock().getName()));
     }

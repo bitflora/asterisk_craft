@@ -18,10 +18,10 @@ import org.jetbrains.annotations.Nullable;
 /**
  * The core block of a plain <b>structure</b>: a building that is stamped from a template, spends a
  * build time going up behind its scaffold, and can then be battered down — and does nothing else.
- * The Barracks, the Stargate, the Spawning Pool and the Spire are all this block registered four
- * times, the way {@link BaseBlock} is one block registered once per race.
+ * The Barracks, the Factory, the Stargate, the Spawning Pool and the Spire are all this block
+ * registered five times, the way {@link BaseBlock} is one block registered once per race.
  *
- * <p>One class rather than four because nothing separates them but their numbers. A structure that
+ * <p>One class rather than five because nothing separates them but their numbers. A structure that
  * later gains a command card graduates to its own block and {@link ProductionBuilding} block entity
  * (the Gateway's shape) — that is a building acquiring behaviour, not this table growing a case for
  * it.
