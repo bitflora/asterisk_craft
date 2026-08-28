@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
@@ -78,8 +79,11 @@ public final class ConstructionSite {
      */
     public static final double STANDOFF = 4.0;
 
-    /** How long a builder may be unresolvable before the site gives up on it. */
-    static final int LOST_TOLERANCE_TICKS = 40;
+    /**
+     * How long either end of the arrangement may fail to find the other before giving up on it —
+     * the site on an unresolvable builder, and the builder on a site that no longer claims it.
+     */
+    public static final int LOST_TOLERANCE_TICKS = 40;
 
     /** How long a site waits for a builder that has never reached it before cancelling itself. */
     static final int ARRIVAL_TIMEOUT_TICKS = 600;
@@ -142,6 +146,42 @@ public final class ConstructionSite {
     /** Whether anyone was ever required to build this. */
     public boolean isRequired() {
         return this.builder != null;
+    }
+
+    /** Whether this site is still waiting on the worker with this id — see {@link #stillClaims}. */
+    public boolean isBuiltBy(UUID id) {
+        return id.equals(this.builder);
+    }
+
+    /**
+     * The builder's half of {@link #resolve}: whether a building still standing at {@code pos} is
+     * still waiting on {@code worker}. Both halves are needed because {@link #release} can only
+     * reach a worker it can resolve, and a building destroyed while its builder's chunk has not
+     * caught up — or one that goes away without ever being released at all — would otherwise leave
+     * that worker walking to a hole in the ground for the rest of the match.
+     *
+     * <p>It covers both of the mod's construction mechanisms, since either kind of building may be
+     * the one that vanished: a building that is blocks answers off the {@link SiegeTarget} block
+     * entity on the core column, one that is an entity off the {@link PrePlaced} standing there.
+     *
+     * <p>An unloaded site answers yes. "Nothing is there" is only knowable about ground the server
+     * is actually holding, and the caller counts consecutive misses on top of that for the same
+     * reason {@link #LOST_TOLERANCE_TICKS} exists on this side.
+     */
+    public static boolean stillClaims(ServerLevel level, BlockPos pos, WorkerEntity worker) {
+        if (!level.isLoaded(pos)) {
+            return true;
+        }
+        UUID id = worker.getUUID();
+        if (level.getBlockEntity(pos) instanceof SiegeTarget target
+                && target.defense().constructionSite().isBuiltBy(id)) {
+            return true;
+        }
+        // Inflated by a block: a building-as-entity is centred on its spawn position, and the site
+        // was recorded as the block it stood in rather than as its exact centre.
+        AABB box = new AABB(pos).inflate(1.0);
+        return !level.getEntitiesOfClass(Mob.class, box,
+                mob -> mob instanceof PrePlaced building && building.constructionSite().isBuiltBy(id)).isEmpty();
     }
 
     /**

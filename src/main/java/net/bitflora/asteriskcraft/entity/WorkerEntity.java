@@ -1,6 +1,7 @@
 package net.bitflora.asteriskcraft.entity;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.building.ConstructionSite;
 import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
@@ -149,11 +150,20 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
     /**
      * The construction site this worker has been called to, or {@code null} for a worker free to
      * mine. Written by whichever placement called it (see {@code building/ConstructionSite}) and
-     * cleared by the building itself when it finishes or is destroyed — the worker never drops it on
-     * its own, because a build that has started still needs somebody on the hook for it.
+     * cleared by the building itself when it finishes or is destroyed — the worker never drops it
+     * merely because the walk is hard, since a build that has started still needs somebody on the
+     * hook for it. It does drop a site that is no longer there at all; see
+     * {@link #forgetLostBuildSite}.
      */
     @Nullable
     private BlockPos buildSite;
+    /**
+     * Consecutive ticks the assigned site has failed to claim this worker — see
+     * {@link #forgetLostBuildSite}. Deliberately not saved, for the reason
+     * {@code ConstructionSite}'s own miss counter isn't: a reload is exactly the case the tolerance
+     * exists for, and it has to start counting from zero there.
+     */
+    private int orphanTicks;
 
     public WorkerEntity(EntityType<? extends WorkerEntity> type, Level level) {
         super(type, level);
@@ -184,6 +194,39 @@ public abstract class WorkerEntity extends PathfinderMob implements Shielded {
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0f));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
+        super.customServerAiStep(level);
+        this.forgetLostBuildSite(level);
+    }
+
+    /**
+     * Drops an assignment whose building is gone. {@code building/ConstructionSite} releases its
+     * builder when a structure finishes or falls, but it can only reach a worker it can resolve —
+     * and a building can also stop existing without releasing anything at all, if whatever removed
+     * it never ran the building's own removal path. Either way the worker is left walking to a hole
+     * in the ground forever, unable to mine and passed over by every later placement, which is the
+     * one failure the whole mechanism cannot recover from on its own. So the worker asks the same
+     * question from its end.
+     *
+     * <p>The tolerance is {@code ConstructionSite.LOST_TOLERANCE_TICKS} worth of consecutive
+     * misses, and for the same reason that counter exists on the other side: a site whose chunk has
+     * not caught up answers "nothing there" for a tick or two after a reload.
+     */
+    private void forgetLostBuildSite(ServerLevel level) {
+        if (this.buildSite == null) {
+            return;
+        }
+        if (ConstructionSite.stillClaims(level, this.buildSite, this)) {
+            this.orphanTicks = 0;
+            return;
+        }
+        if (++this.orphanTicks > ConstructionSite.LOST_TOLERANCE_TICKS) {
+            this.clearBuildSite(this.buildSite);
+            this.orphanTicks = 0;
+        }
     }
 
     @Override
