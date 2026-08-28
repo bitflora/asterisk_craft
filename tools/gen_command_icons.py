@@ -86,6 +86,7 @@ KITS = {
     "command_center_kit": "command_center",
     "barracks_kit": "barracks",
     "stargate_kit": "stargate",
+    "starport_kit": "starport",
     "spawning_pool_kit": "spawning_pool",
     "spire_kit": "spire",
 }

@@ -123,6 +123,15 @@ public class BaseBlockEntity extends BlockEntity
     public static final UnitCost STARGATE_COST = UnitCost.all(
             UnitCost.line(Resource.STONE, 150), UnitCost.line(Resource.WOOD, 150),
             UnitCost.line(Resource.IRON, 10));
+    /**
+     * The Terran air building. Its shape is the {@link #BARRACKS_COST}'s — a bundle of both
+     * resources rather than a choice between them — plus the iron that keeps an air building out of
+     * an opening, which is what {@link #STARGATE_COST} and {@link #SPIRE_COST} spend for the same
+     * reason.
+     */
+    public static final UnitCost STARPORT_COST = UnitCost.all(
+            UnitCost.line(Resource.WOOD, 150), UnitCost.line(Resource.STONE, 100),
+            UnitCost.line(Resource.IRON, 10));
     /** The swarm's first tech building — one flat pile of anything, the way every Zerg cost is. */
     public static final UnitCost SPAWNING_POOL_COST = UnitCost.of(Resource.ANY, 200);
     /**

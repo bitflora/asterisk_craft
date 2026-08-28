@@ -45,6 +45,7 @@ public final class BuildingTemplates {
     public static final Identifier STARGATE = AsteriskCraft.id("stargate");
     public static final Identifier SPAWNING_POOL = AsteriskCraft.id("spawning_pool");
     public static final Identifier SPIRE = AsteriskCraft.id("spire");
+    public static final Identifier STARPORT = AsteriskCraft.id("starport");
 
     /**
      * A template's bounding box and where its core sits inside it, declared up front so the
@@ -78,6 +79,7 @@ public final class BuildingTemplates {
     public static final Footprint STARGATE_FOOTPRINT = new Footprint(new Vec3i(6, 6, 4), new BlockPos(3, 3, 1));
     public static final Footprint SPAWNING_POOL_FOOTPRINT = new Footprint(new Vec3i(6, 2, 6), new BlockPos(3, 0, 2));
     public static final Footprint SPIRE_FOOTPRINT = new Footprint(new Vec3i(7, 8, 7), new BlockPos(3, 3, 3));
+    public static final Footprint STARPORT_FOOTPRINT = new Footprint(new Vec3i(8, 8, 7), new BlockPos(5, 1, 3));
 
     /** Where a stamped template landed: its core block, its min corner, and its size. */
     public record Placed(BlockPos core, BlockPos min, Vec3i size) {

@@ -156,6 +156,8 @@ public class AsteriskCraft {
     private static final int SPAWNING_POOL_BUILD_TICKS = 20 * 80;
     /** Two minutes, the Spire and an expansion base — the two things you commit an army's time to. */
     private static final int SPIRE_BUILD_TICKS = 20 * 120;
+    /** 70s, matching the Stargate: each race's air building is the quickest of its tech buildings. */
+    private static final int STARPORT_BUILD_TICKS = 20 * 70;
     // Staying power is per building rather than one shared number: what a structure is worth in a
     // fight is the same kind of fact as its build time, and the five differ. The Terran ones are the
     // toughest and carry no shields; the Stargate is the only one of the five that has any.
@@ -165,6 +167,8 @@ public class AsteriskCraft {
     private static final int SPIRE_HEALTH = 300;
     private static final int BARRACKS_HEALTH = 500;
     private static final int TERRAN_FACTORY_HEALTH = 625;
+    /** The sturdiest structure in the mod — a Starport is the last thing a Terran army commits to. */
+    private static final int STARPORT_HEALTH = 650;
 
     // A FactoryBlock, like the Barracks: the Protoss air unit is built here rather than at the
     // Gateway, so the Stargate is a structure plus a command card. The card is a supplier because
@@ -198,6 +202,13 @@ public class AsteriskCraft {
     // that can be placed at all can be shot at, and a block with no block entity behind it has no HP
     // to shoot off. It is a plain StructureBlock and not a FactoryBlock because it produces nothing
     // yet; that is a command card away, and it graduates the way the Barracks did.
+    // The Terran air building. A plain StructureBlock and not a FactoryBlock because it produces
+    // nothing yet — that is a command card away, and it graduates the way the Barracks did.
+    public static final DeferredBlock<StructureBlock> STARPORT_CORE = BLOCKS.registerBlock("starport_core",
+            props -> new StructureBlock(new StructureBlock.Defence(Race.TERRAN, STARPORT_HEALTH, 0,
+                    STARPORT_BUILD_TICKS), props),
+            p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
+
     public static final DeferredBlock<StructureBlock> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
             props -> new StructureBlock(new StructureBlock.Defence(Race.TERRAN, TERRAN_FACTORY_HEALTH, 0,
                     TERRAN_FACTORY_BUILD_TICKS), props),
@@ -213,6 +224,7 @@ public class AsteriskCraft {
     public static final DeferredItem<BlockItem> SPIRE_CORE_ITEM = ITEMS.registerSimpleBlockItem("spire_core", SPIRE_CORE);
     public static final DeferredItem<BlockItem> BARRACKS_CORE_ITEM = ITEMS.registerSimpleBlockItem("barracks_core", BARRACKS_CORE);
     public static final DeferredItem<BlockItem> FACTORY_CORE_ITEM = ITEMS.registerSimpleBlockItem("factory_core", FACTORY_CORE);
+    public static final DeferredItem<BlockItem> STARPORT_CORE_ITEM = ITEMS.registerSimpleBlockItem("starport_core", STARPORT_CORE);
 
     public static final DeferredItem<BuildingKitItem> GATEWAY_KIT = ITEMS.registerItem("gateway_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.GATEWAY, GATEWAY_CORE,
@@ -257,6 +269,13 @@ public class AsteriskCraft {
     public static final DeferredItem<BuildingKitItem> BARRACKS_KIT = ITEMS.registerItem("barracks_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.BARRACKS, BARRACKS_CORE,
                     BuildingTemplates.BARRACKS_FOOTPRINT, false).requiringBuilder());
+
+    // The Terran air building, sold at the Command Center beside the Barracks. Its .nbt is still the
+    // placeholder core emitted by tools/make_core_template.py, so what it stamps today is one block —
+    // designing the building is a re-export over that file and no change here.
+    public static final DeferredItem<BuildingKitItem> STARPORT_KIT = ITEMS.registerItem("starport_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.STARPORT, STARPORT_CORE,
+                    BuildingTemplates.STARPORT_FOOTPRINT, false).requiringBuilder());
 
     public static final DeferredItem<BuildingKitItem> STARGATE_KIT = ITEMS.registerItem("stargate_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.STARGATE, STARGATE_CORE,
@@ -321,7 +340,8 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StructureBlockEntity>> STRUCTURE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("structure",
                     () -> new BlockEntityType<>(StructureBlockEntity::new,
-                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get(), FACTORY_CORE.get()));
+                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get(), FACTORY_CORE.get(),
+                            STARPORT_CORE.get()));
 
     // One type for every unit factory, as BASE_BLOCK_ENTITY is one for every base. The Gateway keeps
     // its own — it predates the roster and dispatches its card positionally through an enum of
@@ -849,6 +869,7 @@ public class AsteriskCraft {
                 output.accept(STARGATE_KIT.get());
                 output.accept(COMMAND_CENTER_KIT.get());
                 output.accept(BARRACKS_KIT.get());
+                output.accept(STARPORT_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CENTER_CORE_ITEM.get());
                 output.accept(STARGATE_CORE_ITEM.get());
@@ -856,6 +877,7 @@ public class AsteriskCraft {
                 output.accept(SPIRE_CORE_ITEM.get());
                 output.accept(BARRACKS_CORE_ITEM.get());
                 output.accept(FACTORY_CORE_ITEM.get());
+                output.accept(STARPORT_CORE_ITEM.get());
                 output.accept(BUNKER_KIT.get());
                 output.accept(MISSILE_TURRET_KIT.get());
                 output.accept(CURSOR.get());

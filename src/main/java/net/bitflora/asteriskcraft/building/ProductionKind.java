@@ -214,7 +214,7 @@ public enum ProductionKind implements StringRepresentable {
      * The Command Center's card. The Terran have no factory building, so — like the Hive and unlike
      * the Nexus — the base is where the army comes from as well as the economy.
      *
-     * <p>It trains one unit — the SCV — and sells four buildings, which makes it the
+     * <p>It trains one unit — the SCV — and sells five buildings, which makes it the
      * {@link #PROTOSS_BASE}'s shape rather than the {@link #ZERG_BASE}'s: the race's infantry moved
      * to {@link #TERRAN_BARRACKS} the moment there was a Barracks to put them in, and a base that
      * still built Marines would have made that building optional.
@@ -242,6 +242,15 @@ public enum ProductionKind implements StringRepresentable {
                     CostText.tooltip(BaseBlockEntity.BARRACKS_COST, 0), 1,
                     new Action.GiveKit(AsteriskCraft.BARRACKS_KIT::get, BaseBlockEntity.BARRACKS_COST, 0,
                             "message.asteriskcraft.base.barracks_ready")),
+            // The Starport sits under the Barracks in the same column, the pairing the swarm's
+            // Spawning Pool and Spire make: one building is where the race's ground army comes from
+            // and the other where its air will, and a column is what says they are the same kind of
+            // commitment. One button, because its price is a bundle with nothing to choose between.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.STARPORT_KIT),
+                    CostText.tooltip(BaseBlockEntity.STARPORT_COST, 0), 1,
+                    new Action.GiveKit(AsteriskCraft.STARPORT_KIT::get, BaseBlockEntity.STARPORT_COST, 0,
+                            "message.asteriskcraft.base.starport_ready")),
             // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
             // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
             // building's price. A single button, because its cost names one resource.
