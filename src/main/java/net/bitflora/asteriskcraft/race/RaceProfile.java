@@ -61,7 +61,8 @@ import java.util.function.Supplier;
  *                       wrong army's
  * @param baseDefences   static defence planted with each base at world generation. The
  *                       <em>computer's</em> only — the human's starting base deliberately plants
- *                       none and gets {@link #playerKit} instead, so it mines its own way up
+ *                       none, and opens with {@link #playerKit} and {@link #playerDefences}
+ *                       instead, so it mines and moves its own way up
  * @param baseEscort     mobile units spawned beside every base this race starts the match with,
  *                       on <em>both</em> sides. That symmetry is the whole reason it is not folded
  *                       into {@link #baseDefences}: a rule like "every Hive comes with an Overlord"
@@ -69,6 +70,13 @@ import java.util.function.Supplier;
  *                       defence deliberately does not. Bootstrap only — a base warped in later from
  *                       a kit brings no escort, because it is the <em>starting</em> position this
  *                       describes
+ * @param playerDefences units spawned beside the <em>human's</em> starting base only — the exact
+ *                       complement of {@link #baseDefences}, which is the computer's only. Two
+ *                       one-sided lists rather than one flag because the two sides open a match
+ *                       differently on purpose: the computer is planted behind static defence so an
+ *                       early rush meets something with teeth, while a player is handed an opening
+ *                       army to move with. A race that opens with nothing but workers leaves it
+ *                       empty. Bootstrap only, like the other two lists
  * @param startingBank   what this race's shared bank is seeded with when it is the computer player
  * @param playerBank     what this race's shared bank is seeded with when it is the <em>human's</em>
  *                       — a fraction of {@link #startingBank}, because a player mines their own way
@@ -94,14 +102,16 @@ public record RaceProfile(
         ParticleOptions constructionParticle,
         List<BaseDefence> baseDefences,
         List<BaseDefence> baseEscort,
+        List<BaseDefence> playerDefences,
         List<StartingStack> startingBank,
         List<StartingStack> playerBank,
         List<Supplier<Item>> playerKit) {
 
     /**
-     * A unit spawned with each base at world generation, and how many of it. Used by both
-     * {@link #baseDefences} (the computer's static defence) and {@link #baseEscort} (each side's
-     * mobile escort) — the two differ in <em>which bases</em> they are walked for, not in shape.
+     * A unit spawned with each base at world generation, and how many of it. Used by all three of
+     * {@link #baseDefences} (the computer's static defence), {@link #playerDefences} (the human's
+     * opening army) and {@link #baseEscort} (each side's mobile escort) — they differ in <em>which
+     * bases</em> they are walked for, not in shape.
      */
     public record BaseDefence(Supplier<? extends EntityType<? extends Mob>> type, int count) {
     }

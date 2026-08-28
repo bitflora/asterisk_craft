@@ -42,6 +42,10 @@ class RacesTest {
                     race + " seeds an empty starting stack");
             assertTrue(profile.baseDefences().stream().allMatch(defence -> defence.count() > 0),
                     race + " plants a static defence zero times");
+            assertTrue(profile.baseEscort().stream().allMatch(escort -> escort.count() > 0),
+                    race + " spawns a base escort zero times");
+            assertTrue(profile.playerDefences().stream().allMatch(unit -> unit.count() > 0),
+                    race + " opens a player with zero of a unit");
         }
     }
 

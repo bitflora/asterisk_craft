@@ -231,6 +231,9 @@ public final class GameBootstrap {
         // holding it, and a player who had to buy their first detector while the computer was given
         // one would be playing a different match.
         spawnBaseEscort(level, core, profile, setup.playerFaction());
+        // The human's counterpart to placeAiBaseAt's baseDefences loop: the opening army a race
+        // hands its player, which for the same reason is spawned on this side only.
+        spawnUnits(level, core, profile, setup.playerFaction(), profile.playerDefences());
         // No iron: the single iron column is the computer player's one edge.
         seedMineralField(level, x, z, false);
 
@@ -742,12 +745,6 @@ public final class GameBootstrap {
     }
 
     /**
-     * The mobile units a race's base opens the match with, spawned beside every starting base on
-     * <em>both</em> sides — which is exactly what separates this from the {@code baseDefences} loop
-     * in {@link #placeAiBaseAt}, where the human deliberately gets nothing. Bootstrap only: an
-     * expansion base warped in from a kit brings no escort.
-     */
-    /**
      * Puts a base's own defenders inside a transport planted with them, if its race declared both. The
      * Terran are the only race that does today: their static defence is a Bunker, which is a wall
      * rather than a gun, so a base that spawned one and left its Marines standing beside it would be
@@ -774,10 +771,23 @@ public final class GameBootstrap {
         }
     }
 
+    /**
+     * The mobile units a race's base opens the match with, spawned beside every starting base on
+     * <em>both</em> sides — which is exactly what separates this from the {@code baseDefences} loop
+     * in {@link #placeAiBaseAt} and the {@code playerDefences} one at the player's base, each of
+     * which is deliberately one-sided. Bootstrap only: an expansion base warped in from a kit brings
+     * no escort.
+     */
     private static void spawnBaseEscort(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction) {
-        for (RaceProfile.BaseDefence escort : profile.baseEscort()) {
-            for (int i = 0; i < escort.count(); i++) {
-                UnitSpawns.spawn(level, core, escort.type().get(), faction, profile.race(), false);
+        spawnUnits(level, core, profile, faction, profile.baseEscort());
+    }
+
+    /** Spawns one of a profile's {@code BaseDefence} lists beside a base. */
+    private static void spawnUnits(ServerLevel level, BlockPos core, RaceProfile profile, Faction faction,
+            List<RaceProfile.BaseDefence> units) {
+        for (RaceProfile.BaseDefence unit : units) {
+            for (int i = 0; i < unit.count(); i++) {
+                UnitSpawns.spawn(level, core, unit.type().get(), faction, profile.race(), false);
             }
         }
     }

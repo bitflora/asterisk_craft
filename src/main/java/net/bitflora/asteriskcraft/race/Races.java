@@ -113,6 +113,9 @@ public final class Races {
             // No escort: the Protoss detector is the Photon Cannon, which is already in the line
             // above, and nothing else about a Nexus wants a unit hovering over it at world start.
             List.of(),
+            // No opening army either: the Protoss player starts with a Pylon and a Cannon kit and
+            // buys their first Zealot off the Nexus card.
+            List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
             PLAYER_BANK,
@@ -158,6 +161,9 @@ public final class Races {
             // rooted to this spot — the Overlord is what carries detection out with an army, which
             // is the whole answer to a Dark Templar met in the field.
             List.of(new BaseDefence(AsteriskCraft.OVERLORD, 1)),
+            // No opening army: the Hive is the swarm's whole production building, so a Zerg player
+            // is already one click from a Zergling and starts with a Sunken Colony to root instead.
+            List.of(),
             List.of(new StartingStack(() -> Items.OAK_LOG, ZERG_STARTING_LOGS),
                     new StartingStack(() -> Items.COBBLESTONE, ZERG_STARTING_COBBLE),
                     new StartingStack(() -> Items.IRON_INGOT, ZERG_STARTING_IRON)),
@@ -219,13 +225,19 @@ public final class Races {
             // hovering over it. Their detection is the Missile Turret above, which is rooted — so
             // unlike the swarm's Overlord, nothing carries it out with an army.
             List.of(),
+            // Two Marines standing at the Command Center, the human's only. The Terran are the one
+            // race whose base card sells no combat unit — infantry come out of a Barracks — so a
+            // Terran player who was given nothing but SCVs would be defenceless for as long as the
+            // kit below takes to build. These are the crew for the Bunker in that kit, too.
+            List.of(new BaseDefence(AsteriskCraft.MARINE, 2)),
             List.of(new StartingStack(() -> Items.OAK_LOG, 128 * 3),
                     new StartingStack(() -> Items.COBBLESTONE, 128 * 3)),
             PLAYER_BANK,
-            // One Bunker kit, so placing it is the Terran opening move the way a Pylon is the Protoss
-            // one — except that a Bunker does nothing until the player has built something to put in
-            // it, which is the race's whole shape restated as an opening.
-            List.of(AsteriskCraft.BUNKER_KIT::get));
+            // A Bunker kit and a Barracks kit: placing them is the Terran opening move the way a Pylon
+            // is the Protoss one. The Barracks is what makes the pair an opening rather than a wall —
+            // the base card trains only SCVs, so without one a Terran player has no way to replace
+            // the two Marines above, and the Bunker has nothing to be crewed with once they die.
+            List.of(AsteriskCraft.BUNKER_KIT::get, AsteriskCraft.BARRACKS_KIT::get));
 
     private static final Map<Race, RaceProfile> BY_RACE = new EnumMap<>(Map.of(
             Race.PROTOSS, PROTOSS,
