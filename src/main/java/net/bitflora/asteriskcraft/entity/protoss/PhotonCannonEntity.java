@@ -1,5 +1,6 @@
 package net.bitflora.asteriskcraft.entity.protoss;
 
+import net.bitflora.asteriskcraft.building.ConstructionSite;
 import net.bitflora.asteriskcraft.building.PhotonCannonTargeting;
 import net.bitflora.asteriskcraft.building.WarpInVulnerability;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
@@ -12,7 +13,6 @@ import net.bitflora.asteriskcraft.faction.WildKind;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -134,8 +134,7 @@ public class PhotonCannonEntity extends Mob implements Shielded, Detector, Roote
         int warpTicks = this.warpTicksRemaining();
         if (this.level() instanceof ServerLevel level && warpTicks > 0) {
             this.entityData.set(WARP_TICKS_REMAINING, warpTicks - 1);
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
-                    this.getX(), this.getY() + 0.6, this.getZ(), 6, 0.4, 0.6, 0.4, 0.02);
+            ConstructionSite.plume(level, this, 6, 0.4, 0.6);
             if (warpTicks == 1) {
                 this.finishWarp(level);
             }

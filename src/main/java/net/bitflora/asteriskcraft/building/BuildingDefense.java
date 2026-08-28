@@ -4,6 +4,7 @@ import net.bitflora.asteriskcraft.combat.DelayedRegen;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.combat.ShieldEventHandler;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -54,6 +55,14 @@ public final class BuildingDefense {
     private int shieldRegenDelay;
     /** The glass layout that fills in over the warp. Empty for a building that was never warped in. */
     private final WarpScaffold scaffold = new WarpScaffold();
+    /**
+     * What this building throws off while it goes up — the placing race's
+     * ({@code race.RaceProfile.constructionParticle}), handed in at {@link #beginWarpIn} beside the
+     * scaffold's panes and saved for the same reason: a warp routinely outlives a reload, and a
+     * Command Center that came back welding itself together in Protoss soul fire would read as the
+     * wrong army's.
+     */
+    private ParticleOptions constructionParticle = ParticleTypes.SOUL_FIRE_FLAME;
     /**
      * The worker that has to be present for the warp to run at all. Empty for every building that
      * warps itself in — which today is all of them, since only the Terran kits ask for a builder —
@@ -139,12 +148,15 @@ public final class BuildingDefense {
      * arrives with a spent countdown and has to be told to warp, rather than being trusted to start
      * out that way.
      *
-     * @param pane what the unfinished layout stands as — the placing race's own
-     *             ({@code race.RaceProfile.scaffold}), since a building under construction is the
-     *             most visible thing on the field and it should look like its own army's
+     * @param pane     what the unfinished layout stands as — the placing race's own
+     *                 ({@code race.RaceProfile.scaffold}), since a building under construction is the
+     *                 most visible thing on the field and it should look like its own army's
+     * @param particle what it throws off while it does, from the same race's profile
      */
-    public void beginWarpIn(ServerLevel level, BuildingTemplates.Placed placed, BlockState pane) {
+    public void beginWarpIn(ServerLevel level, BuildingTemplates.Placed placed, BlockState pane,
+                            ParticleOptions particle) {
         if (this.restartWarpIn()) {
+            this.constructionParticle = particle;
             this.scaffold.raise(level, placed, pane);
         }
     }
@@ -228,7 +240,7 @@ public final class BuildingDefense {
                 this.damage(owed, serverLevel, pos);
             }
         } else if (this.isWarping()) {
-            serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
+            serverLevel.sendParticles(this.constructionParticle,
                     pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.4, 0.6, 0.4, 0.02);
         }
         return this.isWarping();
@@ -294,6 +306,7 @@ public final class BuildingDefense {
         output.putFloat("Shield", this.shield);
         output.putInt("ShieldDelay", this.shieldRegenDelay);
         output.putInt("WarpTicks", this.warpTicksRemaining);
+        output.store("WarpParticle", ParticleTypes.CODEC, this.constructionParticle);
         this.scaffold.save(output);
         this.site.save(output);
     }
@@ -309,6 +322,8 @@ public final class BuildingDefense {
         this.health = Math.min(this.maxHealth(), input.getIntOr("CoreHealth", this.maxHealth()));
         this.shield = Math.min(this.maxShield(), input.getFloatOr("Shield", this.maxShield()));
         this.shieldRegenDelay = input.getIntOr("ShieldDelay", 0);
+        this.constructionParticle = input.read("WarpParticle", ParticleTypes.CODEC)
+                .orElse(ParticleTypes.SOUL_FIRE_FLAME);
         this.scaffold.load(input);
         this.site.load(input);
     }

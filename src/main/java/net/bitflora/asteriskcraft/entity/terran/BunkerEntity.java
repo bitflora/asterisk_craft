@@ -11,7 +11,6 @@ import net.bitflora.asteriskcraft.faction.Garrison;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -152,8 +151,7 @@ public class BunkerEntity extends Mob implements Rooted, Garrison, PrePlaced {
                 }
             }
             this.entityData.set(BUILD_TICKS_REMAINING, buildTicks - 1);
-            level.sendParticles(ParticleTypes.SMOKE,
-                    this.getX(), this.getY() + 0.6, this.getZ(), 4, 0.6, 0.5, 0.6, 0.01);
+            ConstructionSite.plume(level, this, 4, 0.6, 0.5);
             if (buildTicks == 1) {
                 this.finishBuild(level);
                 this.site.release(level, this.blockPosition());

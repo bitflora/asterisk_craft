@@ -8,6 +8,8 @@ import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.GameBootstrap;
 import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -15,6 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -186,13 +189,16 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
         if (core instanceof SiegeTarget target) {
             // The scaffold stands in the placing race's own colours — a kit only ever places its own
             // race's building, so the player's race is the building's.
-            target.defense().beginWarpIn(serverLevel, placed, scaffoldPane(ControlledRace.of(player)));
+            Race placingRace = ControlledRace.of(player);
+            target.defense().beginWarpIn(serverLevel, placed, scaffoldPane(placingRace),
+                    constructionParticle(placingRace));
             // Only put the worker on the hook if there is actually a warp for it to see through:
             // a building with no warp phase came up finished, and a builder assigned to one would
             // never be released.
             if (builder != null && target.defense().isWarping()) {
                 target.defense().constructionSite().assign(builder.getUUID(),
-                        BuildingTemplates.footprintRadius(placed.size()) + ConstructionSite.STANDOFF);
+                        BuildingTemplates.footprintRadius(placed.size()) + ConstructionSite.STANDOFF,
+                        new ItemStack(this));
                 builder.setBuildSite(placed.core());
             }
         }
@@ -208,6 +214,11 @@ public class BuildingKitItem extends Item implements PsiDependent, CreepDependen
      */
     private static BlockState scaffoldPane(@Nullable Race race) {
         return race == null ? WarpScaffold.PANE : Races.of(race).scaffold().get();
+    }
+
+    /** What it throws off while it does, with the same fallback and for the same reason. */
+    private static ParticleOptions constructionParticle(@Nullable Race race) {
+        return race == null ? ParticleTypes.SOUL_FIRE_FLAME : Races.of(race).constructionParticle();
     }
 
     private static void overlay(Player player, Component message) {

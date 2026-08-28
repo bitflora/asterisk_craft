@@ -4,13 +4,17 @@ import net.bitflora.asteriskcraft.entity.WorkerEntity;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.race.Races;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
@@ -50,6 +54,13 @@ import java.util.UUID;
  * arrival takes; {@link #decide} does not know about it, because the state it lands in already
  * existed.
  *
+ * <p>A builder that never turns up at all is the other way a site ends: {@value #ARRIVAL_TIMEOUT_TICKS}
+ * ticks (30 seconds) after it was called, a site the builder has still not reached gives up, and the
+ * building is razed exactly as an abandoned one is. Because nothing was ever built there, the kit
+ * that placed it is handed back as an item on the ground — which is also what a builder killed on
+ * its way over refunds, since "the worker never arrived" is the same outcome however it happened. A
+ * build that has <em>started</em> and then loses its worker still just falls down: it was paid for.
+ *
  * <p>"Killed" is deliberately "gone for {@value #LOST_TOLERANCE_TICKS} consecutive ticks" rather
  * than "gone this tick": {@code ServerLevel.getEntity} answers null for an entity whose chunk has
  * not caught up yet, so razing on the first miss would demolish every site in progress across a
@@ -70,18 +81,31 @@ public final class ConstructionSite {
     /** How long a builder may be unresolvable before the site gives up on it. */
     static final int LOST_TOLERANCE_TICKS = 40;
 
+    /** How long a site waits for a builder that has never reached it before cancelling itself. */
+    static final int ARRIVAL_TIMEOUT_TICKS = 600;
+
     /** What a site lets its building do this tick. */
     public enum Progress {
         /** A builder is assigned but has never reached the site: nothing has been built yet. */
         WAITING,
         /** Carry on — either the builder is here, or it got here once and the build is under way. */
         BUILDING,
-        /** The builder was killed before the building was finished; raze what stands. */
+        /**
+         * The building will never be finished — its builder was killed, or never turned up at all
+         * within {@link #ARRIVAL_TIMEOUT_TICKS}. Raze what stands; the kit has already been refunded
+         * if nothing was ever built here.
+         */
         ABANDONED
     }
 
     @Nullable
     private UUID builder;
+    /**
+     * The item that placed this building, handed back if the builder never arrives. Saved, because a
+     * 30-second wait routinely outlives a reload and a refund that forgot what it was refunding
+     * would be worse than none.
+     */
+    private ItemStack kit = ItemStack.EMPTY;
     /** How close the builder has to get. Saved, because it is a fact about the building's size. */
     private double arrivalRange = STANDOFF;
     /** Whether the builder has ever reached the site — the latch that makes a build survive it leaving. */
@@ -91,17 +115,28 @@ public final class ConstructionSite {
      * exactly the case the tolerance exists for, and it has to start counting from zero there.
      */
     private int missedTicks;
+    /**
+     * Ticks since the builder was called, while it has still never arrived. Saved, unlike
+     * {@link #missedTicks}: this one is a promise to the player about wall-clock time, so a reload
+     * must not quietly restart it.
+     */
+    private int waitingTicks;
 
     /**
      * Puts {@code builder} on this site. {@code arrivalRange} is how close it has to get, measured
      * from the position the building's own tick passes to {@link #tick} — so a caller adds
      * {@link #STANDOFF} to whatever its half-width or footprint radius is.
+     *
+     * @param kit what to drop if the builder never turns up — the stack that placed the building,
+     *            copied, so shrinking the placer's hand afterwards cannot empty the refund
      */
-    public void assign(UUID builder, double arrivalRange) {
+    public void assign(UUID builder, double arrivalRange, ItemStack kit) {
         this.builder = builder;
         this.arrivalRange = arrivalRange;
+        this.kit = kit.copyWithCount(1);
         this.started = false;
         this.missedTicks = 0;
+        this.waitingTicks = 0;
     }
 
     /** Whether anyone was ever required to build this. */
@@ -124,7 +159,15 @@ public final class ConstructionSite {
         this.missedTicks = worker == null ? this.missedTicks + 1 : 0;
         boolean inRange = worker != null
                 && worker.position().distanceToSqr(site) <= this.arrivalRange * this.arrivalRange;
-        Progress progress = decide(true, worker != null, inRange, this.started, this.missedTicks);
+        if (!this.started) {
+            this.waitingTicks++;
+        }
+        Progress progress =
+                decide(true, worker != null, inRange, this.started, this.missedTicks, this.waitingTicks);
+        if (progress == Progress.ABANDONED && !this.started) {
+            // Nothing was ever built here, so the kit goes back on the ground for whoever placed it.
+            this.refundKit(level, site);
+        }
         if (inRange) {
             this.started = true;
             if (consumesBuilder(worker)) {
@@ -150,11 +193,18 @@ public final class ConstructionSite {
      * @param inRange      whether that worker is standing at the site
      * @param started      whether it has ever been
      * @param missedTicks  consecutive ticks it has failed to resolve
+     * @param waitingTicks ticks since it was called, while it has never arrived
      */
     static Progress decide(boolean required, boolean builderAlive, boolean inRange, boolean started,
-            int missedTicks) {
+            int missedTicks, int waitingTicks) {
         if (!required) {
             return Progress.BUILDING;
+        }
+        // Checked ahead of whether the builder is alive, because the case this exists for is a
+        // worker that is perfectly healthy and simply never gets there — walled off, stuck on
+        // terrain, or pulled away by a move order before it ever arrived.
+        if (!started && waitingTicks > ARRIVAL_TIMEOUT_TICKS) {
+            return Progress.ABANDONED;
         }
         if (!builderAlive) {
             if (missedTicks > LOST_TOLERANCE_TICKS) {
@@ -176,8 +226,24 @@ public final class ConstructionSite {
             worker.clearBuildSite(site);
         }
         this.builder = null;
+        this.kit = ItemStack.EMPTY;
         this.started = false;
         this.missedTicks = 0;
+        this.waitingTicks = 0;
+    }
+
+    /**
+     * Puts the placing item back on the ground where the building was going to stand. Cleared as it
+     * drops, so a site whose building takes another tick to come down cannot refund twice.
+     */
+    private void refundKit(ServerLevel level, Vec3 site) {
+        if (this.kit.isEmpty()) {
+            return;
+        }
+        ItemEntity dropped = new ItemEntity(level, site.x, site.y + 0.5, site.z, this.kit);
+        dropped.setDefaultPickUpDelay();
+        level.addFreshEntity(dropped);
+        this.kit = ItemStack.EMPTY;
     }
 
     @Nullable
@@ -246,6 +312,21 @@ public final class ConstructionSite {
     }
 
     /**
+     * The plume a building that is an entity throws off while it goes up, in its own race's colours
+     * ({@code race.RaceProfile.constructionParticle}) — the counterpart of what
+     * {@code BuildingDefense.tickWarpIn} emits over a building that is blocks. Read off the
+     * building's own race attachment, the way {@code FactionAttachments.isHostile} reads an
+     * attacker's, so no caller names a particle and none names a race. The count and spread stay the
+     * caller's: how big a cloud a Bunker makes is a fact about the Bunker.
+     */
+    public static void plume(ServerLevel level, Entity building, int count, double xzSpread, double ySpread) {
+        Race race = FactionAttachments.raceOf(building);
+        ParticleOptions particle = race == null ? ParticleTypes.SMOKE : Races.of(race).constructionParticle();
+        level.sendParticles(particle, building.getX(), building.getY() + 0.6, building.getZ(),
+                count, xzSpread, ySpread, xzSpread, 0.01);
+    }
+
+    /**
      * Takes a half-built building-as-entity away, for a build whose worker was killed. Discarded
      * rather than killed: it never finished, so it owes no death drops and no death event — it was
      * only ever a construction site.
@@ -262,6 +343,10 @@ public final class ConstructionSite {
             output.store("Builder", UUIDUtil.CODEC, this.builder);
             output.putDouble("BuilderRange", this.arrivalRange);
             output.putBoolean("BuildStarted", this.started);
+            output.putInt("BuilderWait", this.waitingTicks);
+            if (!this.kit.isEmpty()) {
+                output.store("BuilderKit", ItemStack.CODEC, this.kit);
+            }
         }
     }
 
@@ -269,6 +354,8 @@ public final class ConstructionSite {
         this.builder = input.read("Builder", UUIDUtil.CODEC).orElse(null);
         this.arrivalRange = input.getDoubleOr("BuilderRange", STANDOFF);
         this.started = input.getBooleanOr("BuildStarted", false);
+        this.waitingTicks = input.getIntOr("BuilderWait", 0);
+        this.kit = input.read("BuilderKit", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         this.missedTicks = 0;
     }
 }

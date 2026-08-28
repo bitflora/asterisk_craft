@@ -13,7 +13,6 @@ import net.bitflora.asteriskcraft.entity.protoss.PhotonCannonEntity;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -150,8 +149,7 @@ public class SunkenColonyEntity extends Monster implements Rooted, CreepSource, 
                 }
             }
             this.entityData.set(BUILD_TICKS_REMAINING, buildTicks - 1);
-            level.sendParticles(ParticleTypes.CRIMSON_SPORE,
-                    this.getX(), this.getY() + 0.6, this.getZ(), 6, 0.5, 0.6, 0.5, 0.01);
+            ConstructionSite.plume(level, this, 6, 0.5, 0.6);
             if (buildTicks == 1) {
                 this.finishBuild(level);
                 this.site.release(level, this.blockPosition());

@@ -165,7 +165,12 @@ Production buildings share a common shape, factored into `building/`:
   `ConstructionSite.CALL_RADIUS` (32) and is refused outright if none answers, the countdown does not
   start until that worker arrives, and the structure is razed if it is killed before the build
   finishes. Once the worker has arrived the build runs to completion whether or not it stays, so
-  pulling one off with a move order is a redirection rather than a cancellation. It is its own object
+  pulling one off with a move order is a redirection rather than a cancellation. **A builder that
+  never arrives at all cancels the site**: `ARRIVAL_TIMEOUT_TICKS` (600, 30s) after the call, a
+  structure its worker has still not reached razes itself and **drops the item that placed it**, and
+  so does one whose worker is killed on the way over — nothing was built, so nothing was spent. The
+  refund is the placing stack, copied at `assign` and saved on the site (a 30-second wait outlives a
+  reload), and it is dropped by the site itself, so neither raze call site knows about it. It is its own object
   and not a field on either mechanism because there are two: a building that is blocks counts down in
   `BuildingDefense.tickWarpIn`, a building that is an entity (`building/PrePlaced`) in its own
   `tick()`, and both consult one of these first — so a Terran structure later re-authored as an
@@ -191,11 +196,18 @@ Production buildings share a common shape, factored into `building/`:
   in the not-required state world generation already used. Dropping the UUID in the same tick the
   worker dies is load-bearing: a dying entity stops answering `isAlive()`, so a site that kept it
   would count past `LOST_TOLERANCE_TICKS` and raze the structure the Drone just paid for.
-- **What a building stands as while it goes up is per race**, not one constant: `RaceProfile.scaffold`
-  supplies `WarpScaffold`'s pane (Protoss light-blue glass, Zerg purple), handed in at
-  `BuildingDefense.beginWarpIn` from `BuildingKitItem` and then **saved on the scaffold**, because
-  `collectSmashed` tests against it on every sweep and a warp routinely outlives a reload. A Hive
-  growing itself out of Protoss warp glass is the failure this prevents.
+- **What a building stands as while it goes up is per race, and so is what it throws off** — two
+  fields, not one constant each: `RaceProfile.scaffold` supplies `WarpScaffold`'s pane (Protoss
+  light-blue glass, Zerg slime, Terran dark grey glass) and `RaceProfile.constructionParticle` the
+  plume over it (Protoss soul fire, Zerg `spore_blossom_air`, Terran `campfire_cosy_smoke`). Both are
+  handed in at `BuildingDefense.beginWarpIn` from `BuildingKitItem` and then **saved**, the pane on
+  the scaffold because `collectSmashed` tests against it on every sweep and the particle beside it,
+  because a warp routinely outlives a reload. A Hive growing itself out of Protoss warp glass, or a
+  Command Center welding itself together in Protoss soul fire, is the failure this prevents.
+  **A building that is an entity gets the same plume from the same table**, through
+  `ConstructionSite.plume`, which reads the race off the building's own attachment the way
+  `isHostile` reads an attacker's — so the Bunker, the Missile Turret, the two colonies and the
+  Photon Cannon name no particle between them.
 - `building/CoreCensus` is the **only** answer to "where are this faction's bases". Every base enrols itself from its own tick, so it sees one warped in from a kit, and it is symmetric across the two sides in a way the old bootstrap-written position attachments never were. `game/GameOutcome.decide` is symmetric too: a side is out when its *last* base falls, whichever side that is — so an expansion base buys the player another life exactly the way a second Hive always bought the swarm one.
 - Each building is a `BaseEntityBlock` + `BlockEntity` pair (`BaseBlock`/`BaseBlockEntity`, `GatewayBlock`/`GatewayBlockEntity`) with its own production queue, ticking via `createTickerHelper`. **A building that produces nothing does not get a pair of its own**: `building/StructureBlock` + `building/StructureBlockEntity` is the shared one for a structure that only stands up over a build time and can then be battered down (Barracks, Stargate, Spawning Pool, Spire), so each of those is a line of numbers at its registration — race, siege HP, shield pool, build time — rather than a class. The race is there for the reason `BaseBlock` carries one: a building placed by hand belongs to whichever side is playing it. A structure that later gains a command card graduates off it to the Gateway's shape; don't add a case to it instead. A building's `preRemoveSideEffects` deliberately skips `super` (see `ArmyLinkedContainer`) so destroying one building never drops/clears the whole army's shared bank.
 

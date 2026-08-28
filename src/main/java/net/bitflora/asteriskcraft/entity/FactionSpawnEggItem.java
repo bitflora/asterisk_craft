@@ -262,7 +262,7 @@ public class FactionSpawnEggItem extends Item implements PsiDependent, CreepDepe
                 // Standoff measured off the building's own half-width: an SCV cannot stand inside a
                 // Missile Turret, and the site position is the turret's centre.
                 building.constructionSite().assign(builder.getUUID(),
-                        mob.getBbWidth() / 2.0 + ConstructionSite.STANDOFF);
+                        mob.getBbWidth() / 2.0 + ConstructionSite.STANDOFF, new ItemStack(this));
                 builder.setBuildSite(mob.blockPosition());
             }
             if (this.spreadsCreep) {

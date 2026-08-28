@@ -8,6 +8,7 @@ import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile.BaseDefence;
 import net.bitflora.asteriskcraft.race.RaceProfile.StartingStack;
 import net.bitflora.asteriskcraft.stats.UnitStats;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
@@ -106,6 +107,8 @@ public final class Races {
             null,
             // Warp glass, the look this whole mechanic was written for.
             () -> WarpScaffold.PANE,
+            // Soul fire off a building the warp rift is still pouring into place.
+            ParticleTypes.SOUL_FIRE_FLAME,
             List.of(new BaseDefence(AsteriskCraft.PHOTON_CANNON, 1)),
             // No escort: the Protoss detector is the Photon Cannon, which is already in the line
             // above, and nothing else about a Nexus wants a unit hovering over it at world start.
@@ -143,9 +146,12 @@ public final class Races {
             // The mound keeps a mycelium footing under it — same material as the creep it sits in,
             // so unlike the Protoss stonework there is nothing foreign to see.
             () -> Blocks.MYCELIUM.defaultBlockState(),
-            // Purple rather than the Protoss blue: a Hive is grown, not warped in, and a Drone died
-            // to start it. Still glass, so an attacker can smash it for the same penalty.
-            () -> Blocks.PURPLE_STAINED_GLASS.defaultBlockState(),
+            // Slime rather than the Protoss glass: a Hive is grown out of the Drone that died to
+            // start it, so what it stands as while it grows should be flesh rather than a pane.
+            // Still one hit to break, so an attacker can smash it for the same penalty.
+            () -> Blocks.SLIME_BLOCK.defaultBlockState(),
+            // Spores drifting off something alive and unfinished.
+            ParticleTypes.SPORE_BLOSSOM_AIR,
             List.of(new BaseDefence(AsteriskCraft.SUNKEN_COLONY, 1),
                     new BaseDefence(AsteriskCraft.SPORE_COLONY, 1)),
             // One Overlord per Hive, on both sides. The Spore Colony above it detects too, but it is
@@ -199,9 +205,11 @@ public final class Races {
             null,
             null,
             // The Terran build rather than warp, but a half-built Command Center still has to stand
-            // as something for the two minutes an SCV spends welding it together, and glass is what
-            // every race's scaffold is made of.
-            () -> WarpScaffold.PANE,
+            // as something for the two minutes an SCV spends welding it together. Dark grey glass:
+            // the frame of a building, not the Protoss light pouring into one.
+            () -> Blocks.GRAY_STAINED_GLASS.defaultBlockState(),
+            // The smoke of a welding torch, not an energy effect — the SCV is building this by hand.
+            ParticleTypes.CAMPFIRE_COSY_SMOKE,
             // A Bunker and the two Marines that crew it. GameBootstrap puts the Marines inside once
             // both are standing (see its garrison pass) — order here is irrelevant, since it boards
             // afterwards rather than as it spawns.

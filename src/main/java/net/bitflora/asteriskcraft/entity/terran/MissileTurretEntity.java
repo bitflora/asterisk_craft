@@ -12,7 +12,6 @@ import net.bitflora.asteriskcraft.entity.ai.terran.MissileTurretFireGoal;
 import net.bitflora.asteriskcraft.stats.UnitAttributes;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.bitflora.asteriskcraft.stats.UnitStats;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -186,8 +185,7 @@ public class MissileTurretEntity extends Mob implements Detector, Rooted, PrePla
                 }
             }
             this.entityData.set(BUILD_TICKS_REMAINING, buildTicks - 1);
-            level.sendParticles(ParticleTypes.SMOKE,
-                    this.getX(), this.getY() + 0.6, this.getZ(), 4, 0.5, 0.7, 0.5, 0.01);
+            ConstructionSite.plume(level, this, 4, 0.5, 0.7);
             if (buildTicks == 1) {
                 this.finishBuild(level);
                 this.site.release(level, this.blockPosition());

@@ -2,6 +2,7 @@ package net.bitflora.asteriskcraft.race;
 
 import net.bitflora.asteriskcraft.building.ProductionKind;
 import net.bitflora.asteriskcraft.faction.Race;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -51,6 +52,13 @@ import java.util.function.Supplier;
  *                       Per race rather than one constant because it is the most visible thing about
  *                       a building under construction, and a Hive growing out of Protoss warp glass
  *                       reads as the wrong army's
+ * @param constructionParticle
+ *                       what a building of this race throws off while it is going up — the plume at
+ *                       a warping core ({@code building.BuildingDefense}) and at a building that is
+ *                       an entity ({@code building.ConstructionSite#plume}). Beside {@link #scaffold}
+ *                       and for the same reason: how a half-built building reads is per race, and a
+ *                       Command Center welding itself together in Protoss warp sparks reads as the
+ *                       wrong army's
  * @param baseDefences   static defence planted with each base at world generation. The
  *                       <em>computer's</em> only — the human's starting base deliberately plants
  *                       none and gets {@link #playerKit} instead, so it mines its own way up
@@ -83,6 +91,7 @@ public record RaceProfile(
         @Nullable Supplier<BlockState> creep,
         @Nullable Supplier<BlockState> support,
         Supplier<BlockState> scaffold,
+        ParticleOptions constructionParticle,
         List<BaseDefence> baseDefences,
         List<BaseDefence> baseEscort,
         List<StartingStack> startingBank,
