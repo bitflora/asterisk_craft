@@ -1,6 +1,5 @@
 package net.bitflora.asteriskcraft.building;
 
-import com.mojang.serialization.Codec;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.entity.TeamColors;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
@@ -14,6 +13,7 @@ import net.bitflora.asteriskcraft.race.UnitRoster;
 import net.bitflora.asteriskcraft.stats.CostPayment;
 import net.bitflora.asteriskcraft.stats.CostText;
 import net.bitflora.asteriskcraft.stats.Resource;
+import net.bitflora.asteriskcraft.stats.UnitCost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -39,9 +39,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,28 +74,66 @@ import java.util.Optional;
 public class BaseBlockEntity extends BlockEntity
         implements ArmyLinkedContainer, ProductionBuilding, FactionCore, BeaconBeamOwner, WarpInBuilding {
 
-    /** All-wood or all-cobblestone (player's choice) to warp out a building kit. */
-    public static final int BUILDING_COST = 150;
+    /**
+     * What the buildings sold at a command card cost. These are {@link UnitCost}s and not plain
+     * amounts because a building's price is the same shape a unit's is: several lines that must all
+     * be paid ({@link #BARRACKS_COST}), or several interchangeable ones the player picks between
+     * ({@link #BUILDING_COST}). A card gives one button per alternative, exactly as it does for a
+     * worker, so alternative order is button order here too — Wood first, then Stone.
+     */
+    public static final UnitCost BUILDING_COST = UnitCost.either(
+            List.of(UnitCost.line(Resource.WOOD, 150)),
+            List.of(UnitCost.line(Resource.STONE, 150)));
     /** Cobblestone-only cost for a second/expansion base — deliberately pricier and not wood-alternative. */
-    public static final int BASE_KIT_COST = 400;
+    public static final UnitCost BASE_KIT_COST = UnitCost.of(Resource.STONE, 400);
     /** All-wood or all-cobblestone, and cheaper than what it unlocks: a Pylon is a prerequisite, not a prize. */
-    public static final int PYLON_COST = 100;
+    public static final UnitCost PYLON_COST = UnitCost.either(
+            List.of(UnitCost.line(Resource.WOOD, 100)),
+            List.of(UnitCost.line(Resource.STONE, 100)));
     /**
      * Cobblestone-only, and the cheapest structure in the mod: a Bunker is worth nothing empty, so
      * what a player really pays for it is the four units they have to put inside.
      */
-    public static final int BUNKER_COST = 100;
+    public static final UnitCost BUNKER_COST = UnitCost.of(Resource.STONE, 100);
     /**
      * Cobblestone-only, and cheaper than a Bunker on purpose: unlike a Bunker, a Missile Turret is
      * worth its price the moment it is standing, so what a player is buying is the whole answer to
      * the air rather than a shell they still have to crew.
      */
-    public static final int MISSILE_TURRET_COST = 75;
-    public static final int MAX_QUEUE = 5;
+    public static final UnitCost MISSILE_TURRET_COST = UnitCost.of(Resource.STONE, 75);
+    /**
+     * The Terran expansion base, and the one price that is <em>not</em> {@link #BASE_KIT_COST}:
+     * a Command Center is the same 400 as a Nexus or a Hive, but payable in either resource rather
+     * than in cobblestone alone, which is the same Wood/Stone choice the race's SCV button offers.
+     */
+    public static final UnitCost COMMAND_CENTER_COST = UnitCost.either(
+            List.of(UnitCost.line(Resource.WOOD, 400)),
+            List.of(UnitCost.line(Resource.STONE, 400)));
+    /**
+     * The Terran infantry building: half a Gateway's price in each resource rather than a choice
+     * between them, so it is bought out of a balanced bank rather than out of whichever pile is
+     * deepest.
+     */
+    public static final UnitCost BARRACKS_COST = UnitCost.all(
+            UnitCost.line(Resource.WOOD, 75), UnitCost.line(Resource.STONE, 75));
+    /**
+     * The Protoss air building, and the most expensive structure on any card: it is bought on top of
+     * the Gateway rather than instead of it, and the iron is what keeps it out of an opening.
+     */
+    public static final UnitCost STARGATE_COST = UnitCost.all(
+            UnitCost.line(Resource.STONE, 150), UnitCost.line(Resource.WOOD, 150),
+            UnitCost.line(Resource.IRON, 10));
+    /** The swarm's first tech building — one flat pile of anything, the way every Zerg cost is. */
+    public static final UnitCost SPAWNING_POOL_COST = UnitCost.of(Resource.ANY, 200);
+    /**
+     * The swarm's air building. The one Zerg cost that names a specific resource alongside
+     * {@link Resource#ANY} — see {@code UnitCost.bankCosts}, which is what keeps the flat pile from
+     * eating the iron before the iron line is paid.
+     */
+    public static final UnitCost SPIRE_COST = UnitCost.all(
+            UnitCost.line(Resource.ANY, 250), UnitCost.line(Resource.IRON, 10));
     /** Pay with whichever cost alternative the army can afford - see {@link #queueUnit}. */
     private static final int ANY_COST = -1;
-
-    private static final Codec<List<String>> QUEUE_CODEC = Codec.STRING.listOf();
 
     private final RaceProfile profile;
     private final BuildingDefense defense;
@@ -111,17 +147,8 @@ public class BaseBlockEntity extends BlockEntity
      * playing its race, which is the only answer that stays right once the human can pick one.
      */
     private @Nullable Faction faction;
-    /**
-     * What is in production, oldest first, as roster ids ({@code stats.UnitStat#id()}).
-     *
-     * <p>Ids rather than option indices because this is saved: a card reordered in a later version
-     * would otherwise turn a saved queue into whatever now sits at those positions. It is also what
-     * lets one queue hold a mix - the Hive's card morphs combat units as well as training Drones,
-     * and a Mutalisk behind a Zergling has to take a Mutalisk's build time.
-     */
-    private final Deque<String> queue = new ArrayDeque<>();
-    /** Counts down the head of the queue; 0 whenever nothing is in production. */
-    private int buildTicksRemaining;
+    /** What is in production, oldest first — shared with every other producing building. */
+    private final UnitQueue queue;
     /** Whether this base has enrolled in the {@link CoreCensus} since loading. Not saved — the census is. */
     private boolean enrolled = false;
 
@@ -131,11 +158,12 @@ public class BaseBlockEntity extends BlockEntity
             if (index >= ProductionMenu.DATA_QUEUE_BASE) {
                 return queuedCountFor(index - ProductionMenu.DATA_QUEUE_BASE);
             }
-            String head = queue.peek();
+            String head = queue.head();
             return switch (index) {
                 case ProductionMenu.DATA_BUILDING_INDEX -> head == null ? -1 : optionIndexFor(head);
-                case ProductionMenu.DATA_BUILD_PROGRESS -> head == null ? 0 : buildTicksOf(head) - buildTicksRemaining;
-                case ProductionMenu.DATA_BUILD_TOTAL -> head == null ? 0 : buildTicksOf(head);
+                case ProductionMenu.DATA_BUILD_PROGRESS ->
+                        head == null ? 0 : queue.buildTicksOf(head) - queue.buildTicksRemaining();
+                case ProductionMenu.DATA_BUILD_TOTAL -> head == null ? 0 : queue.buildTicksOf(head);
                 case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
                 default -> 0;
             };
@@ -157,17 +185,12 @@ public class BaseBlockEntity extends BlockEntity
         this.profile = Races.of(raceOf(state));
         this.defense = new BuildingDefense(
                 this.profile.baseHealth(), this.profile.baseShield(), this.profile.baseWarpTicks());
-        this.buildTicksRemaining = 0;
+        this.queue = new UnitQueue(this.profile::roster);
     }
 
     /** The race a base block declares, defaulting defensively for a state that isn't one. */
     private static Race raceOf(BlockState state) {
         return state.getBlock() instanceof BaseBlock base ? base.race() : Race.PROTOSS;
-    }
-
-    /** The build time of a queued roster id, off the balance table; 0 for one this race can't build. */
-    private int buildTicksOf(String rosterId) {
-        return this.profile.roster().resolve(rosterId).map(UnitRoster.UnitDef::buildTicks).orElse(0);
     }
 
     /**
@@ -192,16 +215,7 @@ public class BaseBlockEntity extends BlockEntity
             return 0;
         }
         String rosterId = producedBy(options.get(optionIndex).action());
-        if (rosterId == null) {
-            return 0;
-        }
-        int count = 0;
-        for (String queuedId : this.queue) {
-            if (rosterId.equals(queuedId)) {
-                count++;
-            }
-        }
-        return count;
+        return rosterId == null ? 0 : this.queue.countOf(rosterId);
     }
 
     /**
@@ -238,16 +252,11 @@ public class BaseBlockEntity extends BlockEntity
         if (base.queue.isEmpty()) {
             return;
         }
-        if (--base.buildTicksRemaining > 0) {
-            base.setChanged();
-            return;
-        }
-        String finished = base.queue.poll();
-        // The next unit's own build time, not this one's: the queue is mixed, and an Ultralisk
-        // behind a Zergling must take an Ultralisk's time.
-        base.buildTicksRemaining = base.queue.isEmpty() ? 0 : base.buildTicksOf(base.queue.peek());
+        String finished = base.queue.tick();
         base.setChanged();
-        base.spawnUnit((ServerLevel) level, pos, finished);
+        if (finished != null) {
+            base.spawnUnit((ServerLevel) level, pos, finished);
+        }
     }
 
     /** True when the base has a clear path to the sky and can produce; false while buried (dormant). */
@@ -257,9 +266,7 @@ public class BaseBlockEntity extends BlockEntity
 
     /** Clears any in-progress production when the base goes dormant (loses its sky). */
     private void cancelQueueOnDormant() {
-        if (!this.queue.isEmpty()) {
-            this.queue.clear();
-            this.buildTicksRemaining = 0;
+        if (this.queue.clear()) {
             this.setChanged();
         }
     }
@@ -323,8 +330,8 @@ public class BaseBlockEntity extends BlockEntity
                     queueUnit(player, this.profile.worker(), alternative);
             case ProductionKind.Action.TrainUnit(String rosterId) ->
                     this.profile.roster().resolve(rosterId).ifPresent(def -> queueUnit(player, def, ANY_COST));
-            case ProductionKind.Action.GiveKit(var kit, Resource resource, int cost, String readyKey) ->
-                    warpInKit(player, kit.get(), resource, cost, readyKey);
+            case ProductionKind.Action.GiveKit(var kit, UnitCost cost, int alternative, String readyKey) ->
+                    warpInKit(player, kit.get(), cost, alternative, readyKey);
             case ProductionKind.Action.Factory ignored -> {
                 // A factory button on a base's card is a mis-authored table, not a runtime case.
             }
@@ -337,7 +344,7 @@ public class BaseBlockEntity extends BlockEntity
      * combat unit's single button wants, and matches how the Gateway pays.
      */
     private void queueUnit(Player player, UnitRoster.UnitDef def, int alternative) {
-        if (this.queue.size() >= MAX_QUEUE) {
+        if (this.queue.isFull()) {
             overlay(player, Component.translatable("message.asteriskcraft.base.queue_full"));
             return;
         }
@@ -348,11 +355,7 @@ public class BaseBlockEntity extends BlockEntity
             overlay(player, cannotAfford(def, alternative));
             return;
         }
-        boolean wasIdle = this.queue.isEmpty();
         this.queue.add(def.id());
-        if (wasIdle) {
-            this.buildTicksRemaining = def.buildTicks();
-        }
         this.setChanged();
         if (this.level != null) {
             this.level.playSound(null, this.worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.6f, 1.4f);
@@ -375,11 +378,15 @@ public class BaseBlockEntity extends BlockEntity
                 def.cost().amountOf(alternative, resource), resourceName(resource));
     }
 
-    /** Warp-in kits are instant: pay the chosen resource's share and hand the player the kit item. */
-    private void warpInKit(Player player, Item kit, Resource resource, int cost, String readyKey) {
-        if (!ResourceBank.extract(this, resource.matches(), cost)) {
+    /**
+     * Warp-in kits are instant: pay the button's own cost alternative and hand the player the kit
+     * item. The building's own build time is spent afterwards, once the kit is placed — a kit's
+     * countdown belongs to the structure it stamps, not to the base that sold it.
+     */
+    private void warpInKit(Player player, Item kit, UnitCost cost, int alternative, String readyKey) {
+        if (!CostPayment.pay(this, cost, alternative)) {
             overlay(player, Component.translatable("message.asteriskcraft.base.cannot_afford_building",
-                    cost, resourceName(resource)));
+                    CostText.costOnly(cost, alternative)));
             return;
         }
         giveOrDrop(player, new ItemStack(kit));
@@ -555,8 +562,7 @@ public class BaseBlockEntity extends BlockEntity
         if (this.faction != null) {
             output.store("Faction", Faction.CODEC, this.faction);
         }
-        output.store("Queue", QUEUE_CODEC, List.copyOf(this.queue));
-        output.putInt("BuildTicks", this.buildTicksRemaining);
+        this.queue.save(output);
         this.defense.save(output);
     }
 
@@ -566,7 +572,7 @@ public class BaseBlockEntity extends BlockEntity
      * production instead of losing it.
      */
     private List<String> legacyQueue(ValueInput input) {
-        return Collections.nCopies(Math.min(input.getIntOr("Queued", 0), MAX_QUEUE),
+        return Collections.nCopies(Math.min(input.getIntOr("Queued", 0), UnitQueue.MAX),
                 this.profile.worker().id());
     }
 
@@ -575,12 +581,7 @@ public class BaseBlockEntity extends BlockEntity
         super.loadAdditional(input);
         Optional<Faction> saved = input.read("Faction", Faction.CODEC);
         this.faction = saved.orElse(null);
-        this.queue.clear();
-        this.queue.addAll(input.read("Queue", QUEUE_CODEC).orElseGet(() -> legacyQueue(input)));
-        // Read after the queue: with per-unit build times, the fallback for a save without one is
-        // the head unit's own, which there is no way to know before the queue is in hand.
-        this.buildTicksRemaining = input.getIntOr("BuildTicks",
-                this.queue.isEmpty() ? 0 : buildTicksOf(this.queue.peek()));
+        this.queue.load(input, () -> legacyQueue(input));
         this.defense.load(input);
     }
 }

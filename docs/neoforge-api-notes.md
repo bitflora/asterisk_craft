@@ -332,3 +332,14 @@ and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/clie
   by hand at the same time, or the widget and the value it stands for silently disagree. Recorded
   because `client/RacePickerOverlay` used to push its two pickers off a shared race this way; the two
   are independent now (a mirror match is a real match), so nothing in the mod calls it today.
+
+## Concrete API facts (menus with extra open data — verified while giving the Barracks a command card)
+
+- **A `MenuType` registered through `IMenuTypeExtension.create` has *two* constructors, and the server has to feed the second one.** `IMenuTypeExtension.create(ProductionMenu::new)` binds the `(int, Inventory, RegistryFriendlyByteBuf)` form, which the client calls from `ClientboundOpenScreenPacket`. The buffer it is handed is whatever the server wrote when the menu was opened — and `player.openMenu(provider)`, the vanilla one-argument overload, writes **nothing**, so the client constructor receives a literal `null` and dies on its first read:
+  ```
+  java.lang.NullPointerException: Cannot invoke "RegistryFriendlyByteBuf.readVarInt()" because "buf" is null
+      at ProductionMenu.<init>(ProductionMenu.java:83)
+      at net.neoforged.neoforge.network.IContainerFactory.create(IContainerFactory.java:35)
+  ```
+  It is a **client** crash on right-click (the packet handler disconnects), not a server error, and nothing about the one-argument overload's signature hints that it is the wrong one — it compiles and reads perfectly. The correct call is the NeoForge overload `player.openMenu(provider, buf -> ...)`, writing exactly what the client constructor reads, in the same order.
+- Because the two halves can only be kept in step by hand, this mod funnels every open through `ProductionMenu.open(Player, ProductionBuilding)`, which sits directly above the client constructor it feeds. A new producing building calls that rather than `openMenu` itself.

@@ -44,6 +44,26 @@ class ProductionCardLayoutTest {
         }
     }
 
+    /**
+     * A kit button names a cost <em>alternative</em>, and a card that names one its cost doesn't
+     * have is a table typo with no runtime branch to catch it: the tooltip is built at this enum's
+     * class-init, so the whole mod fails to load rather than the button misbehaving. Pinning it here
+     * turns that into a named test failure.
+     */
+    @Test
+    void everyKitButtonNamesACostAlternativeThatExists() {
+        for (ProductionKind kind : ProductionKind.values()) {
+            for (ProductionKind.OptionView option : kind.options()) {
+                if (!(option.action() instanceof ProductionKind.Action.GiveKit kit)) {
+                    continue;
+                }
+                assertTrue(kit.alternative() >= 0 && kit.alternative() < kit.cost().alternatives().size(),
+                        kind + ": a kit button pays alternative " + kit.alternative()
+                                + " of a cost that has " + kit.cost().alternatives().size());
+            }
+        }
+    }
+
     @Test
     void everyCardsButtonGridFitsThePanelWidth() {
         for (ProductionKind kind : ProductionKind.values()) {

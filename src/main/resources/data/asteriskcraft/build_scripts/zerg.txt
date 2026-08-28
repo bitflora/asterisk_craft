@@ -26,7 +26,7 @@ Workers: 9
 
 # Opening: post a few defenders while the economy ramps up.
 Defence: 3 Zergling
-Wait 65
+Wait 165
 
 # Escalating pushes.
 Wave: 2 Zergling

@@ -52,10 +52,11 @@ public final class Races {
 
     /**
      * The Terran base is as sturdy as the other two — the thing you lose the game with should be —
-     * but carries no shields (not a Terran mechanic) and no warp-in, since nothing raises one from
-     * a kit yet.
+     * but carries no shields, which is not a Terran mechanic.
      */
     private static final int TERRAN_BASE_HEALTH = 325;
+    /** The Nexus's and the Hive's two minutes: an expansion Command Center is the same commitment. */
+    private static final int TERRAN_BASE_WARP_TICKS = 20 * 120;
     /** The Protoss shape: three rows, and only a handful of item types ever in it. */
     private static final int TERRAN_BANK_SLOTS = 27;
 
@@ -179,7 +180,7 @@ public final class Races {
             BuildingTemplates.COMMAND_CENTER,
             TERRAN_BASE_HEALTH,
             0,
-            0,
+            TERRAN_BASE_WARP_TICKS,
             TERRAN_BANK_SLOTS,
             UnitRoster.builder()
                     .worker(UnitStats.SCV, AsteriskCraft.SCV)
@@ -197,8 +198,9 @@ public final class Races {
             // No creep, and no support fill: the Terran set down on the ground as they find it.
             null,
             null,
-            // Never raised today — no Terran kit stamps a template — but a profile has to name one,
-            // and the Command Center is a building like any other if one ever does.
+            // The Terran build rather than warp, but a half-built Command Center still has to stand
+            // as something for the two minutes an SCV spends welding it together, and glass is what
+            // every race's scaffold is made of.
             () -> WarpScaffold.PANE,
             // A Bunker and the two Marines that crew it. GameBootstrap puts the Marines inside once
             // both are standing (see its garrison pass) — order here is irrelevant, since it boards

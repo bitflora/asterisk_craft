@@ -1,7 +1,7 @@
 package net.bitflora.asteriskcraft.entity;
 
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
-import net.bitflora.asteriskcraft.building.BaseBlockEntity;
+import net.bitflora.asteriskcraft.building.UnitQueue;
 import net.bitflora.asteriskcraft.race.RaceProfile;
 import net.bitflora.asteriskcraft.race.Races;
 import net.bitflora.asteriskcraft.entity.WorkerEntity.ResourceType;
@@ -61,6 +61,6 @@ class WorkerEconomyTest {
             assertTrue(profile.worker().buildTicks() > 0,
                     profile.race() + "'s worker must take time to build");
         }
-        assertTrue(BaseBlockEntity.MAX_QUEUE >= 1, "the queue must hold at least one worker");
+        assertTrue(UnitQueue.MAX >= 1, "the queue must hold at least one worker");
     }
 }

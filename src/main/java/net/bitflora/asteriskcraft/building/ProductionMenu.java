@@ -30,11 +30,12 @@ public class ProductionMenu extends AbstractContainerMenu {
     // The screen reads a queued count for every option, so this has to cover the widest card there
     // is: the Nexus spends its buttons on Wood/Stone pairs, and the Hive - which has no factory
     // building to send unit production to - on one button per unit it can morph, so the Hive's card
-    // is the one that grows every time the swarm gains a unit. It is at ten as of the Overlord.
+    // is the one that grows every time the swarm gains a unit. It is at twelve as of the Spawning
+    // Pool and the Spire.
     // ProductionCardLayoutTest fails the build if a card outgrows this: the count is not checked
     // anywhere at runtime, and a card with one option too many read off the end of the data array
     // and crashed the screen rather than degrading.
-    public static final int MAX_OPTIONS = 10;
+    public static final int MAX_OPTIONS = 12;
     public static final int DATA_COUNT = DATA_QUEUE_BASE + MAX_OPTIONS;
 
     // Shared layout so the screen positions buttons/slots to match the menu's slots.
@@ -76,6 +77,21 @@ public class ProductionMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final ContainerLevelAccess access;
     private final int inputSlots;
+
+    /**
+     * Opens {@code building}'s card for {@code player}, writing the one thing the client needs to
+     * rebuild the menu: which card it is.
+     *
+     * <p>This exists so that the write and the {@linkplain #ProductionMenu(int, Inventory,
+     * RegistryFriendlyByteBuf) read} sit beside each other. Every producing building has to open its
+     * menu this way — {@code MenuType} is registered through {@code IMenuTypeExtension.create}, so a
+     * plain {@code player.openMenu(provider)} hands the client constructor a <b>null</b> buffer and
+     * takes the game down with an NPE on right-click, which no test catches and every building would
+     * otherwise have to remember on its own.
+     */
+    public static void open(Player player, ProductionBuilding building) {
+        player.openMenu(building, buf -> buf.writeVarInt(building.kind().ordinal()));
+    }
 
     /** Client constructor: rebuilds an empty mirror container/data from the open-menu buffer. */
     public ProductionMenu(int windowId, Inventory playerInv, RegistryFriendlyByteBuf buf) {

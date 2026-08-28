@@ -9,11 +9,16 @@ import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
+import net.bitflora.asteriskcraft.building.FactoryBlock;
+import net.bitflora.asteriskcraft.building.FactoryBlockEntity;
 import net.bitflora.asteriskcraft.building.GatewayBlock;
 import net.bitflora.asteriskcraft.building.GatewayBlockEntity;
+import net.bitflora.asteriskcraft.building.ProductionKind;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
 import net.bitflora.asteriskcraft.building.PylonBlock;
 import net.bitflora.asteriskcraft.building.PylonBlockEntity;
+import net.bitflora.asteriskcraft.building.StructureBlock;
+import net.bitflora.asteriskcraft.building.StructureBlockEntity;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CursorItem;
 import net.bitflora.asteriskcraft.command.CommandInputPacket;
@@ -135,30 +140,51 @@ public class AsteriskCraft {
             props -> new BaseBlock(Race.TERRAN, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
-    // Visual-only cores for the next wave of unit-factory buildings (Stargate, Spawning Pool, Spire,
-    // Barracks, Factory) — plain blocks with no BlockEntity yet, staged ahead of the production-menu
-    // wiring (ProductionKind card, BlockEntity, .nbt template, BuildingKitItem) that will follow the
-    // Gateway's shape. Appearance is borrowed via the block model's "parent", not copied pixels.
-    public static final DeferredBlock<Block> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
-            Block::new,
+    // The cores of the four buildings a kit stamps but that produce nothing yet. They share one
+    // StructureBlock/StructureBlockEntity pair, so each is a line of numbers rather than a class:
+    // whose building it is (for resolving an owner that was never set), what it takes to raze, and
+    // its build time — the warp-in countdown the kit starts, which is what a "build time" is once
+    // the kit itself is instant. Appearance is borrowed via the block model's "parent", not copied
+    // pixels. Adding a command card to one of these is the Gateway's shape and graduates it off this
+    // block; it is not a case to add here.
+    /** 70s, the quickest of the four: the Stargate is the priciest thing on any card already. */
+    private static final int STARGATE_BUILD_TICKS = 20 * 70;
+    private static final int BARRACKS_BUILD_TICKS = 20 * 80;
+    private static final int SPAWNING_POOL_BUILD_TICKS = 20 * 80;
+    /** Two minutes, the Spire and an expansion base — the two things you commit an army's time to. */
+    private static final int SPIRE_BUILD_TICKS = 20 * 120;
+    /** A unit factory's staying power, the Gateway's numbers; a race without shields passes zero. */
+    private static final int FACTORY_HEALTH = 250;
+    private static final int PROTOSS_FACTORY_SHIELD = 250;
+
+    public static final DeferredBlock<StructureBlock> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
+            props -> new StructureBlock(new StructureBlock.Defence(Race.PROTOSS, FACTORY_HEALTH,
+                    PROTOSS_FACTORY_SHIELD, STARGATE_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.COLOR_CYAN).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
-    public static final DeferredBlock<Block> SPAWNING_POOL_CORE = BLOCKS.registerBlock("spawning_pool_core",
-            Block::new,
+    public static final DeferredBlock<StructureBlock> SPAWNING_POOL_CORE = BLOCKS.registerBlock("spawning_pool_core",
+            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, FACTORY_HEALTH, 0,
+                    SPAWNING_POOL_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 15));
 
     // The Spire tapers to a point instead of filling its cube (see the block model), so it must not
     // occlude: an opaque full-cube block wearing a partial model culls its neighbours' facing sides
     // and lights itself as solid, leaving holes in the ground around the spike.
-    public static final DeferredBlock<Block> SPIRE_CORE = BLOCKS.registerBlock("spire_core",
-            Block::new,
+    public static final DeferredBlock<StructureBlock> SPIRE_CORE = BLOCKS.registerBlock("spire_core",
+            props -> new StructureBlock(new StructureBlock.Defence(Race.ZERG, FACTORY_HEALTH, 0,
+                    SPIRE_BUILD_TICKS), props),
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7)
                     .noOcclusion());
 
-    public static final DeferredBlock<Block> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
-            Block::new,
+    // The one of the four that produces something, so it is a FactoryBlock: the same structure plus
+    // a command card. The card is a supplier because ProductionKind's constants name blocks.
+    public static final DeferredBlock<FactoryBlock> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
+            props -> new FactoryBlock(new StructureBlock.Defence(Race.TERRAN, FACTORY_HEALTH, 0,
+                    BARRACKS_BUILD_TICKS), () -> ProductionKind.TERRAN_BARRACKS, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
+    // No kit sells a Factory yet, so it is still the visual-only block the others started as: a
+    // StructureBlock would be claiming a build time nothing ever runs.
     public static final DeferredBlock<Block> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
             Block::new,
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
@@ -208,12 +234,12 @@ public class AsteriskCraft {
             props -> new BuildingKitItem(props, BuildingTemplates.COMMAND_CENTER, COMMAND_CENTER_CORE,
                     BuildingTemplates.COMMAND_CENTER_FOOTPRINT, false).requiringBuilder());
 
-    // The four unit-factory kits. Each is gated by its own race's placement rule — the Stargate needs
-    // psi, the Spawning Pool and Spire need creep, the Barracks needs an SCV — so the ground rules are
-    // exercised the moment a kit goes down, even though the buildings they stamp are still the
-    // visual-only cores registered above: no BlockEntity means no warp-in countdown, no scaffold, no
-    // owner and no siege HP yet. Wiring those is a BlockEntity per core (the Gateway's shape) and
-    // changes nothing here.
+    // The four unit-factory kits, sold at their own race's base (building/ProductionKind). Each is
+    // gated by its race's placement rule — the Stargate needs psi, the Spawning Pool and Spire need
+    // creep, the Barracks needs an SCV — and each stamps a StructureBlock core, which is where its
+    // build time, its scaffold, its owner and its siege HP live. What they still do not have is
+    // anything to produce: a command card on one of these is the Gateway's shape and would take it
+    // off StructureBlock, and it changes nothing here.
     public static final DeferredItem<BuildingKitItem> BARRACKS_KIT = ITEMS.registerItem("barracks_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.BARRACKS, BARRACKS_CORE,
                     BuildingTemplates.BARRACKS_FOOTPRINT, false).requiringBuilder());
@@ -274,6 +300,21 @@ public class AsteriskCraft {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PylonBlockEntity>> PYLON_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("pylon", () -> new BlockEntityType<>(PylonBlockEntity::new, PYLON_CORE.get()));
+
+    // One type for every plain structure, the way BASE_BLOCK_ENTITY is one for every race's base.
+    // A StructureBlock registered without its core listed here gets no block entity behind it, and
+    // so no build time and no siege HP — StructureBlockTest is what says otherwise.
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StructureBlockEntity>> STRUCTURE_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("structure",
+                    () -> new BlockEntityType<>(StructureBlockEntity::new,
+                            STARGATE_CORE.get(), SPAWNING_POOL_CORE.get(), SPIRE_CORE.get()));
+
+    // One type for every unit factory, as BASE_BLOCK_ENTITY is one for every base. The Gateway keeps
+    // its own — it predates the roster and dispatches its card positionally through an enum of
+    // Protoss units, which is a merge worth doing on its own rather than as a side effect of this.
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FactoryBlockEntity>> FACTORY_BLOCK_ENTITY =
+            BLOCK_ENTITY_TYPES.register("factory",
+                    () -> new BlockEntityType<>(FactoryBlockEntity::new, BARRACKS_CORE.get()));
 
     // --- Menus ---
 

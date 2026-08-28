@@ -28,6 +28,15 @@ public final class UnderAttackAlert {
      * one went out recently.
      */
     public void ping(ServerLevel level, Faction owner, String messageKey) {
+        ping(level, owner, Component.translatable(messageKey));
+    }
+
+    /**
+     * The same ping for a building whose message is composed rather than named — a structure that
+     * shares its block entity with three others and can only say which of them it is by its own
+     * block name (see {@code StructureBlockEntity}).
+     */
+    public void ping(ServerLevel level, Faction owner, Component message) {
         if (owner == Faction.NEUTRAL) {
             return;
         }
@@ -40,7 +49,7 @@ public final class UnderAttackAlert {
             if (ControlledFaction.of(player) != owner) {
                 continue;
             }
-            player.sendSystemMessage(Component.translatable(messageKey));
+            player.sendSystemMessage(message);
             level.playSound(null, player.blockPosition(), SoundEvents.WARDEN_NEARBY_CLOSEST, SoundSource.HOSTILE, 0.7f, 1.2f);
         }
     }

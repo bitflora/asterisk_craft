@@ -3,10 +3,12 @@ package net.bitflora.asteriskcraft.building;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.race.Races;
 import net.bitflora.asteriskcraft.stats.CostText;
-import net.bitflora.asteriskcraft.stats.Resource;
+import com.mojang.serialization.Codec;
+import net.bitflora.asteriskcraft.stats.UnitCost;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
@@ -39,7 +41,7 @@ import java.util.function.Supplier;
  * Actions are inert data on the client — the item a kit names is a supplier, and only the server
  * ever resolves it.
  */
-public enum ProductionKind {
+public enum ProductionKind implements StringRepresentable {
     PROTOSS_BASE(() -> AsteriskCraft.NEXUS_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
                     Icon.ofIcon("probe"),
@@ -53,39 +55,47 @@ public enum ProductionKind {
             // standing before its kit will go down — see PsiField.
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PYLON_KIT),
-                    CostText.tooltip(BaseBlockEntity.PYLON_COST, Resource.WOOD), 1,
-                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, Resource.WOOD,
-                            BaseBlockEntity.PYLON_COST, "message.asteriskcraft.base.pylon_ready")),
+                    CostText.tooltip(BaseBlockEntity.PYLON_COST, 0), 1,
+                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, BaseBlockEntity.PYLON_COST, 0,
+                            "message.asteriskcraft.base.pylon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PYLON_KIT),
-                    CostText.tooltip(BaseBlockEntity.PYLON_COST, Resource.STONE), 1,
-                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, Resource.STONE,
-                            BaseBlockEntity.PYLON_COST, "message.asteriskcraft.base.pylon_ready")),
+                    CostText.tooltip(BaseBlockEntity.PYLON_COST, 1), 1,
+                    new Action.GiveKit(AsteriskCraft.PYLON_KIT::get, BaseBlockEntity.PYLON_COST, 1,
+                            "message.asteriskcraft.base.pylon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 2,
-                    new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.WOOD,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 0), 2,
+                    new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, BaseBlockEntity.BUILDING_COST, 0,
+                            "message.asteriskcraft.base.gateway_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.GATEWAY_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 2,
-                    new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.gateway_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 1), 2,
+                    new Action.GiveKit(AsteriskCraft.GATEWAY_KIT::get, BaseBlockEntity.BUILDING_COST, 1,
+                            "message.asteriskcraft.base.gateway_ready")),
+            // The Stargate sits between the Gateway and the Cannon because that is the order it is
+            // bought in, and it gets a single button where its neighbours get a Wood/Stone pair: its
+            // price is one bundle of all three resources, so there is no choice to offer.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.STARGATE_KIT),
+                    CostText.tooltip(BaseBlockEntity.STARGATE_COST, 0), 3,
+                    new Action.GiveKit(AsteriskCraft.STARGATE_KIT::get, BaseBlockEntity.STARGATE_COST, 0,
+                            "message.asteriskcraft.base.stargate_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.WOOD), 3,
-                    new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.WOOD,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 0), 4,
+                    new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, BaseBlockEntity.BUILDING_COST, 0,
+                            "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.PHOTON_CANNON_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 3,
-                    new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.photon_cannon_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 1), 4,
+                    new Action.GiveKit(AsteriskCraft.PHOTON_CANNON_KIT::get, BaseBlockEntity.BUILDING_COST, 1,
+                            "message.asteriskcraft.base.photon_cannon_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.NEXUS_KIT),
-                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 4,
-                    new Action.GiveKit(AsteriskCraft.NEXUS_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.base_kit_ready")))),
+                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, 0), 5,
+                    new Action.GiveKit(AsteriskCraft.NEXUS_KIT::get, BaseBlockEntity.BASE_KIT_COST, 0,
+                            "message.asteriskcraft.base.base_kit_ready")))),
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
                     Icon.ofIcon("zealot"),
@@ -104,8 +114,10 @@ public enum ProductionKind {
      * a Hive morphs its combat units itself, so everything an army needs is on this one card.
      *
      * <p>Two deliberate asymmetries with {@link #PROTOSS_BASE}. Every button is a single one rather
-     * than a Wood/Stone pair — the swarm pays for everything out of one pool — which is also what
-     * keeps this grid inside the panel's six-column budget. And its input slot count is a flat 27,
+     * than a Wood/Stone pair — the swarm pays for everything out of one pool — which is what keeps a
+     * card this long inside the panel's width at all; at seven columns it is the widest there is,
+     * and {@code ProductionCardLayoutTest} is what says whether the next one still fits. And its
+     * input slot count is a flat 27,
      * three rows, rather than the Zerg bank's full {@code Races.ZERG.bankSlots()} of 81:
      * {@link ProductionMenu} lays its height out around three rows, nine would run straight through
      * the button row and the player inventory, and the bank fills from the front with only three
@@ -149,36 +161,46 @@ public enum ProductionKind {
             // way the Photon Cannon is: an ally-side spawn item handed over for a building's price.
             new OptionView(
                     Icon.ofItem(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 4,
-                    new Action.GiveKit(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get, Resource.STONE,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.sunken_colony_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 1), 4,
+                    new Action.GiveKit(AsteriskCraft.SUNKEN_COLONY_SPAWN_EGG_ALLY::get,
+                            BaseBlockEntity.BUILDING_COST, 1, "message.asteriskcraft.base.sunken_colony_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.SPORE_COLONY_SPAWN_EGG_ALLY),
-                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, Resource.STONE), 4,
-                    new Action.GiveKit(AsteriskCraft.SPORE_COLONY_SPAWN_EGG_ALLY::get, Resource.STONE,
-                            BaseBlockEntity.BUILDING_COST, "message.asteriskcraft.base.spore_colony_ready")),
+                    CostText.tooltip(BaseBlockEntity.BUILDING_COST, 1), 4,
+                    new Action.GiveKit(AsteriskCraft.SPORE_COLONY_SPAWN_EGG_ALLY::get,
+                            BaseBlockEntity.BUILDING_COST, 1, "message.asteriskcraft.base.spore_colony_ready")),
+            // The swarm's two grown structures share a column, and it is the only Zerg column whose
+            // buildings are block layouts rather than entities: both are stamped from a template by
+            // a Drone that dies doing it, and both may only go down on creep (CreepField).
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.SPAWNING_POOL_KIT),
+                    CostText.tooltip(BaseBlockEntity.SPAWNING_POOL_COST, 0), 5,
+                    new Action.GiveKit(AsteriskCraft.SPAWNING_POOL_KIT::get,
+                            BaseBlockEntity.SPAWNING_POOL_COST, 0,
+                            "message.asteriskcraft.base.spawning_pool_ready")),
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.SPIRE_KIT),
+                    CostText.tooltip(BaseBlockEntity.SPIRE_COST, 0), 5,
+                    new Action.GiveKit(AsteriskCraft.SPIRE_KIT::get, BaseBlockEntity.SPIRE_COST, 0,
+                            "message.asteriskcraft.base.spire_ready")),
             new OptionView(
                     Icon.ofItem(AsteriskCraft.HIVE_KIT),
-                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 5,
-                    new Action.GiveKit(AsteriskCraft.HIVE_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BASE_KIT_COST, "message.asteriskcraft.base.hive_kit_ready")))),
+                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, 0), 6,
+                    new Action.GiveKit(AsteriskCraft.HIVE_KIT::get, BaseBlockEntity.BASE_KIT_COST, 0,
+                            "message.asteriskcraft.base.hive_kit_ready")))),
     /**
      * The Command Center's card. The Terran have no factory building, so — like the Hive and unlike
      * the Nexus — the base is where the army comes from as well as the economy.
      *
-     * <p>The two columns are deliberately different shapes, and the difference is the rule rather
-     * than an inconsistency. The worker column is a Wood button above a Stone one, the
-     * {@link #PROTOSS_BASE} split: an SCV costs 50 of <em>either</em> resource, and the pair is what
-     * turns that into a choice the player makes rather than one the payment code guesses.
-     * Alternative 0 is Wood and 1 is Stone, matching the order in {@code UnitStats.SCV}'s cost. The
-     * army column gets a single button per unit, because {@link Action.TrainUnit} pays through
-     * {@code CostPayment.payAny} — the Wood/Stone split is a worker-only affordance, and a combat
-     * unit takes whichever the army has. That holds even for the Firebat, whose cost is a bundle of
-     * both resources rather than a choice between them: {@code payAny} walks alternatives, and a
-     * bundle is one alternative with two lines in it.
+     * <p>It trains one unit — the SCV — and sells four buildings, which makes it the
+     * {@link #PROTOSS_BASE}'s shape rather than the {@link #ZERG_BASE}'s: the race's infantry moved
+     * to {@link #TERRAN_BARRACKS} the moment there was a Barracks to put them in, and a base that
+     * still built Marines would have made that building optional.
      *
-     * <p>The third column is the Bunker, and it is the race's one structure: the Terran plant nothing
-     * rooted that shoots, so what they buy instead is somewhere to put the infantry from column two.
+     * <p>The worker column is a Wood button above a Stone one, the {@link #PROTOSS_BASE} split: an
+     * SCV costs 50 of <em>either</em> resource, and the pair is what turns that into a choice the
+     * player makes rather than one the payment code guesses. Alternative 0 is Wood and 1 is Stone,
+     * matching the order in {@code UnitStats.SCV}'s cost.
      */
     TERRAN_BASE(() -> AsteriskCraft.COMMAND_CENTER_CORE.get(), Races.TERRAN.bankSlots(), List.of(
             new OptionView(
@@ -189,9 +211,66 @@ public enum ProductionKind {
                     Icon.ofIcon("scv"),
                     CostText.tooltip(UnitStats.SCV.cost(), 1), 0,
                     new Action.TrainWorker(1)),
+            // The Barracks reads first among the buildings for the reason the Pylon does on the
+            // Nexus's card: the whole army to the right of it now comes out of one. A single button
+            // rather than a Wood/Stone pair, because its price is a bundle of both and there is
+            // nothing for a second button to choose between.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.BARRACKS_KIT),
+                    CostText.tooltip(BaseBlockEntity.BARRACKS_COST, 0), 1,
+                    new Action.GiveKit(AsteriskCraft.BARRACKS_KIT::get, BaseBlockEntity.BARRACKS_COST, 0,
+                            "message.asteriskcraft.base.barracks_ready")),
+            // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
+            // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
+            // building's price. A single button, because its cost names one resource.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.BUNKER_KIT),
+                    CostText.tooltip(BaseBlockEntity.BUNKER_COST, 0), 2,
+                    new Action.GiveKit(AsteriskCraft.BUNKER_KIT::get, BaseBlockEntity.BUNKER_COST, 0,
+                            "message.asteriskcraft.base.bunker_ready")),
+            // The Missile Turret shares the structure column with the Bunker, and the pairing is the
+            // point: the Bunker is what the race puts in front of the ground and the turret is what
+            // it puts under the air, and neither covers for the other.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.MISSILE_TURRET_KIT),
+                    CostText.tooltip(BaseBlockEntity.MISSILE_TURRET_COST, 0), 2,
+                    new Action.GiveKit(AsteriskCraft.MISSILE_TURRET_KIT::get,
+                            BaseBlockEntity.MISSILE_TURRET_COST, 0,
+                            "message.asteriskcraft.base.missile_turret_ready")),
+            // The expansion kit gets its own column, exactly as the Nexus's and the Hive's do — but
+            // not their price: a Command Center is the same 400, payable in either resource rather
+            // than in cobblestone alone, so it is the one expansion kit with a Wood/Stone pair.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.COMMAND_CENTER_KIT),
+                    CostText.tooltip(BaseBlockEntity.COMMAND_CENTER_COST, 0), 3,
+                    new Action.GiveKit(AsteriskCraft.COMMAND_CENTER_KIT::get,
+                            BaseBlockEntity.COMMAND_CENTER_COST, 0,
+                            "message.asteriskcraft.base.command_center_kit_ready")),
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.COMMAND_CENTER_KIT),
+                    CostText.tooltip(BaseBlockEntity.COMMAND_CENTER_COST, 1), 3,
+                    new Action.GiveKit(AsteriskCraft.COMMAND_CENTER_KIT::get,
+                            BaseBlockEntity.COMMAND_CENTER_COST, 1,
+                            "message.asteriskcraft.base.command_center_kit_ready")))),
+    /**
+     * The Barracks' card: the whole Terran army, and nothing else. The race's counterpart to
+     * {@link #GATEWAY} — where the Protoss have always had to build one building before they could
+     * build a soldier, and the Zerg deliberately never do (a Hive morphs its own).
+     *
+     * <p>One button per unit, in its own column, because {@link Action.TrainUnit} pays through
+     * {@code CostPayment.payAny}: the Wood/Stone split is a worker-only affordance and a combat unit
+     * takes whichever the army has. That holds even for the Firebat, whose cost is a bundle of both
+     * resources rather than a choice between them — {@code payAny} walks alternatives, and a bundle
+     * is one alternative with two lines in it.
+     *
+     * <p>Unlike the Gateway's, these buttons are <b>not</b> positional: they name their units by the
+     * same {@code UnitStat.id()} a build script spells, so {@link FactoryBlockEntity} resolves them
+     * against its own race's roster and this card names no Java class.
+     */
+    TERRAN_BARRACKS(() -> AsteriskCraft.BARRACKS_CORE.get(), Races.TERRAN.bankSlots(), List.of(
             new OptionView(
                     Icon.ofIcon("marine"),
-                    CostText.tooltip(UnitStats.MARINE.cost(), 0), 1,
+                    CostText.tooltip(UnitStats.MARINE.cost(), 0), 0,
                     new Action.TrainUnit(UnitStats.MARINE.id())),
             new OptionView(
                     Icon.ofIcon("firebat"),
@@ -200,32 +279,7 @@ public enum ProductionKind {
             new OptionView(
                     Icon.ofIcon("ghost"),
                     CostText.tooltip(UnitStats.GHOST.cost(), 0), 2,
-                    new Action.TrainUnit(UnitStats.GHOST.id())),
-            // The Bunker is an entity rather than a block layout, so it is bought exactly the way the
-            // Photon Cannon and the Zerg colonies are: an ally-side spawn item handed over for a
-            // building's price. A single button, because its cost names one resource.
-            new OptionView(
-                    Icon.ofItem(AsteriskCraft.BUNKER_KIT),
-                    CostText.tooltip(BaseBlockEntity.BUNKER_COST, Resource.STONE), 3,
-                    new Action.GiveKit(AsteriskCraft.BUNKER_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BUNKER_COST, "message.asteriskcraft.base.bunker_ready")),
-            // The Missile Turret shares the structure column with the Bunker, and the pairing is the
-            // point: the Bunker is what the race puts in front of the ground and the turret is what
-            // it puts under the air, and neither covers for the other.
-            new OptionView(
-                    Icon.ofItem(AsteriskCraft.MISSILE_TURRET_KIT),
-                    CostText.tooltip(BaseBlockEntity.MISSILE_TURRET_COST, Resource.STONE), 3,
-                    new Action.GiveKit(AsteriskCraft.MISSILE_TURRET_KIT::get, Resource.STONE,
-                            BaseBlockEntity.MISSILE_TURRET_COST,
-                            "message.asteriskcraft.base.missile_turret_ready")),
-            // The expansion kit gets its own column, exactly as the Nexus's and the Hive's do, and
-            // for the same price: a second base is the same purchase whoever is making it.
-            new OptionView(
-                    Icon.ofItem(AsteriskCraft.COMMAND_CENTER_KIT),
-                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 4,
-                    new Action.GiveKit(AsteriskCraft.COMMAND_CENTER_KIT::get, Resource.STONE,
-                            BaseBlockEntity.BASE_KIT_COST,
-                            "message.asteriskcraft.base.command_center_kit_ready"))));
+                    new Action.TrainUnit(UnitStats.GHOST.id()))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),
@@ -260,8 +314,18 @@ public enum ProductionKind {
         record TrainUnit(String rosterId) implements Action {
         }
 
-        /** Hand the player a building kit item for {@code cost} of one resource. */
-        record GiveKit(Supplier<Item> kit, Resource resource, int cost, String readyKey) implements Action {
+        /**
+         * Hand the player a building kit item for one alternative of {@code cost}. The same
+         * {@link UnitCost} a unit is priced with, and for the same reason: a building's price is a
+         * bundle of lines that must all be paid (a Barracks: 75 wood <em>and</em> 75 cobblestone) or
+         * a set of interchangeable ones the card gives a button each (a Gateway: wood <em>or</em>
+         * cobblestone), and a plain amount-and-resource could say neither.
+         *
+         * <p>What a kit does <em>not</em> carry is a build time: the countdown belongs to the
+         * structure the kit stamps ({@code BuildingDefense}'s warp-in), not to the base that sold
+         * it, so a player is free to hold a kit and place it later.
+         */
+        record GiveKit(Supplier<Item> kit, UnitCost cost, int alternative, String readyKey) implements Action {
         }
 
         /**
@@ -355,6 +419,19 @@ public enum ProductionKind {
             max = Math.max(max, rows);
         }
         return max;
+    }
+
+    /**
+     * Serialized form, for the one place a card is named in data rather than in code: a
+     * {@link FactoryBlock}'s own block codec, which has to be able to write out which card the block
+     * it is describing opens. The menu itself still travels by {@link #ordinal()} — see
+     * {@link #byId} — since that buffer is written and read by this same build.
+     */
+    public static final Codec<ProductionKind> CODEC = StringRepresentable.fromEnum(ProductionKind::values);
+
+    @Override
+    public String getSerializedName() {
+        return name().toLowerCase(java.util.Locale.ROOT);
     }
 
     public static ProductionKind byId(int id) {

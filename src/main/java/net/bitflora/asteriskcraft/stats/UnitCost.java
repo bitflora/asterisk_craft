@@ -69,11 +69,27 @@ public record UnitCost(List<List<ResourceAmount>> alternatives) {
         return amountOf(0, resource);
     }
 
-    /** Adapter to the payment layer. This is the only place a {@link Resource} predicate is built. */
+    /**
+     * Adapter to the payment layer. This is the only place a {@link Resource} predicate is built.
+     *
+     * <p>{@link Resource#ANY} lines are emitted <b>last</b>, whatever order the bundle was authored
+     * in. {@code ANY} matches every item in the bank, iron included, so a bundle that asks for both
+     * (the Spire: 250 resources and 10 iron) would otherwise have the flat pile spend the very iron
+     * the next line still needs. Paying the specific lines first leaves {@code ANY} to take whatever
+     * survived, which is the reading a player expects, and it keeps authoring order free for the
+     * card — a cost is written the way it should read, not the way it has to be spent.
+     */
     public List<ResourceBank.Cost> bankCosts(int alternative) {
         List<ResourceBank.Cost> costs = new ArrayList<>();
         for (ResourceAmount line : this.alternatives.get(alternative)) {
-            costs.add(new ResourceBank.Cost(line.resource().matches(), line.amount()));
+            if (line.resource() != Resource.ANY) {
+                costs.add(new ResourceBank.Cost(line.resource().matches(), line.amount()));
+            }
+        }
+        for (ResourceAmount line : this.alternatives.get(alternative)) {
+            if (line.resource() == Resource.ANY) {
+                costs.add(new ResourceBank.Cost(line.resource().matches(), line.amount()));
+            }
         }
         return costs;
     }

@@ -92,7 +92,7 @@ public class BaseBlock extends BaseEntityBlock {
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof BaseBlockEntity base
                 && base.hasProduction()
                 && ControlledFaction.of(player) == base.buildingFaction()) {
-            player.openMenu(base, buf -> buf.writeVarInt(base.kind().ordinal()));
+            ProductionMenu.open(player, base);
         }
         return InteractionResult.SUCCESS;
     }

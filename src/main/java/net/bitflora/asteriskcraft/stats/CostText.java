@@ -22,11 +22,6 @@ public final class CostText {
         return prefixed(lines(cost.alternatives().get(alternative)));
     }
 
-    /** "Cost: 150 wood" for a plain building-kit cost — those stay outside {@link UnitCost}. */
-    public static Component tooltip(int amount, Resource resource) {
-        return prefixed(line(amount, resource));
-    }
-
     /** "50 wood + 50 cobblestone" — the bare amounts, with no "Cost: " prefix, for embedding in a sentence. */
     public static Component costOnly(UnitCost cost, int alternative) {
         return lines(cost.alternatives().get(alternative));

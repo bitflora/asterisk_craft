@@ -44,7 +44,7 @@ public class GatewayBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof GatewayBlockEntity gateway) {
-            player.openMenu(gateway, buf -> buf.writeVarInt(gateway.kind().ordinal()));
+            ProductionMenu.open(player, gateway);
         }
         return InteractionResult.SUCCESS;
     }

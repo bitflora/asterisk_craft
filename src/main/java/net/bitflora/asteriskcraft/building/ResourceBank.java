@@ -34,17 +34,30 @@ public final class ResourceBank {
      * requirement is available and all are removed, or nothing is taken. Availability is
      * checked in full before any removal, so the compute-then-mutate is atomic within a tick
      * without needing a transaction object.
+     *
+     * <p>The check <b>simulates</b> the removals rather than totalling each cost independently,
+     * because two costs may match the same stack — {@code Resource.ANY} matches the iron that an
+     * iron line also wants (the Spire's price is both). Counting them separately said yes to a bank
+     * that could only cover one of them, and the removal pass then took what it could and reported
+     * success, charging the player for a building at less than its price. The simulation walks the
+     * costs in the order they are paid, so it gives exactly the answer the removal pass will.
      */
     public static boolean extractAll(Container container, List<Cost> costs) {
+        int[] remainingInSlot = new int[container.getContainerSize()];
+        for (int i = 0; i < remainingInSlot.length; i++) {
+            remainingInSlot[i] = container.getItem(i).getCount();
+        }
         for (Cost cost : costs) {
-            int available = 0;
-            for (int i = 0; i < container.getContainerSize(); i++) {
+            int owed = cost.amount();
+            for (int i = 0; i < container.getContainerSize() && owed > 0; i++) {
                 ItemStack stack = container.getItem(i);
-                if (!stack.isEmpty() && cost.matches().test(stack)) {
-                    available += stack.getCount();
+                if (!stack.isEmpty() && remainingInSlot[i] > 0 && cost.matches().test(stack)) {
+                    int take = Math.min(owed, remainingInSlot[i]);
+                    remainingInSlot[i] -= take;
+                    owed -= take;
                 }
             }
-            if (available < cost.amount()) {
+            if (owed > 0) {
                 return false;
             }
         }
