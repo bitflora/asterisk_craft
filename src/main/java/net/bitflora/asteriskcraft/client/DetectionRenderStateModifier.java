@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.command.ControlledFaction;
 import net.bitflora.asteriskcraft.faction.Cloaked;
 import net.bitflora.asteriskcraft.faction.Cloaking;
+import net.bitflora.asteriskcraft.faction.DetectionAttachments;
 import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.FactionAttachments;
 import net.minecraft.client.Minecraft;
@@ -18,7 +19,13 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 
 /**
- * Decides, per viewer and per frame, what a {@link Cloaked} unit looks like.
+ * Decides, per viewer and per frame, what a detected or {@link Cloaked} unit looks like.
+ *
+ * <p>It answers two questions off the one synced reveal mask, and they are separate on purpose. The
+ * <b>outline</b> is what a detector buys its own army: every enemy inside a detector's envelope is
+ * drawn under a red outline, cloaked or not, so a detector is an eye and not merely a
+ * counter-measure. The <b>body</b> is the cloak rule, and it applies to nothing else — a unit that
+ * is not cloaked is drawn exactly as vanilla drew it and only gains the outline.
  *
  * <p>This is the client half of cloaking; the server half is the targeting gate in
  * {@code FactionAttachments.isHostile}. Keeping them apart is the whole trick: the enemy AI is blind
@@ -38,10 +45,11 @@ import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEve
  * by hand below rather than simply not happening.
  *
  * <p>Registering against {@code LivingEntityRenderer} catches every subclass, which is all of the
- * mod's bespoke renderers with one registration — and every vanilla one too, hence the
- * {@code isCloaked} early-out on the first line.
+ * mod's bespoke renderers with one registration — and every vanilla one too, hence the early-out on
+ * the first line: a cow is neither cloaked nor ever revealed, so it costs one {@code instanceof} and
+ * one map probe per frame and nothing else.
  *
- * <p>The three cases, all expressed through the two booleans vanilla's
+ * <p>The cloak cases, all expressed through the two booleans vanilla's
  * {@code LivingEntityRenderer.submit} already branches on:
  *
  * <table border="1">
@@ -53,26 +61,28 @@ import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEve
  * </table>
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
-public final class CloakRenderStateModifier {
+public final class DetectionRenderStateModifier {
     /**
-     * The outline colour of a cloaked enemy a detector has revealed. Deliberately not routed through
+     * The outline colour of an enemy a detector has revealed. Deliberately not routed through
      * {@code entity.TeamColors}: this does not say "Zerg", it says "detected", and it must read the
      * same whichever faction is on the receiving end of the reveal.
      */
     private static final int DETECTED_OUTLINE = 0xFFFF3030;
 
-    private CloakRenderStateModifier() {
+    private DetectionRenderStateModifier() {
     }
 
     @SubscribeEvent
     public static void onRegisterRenderStateModifiers(RegisterRenderStateModifiersEvent event) {
         event.registerEntityModifier(
                 new TypeToken<LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?>>() {},
-                CloakRenderStateModifier::applyCloak);
+                DetectionRenderStateModifier::applyDetection);
     }
 
-    private static void applyCloak(LivingEntity entity, LivingEntityRenderState state) {
-        if (!Cloaked.isCloaked(entity)) {
+    private static void applyDetection(LivingEntity entity, LivingEntityRenderState state) {
+        boolean cloaked = Cloaked.isCloaked(entity);
+        byte detectedBy = DetectionAttachments.detectedBy(entity);
+        if (!cloaked && detectedBy == 0) {
             return;
         }
         Player viewer = Minecraft.getInstance().player;
@@ -83,9 +93,21 @@ public final class CloakRenderStateModifier {
         // to decide whose units a click may select, so "units I can see cloaked" and "units I can
         // order" can never drift apart.
         Faction commanded = ControlledFaction.of(viewer);
-        boolean own = FactionAttachments.get(entity) == commanded;
-        boolean visible = own || Cloaking.isDetectedBy(entity, commanded);
+        Faction side = FactionAttachments.get(entity);
+        boolean own = side == commanded;
+        boolean detected = Cloaking.isDetectedBy(detectedBy, commanded);
 
+        if (!cloaked) {
+            // The whole of the outline half. The enemy test is a guard rather than a second rule:
+            // the mask is only ever stamped across factions, so it re-states what the sweep already
+            // decided and covers a reveal outliving the unit's side changing.
+            if (detected && side.isEnemy(commanded)) {
+                state.outlineColor = DETECTED_OUTLINE;
+            }
+            return;
+        }
+
+        boolean visible = own || detected;
         state.isInvisible = true;
         state.isInvisibleToPlayer = !visible;
 

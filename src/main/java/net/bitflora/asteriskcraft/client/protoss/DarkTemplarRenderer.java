@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 
 /**
  * Nothing here knows the unit is cloaked. The ghosting and the red detection outline are applied
- * afterwards by {@code client.CloakRenderStateModifier}, which rewrites the finished render state —
+ * afterwards by {@code client.DetectionRenderStateModifier}, which rewrites the finished render state —
  * so this renderer is exactly the Zealot's, and the emissive blade survives the transparency only
  * because {@link UnitGlowLayer} suppresses itself on a body that is not drawn at all rather than on
  * any invisible body.

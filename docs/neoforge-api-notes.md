@@ -248,7 +248,7 @@ and `registerPayloads` in [AsteriskCraft.java](../src/main/java/net/bitflora/ast
 ## Concrete API facts (invisibility, glowing outlines, per-viewer rendering — verified while building cloak + detectors)
 
 See [faction/Cloaking.java](../src/main/java/net/bitflora/asteriskcraft/faction/Cloaking.java),
-[client/CloakRenderStateModifier.java](../src/main/java/net/bitflora/asteriskcraft/client/CloakRenderStateModifier.java),
+[client/DetectionRenderStateModifier.java](../src/main/java/net/bitflora/asteriskcraft/client/DetectionRenderStateModifier.java),
 and [client/UnitGlowLayer.java](../src/main/java/net/bitflora/asteriskcraft/client/UnitGlowLayer.java).
 
 - **Vanilla invisibility does not hide anything from mob AI, and cannot be made to.** `TargetingConditions.test` scales the acquisition range by `LivingEntity.getVisibilityPercent(targeter)`, which for an unarmoured invisible mob is `0.7 * max(armorCoverage, 0.1)` = **0.07** — but the result is then floored: `visibilityDistance = Math.max(this.range * modifier, MIN_VISIBILITY_DISTANCE_FOR_INVISIBLE_TARGET)` where that constant is **2.0**. So an invisible mob is still acquired by anything within two blocks, and a 32-block follow range only shrinks to 2.24. NeoForge's `LivingEvent.LivingVisibilityEvent` (`modifyVisibility`, clamped at 0) does not help either — the 2.0 floor is applied after it. **A real cloak has to be a `TargetingConditions.Selector` rule** (or a `LivingChangeTargetEvent`), not a flag. Several goals also opt out of the test entirely with `ignoreInvisibilityTesting()`: `HurtByTargetGoal`, and every brain-based mob via `Sensor`.

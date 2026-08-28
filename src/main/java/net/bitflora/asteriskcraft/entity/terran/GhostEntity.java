@@ -52,7 +52,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * seam every consumer already reaches cloak through — {@code faction.FactionAttachments.isHostile}
  * for acquisition, {@code combat.TargetRetentionHandler} for a target already held when the cloak
  * comes up, {@code combat.DetectionHandler} for the detector sweep, and
- * {@code client.CloakRenderStateModifier} for what each viewer sees. The Lurker is why that third
+ * {@code client.DetectionRenderStateModifier} for what each viewer sees. The Lurker is why that third
  * one exists: it was the first unit whose cloak arrived <em>after</em> acquisition, and a Ghost's
  * arrives at exactly the same moment in a fight, so it needed nothing written for it.
  *

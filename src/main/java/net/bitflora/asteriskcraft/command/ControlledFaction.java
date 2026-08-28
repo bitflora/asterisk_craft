@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Player;
  * normal {@code FactionTargetGoal}/{@code RetaliateGoal} path, and PvP later needs two players
  * tagged differently and nothing else. It is also why this works client-side — the faction
  * attachment is synced, which the level-scoped match setup is not, and
- * {@code client.CloakRenderStateModifier} asks this question on the client every frame.
+ * {@code client.DetectionRenderStateModifier} asks this question on the client every frame.
  *
  * <p>A player with no faction yet (before their first login is processed) commands nothing, which
  * is the correct answer rather than a guess at Protoss.

@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * <ul>
  *   <li>{@link #DETECTED_BY} is a <b>bitmask over {@link Faction} ordinals</b> and is
  *       <b>synced</b> — the client needs it to decide whether to draw a cloaked unit (see
- *       {@code client.CloakRenderStateModifier}). It is written only on the edges (a faction starts
+ *       {@code client.DetectionRenderStateModifier}). It is written only on the edges (a faction starts
  *       or stops detecting), so a whole reveal window costs two packets rather than one per tick.
  *       A mask rather than a single {@code Faction} so that a second detecting faction can't
  *       silently overwrite the first — a three-way game must not quietly un-reveal a unit.</li>
@@ -57,8 +57,16 @@ public final class DetectionAttachments {
     private DetectionAttachments() {
     }
 
+    /**
+     * The mask on {@code entity}, or 0 if it has never carried one.
+     *
+     * <p>Deliberately {@code hasData}-guarded rather than a bare {@code getData}: reading an
+     * attachment materialises its default into the holder's own map (see
+     * docs/neoforge-api-notes.md), and this is asked about <em>every</em> rendered entity on every
+     * frame — vanilla cows included — as the client's cheap early-out.
+     */
     public static byte detectedBy(Entity entity) {
-        return entity.getData(DETECTED_BY);
+        return entity.hasData(DETECTED_BY) ? entity.getData(DETECTED_BY) : 0;
     }
 
     public static int[] revealTicks(Entity entity) {

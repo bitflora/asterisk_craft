@@ -40,7 +40,7 @@ public class UnitGlowLayer<S extends LivingEntityRenderState, M extends EntityMo
      * for this viewer — a {@code faction.Cloaked} unit seen by the side that commands it, which
      * vanilla renders at 15% alpha — keeps its glow, so a Dark Templar reads as a dim shimmer
      * carrying a bright blade instead of a flat grey smear. A body that is genuinely not submitted
-     * has both flags set, and stays dark. See {@code client.CloakRenderStateModifier}, which is
+     * has both flags set, and stays dark. See {@code client.DetectionRenderStateModifier}, which is
      * what sets them.
      */
     @Override

@@ -36,7 +36,7 @@ import net.minecraft.world.level.Level;
  * interface, which is the entire implementation of its cloak.
  *
  * <p>That is the point of how cloaking was built: the gate lives in
- * {@code FactionAttachments.isHostile} and the rendering in {@code client.CloakRenderStateModifier},
+ * {@code FactionAttachments.isHostile} and the rendering in {@code client.DetectionRenderStateModifier},
  * so a unit opts in by declaring itself and nothing here has any cloak state, tick work or special
  * case. What it buys is severe — while no enemy detector covers it, an enemy cannot acquire it,
  * cannot splash it, and <em>cannot retaliate</em> even as it is being cut down, because retaliation

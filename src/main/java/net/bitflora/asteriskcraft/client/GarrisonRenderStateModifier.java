@@ -16,7 +16,7 @@ import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEve
  * see, and how many are inside is told by the barrels out of the Bunker's slits rather than by four
  * Marines clipping through its walls.
  *
- * <p>The sibling of {@link CloakRenderStateModifier}, on the same
+ * <p>The sibling of {@link DetectionRenderStateModifier}, on the same
  * {@code RegisterRenderStateModifiersEvent} hook and against the same {@code LivingEntityRenderer}
  * type token — which catches every subclass, hence the early-out on the first line. Registering
  * separately rather than folding this into the cloak modifier keeps two unrelated rules from sharing

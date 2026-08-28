@@ -73,7 +73,7 @@ public class LurkerEntity extends Monster implements Cloaked, Rooted {
 
     /**
      * Synced rather than a plain field, for the same reason {@code PhotonCannonEntity}'s warp
-     * countdown is: two client-side readers depend on it. {@code CloakRenderStateModifier} asks
+     * countdown is: two client-side readers depend on it. {@code DetectionRenderStateModifier} asks
      * {@link Cloaked#isCloaked} every frame, and the renderer sinks the model by the same fraction —
      * and a field the client never loads from NBT would tell it every Lurker is standing on the
      * surface.
