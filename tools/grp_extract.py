@@ -77,7 +77,10 @@ ICON_NAMES = {
     137: "greater_spire",   141: "spire",           142: "spawning_pool",
     144: "spore_colony",    146: "sunken_colony",   149: "extractor",
     # Terran
-    124: "missile_turret",
+    106: "command_center",   111: "barracks",        113: "factory",
+    114: "starport",         124: "missile_turret",
+    # Protoss structures beyond the four above
+    167: "stargate",
 }
 
 

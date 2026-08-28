@@ -11,8 +11,12 @@ real building is designed for one of these, re-export over the file and delete n
 declared Footprint in BuildingTemplates is what has to be updated to match (BuildingTemplatesTest
 fails the build if it drifts).
 
+No building uses this today — the Command Center it was written for has since been designed and
+re-exported over its `.nbt`, which is exactly the path described above. Running it against a
+building that now has a real template would overwrite that design, so name a new building.
+
 Usage:
-    python tools/make_core_template.py command_center asteriskcraft:command_center_core
+    python tools/make_core_template.py <name> asteriskcraft:<name>_core
 """
 
 import gzip

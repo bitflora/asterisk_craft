@@ -58,10 +58,27 @@ class BuildingTemplatesTest {
 
     @Test
     void commandCenterTemplateHasOneCore() {
-        // Generated rather than exported from a design world (tools/make_core_template.py) — the
-        // Command Center is nothing but its core block so far. Same assertion either way: whatever
-        // produced the .nbt, the placement code anchors on exactly one core.
         assertSingleCore("command_center", "asteriskcraft:command_center_core");
+    }
+
+    @Test
+    void barracksTemplateHasOneCore() {
+        assertSingleCore("barracks", "asteriskcraft:barracks_core");
+    }
+
+    @Test
+    void stargateTemplateHasOneCore() {
+        assertSingleCore("stargate", "asteriskcraft:stargate_core");
+    }
+
+    @Test
+    void spawningPoolTemplateHasOneCore() {
+        assertSingleCore("spawning_pool", "asteriskcraft:spawning_pool_core");
+    }
+
+    @Test
+    void spireTemplateHasOneCore() {
+        assertSingleCore("spire", "asteriskcraft:spire_core");
     }
 
     // --- declared footprints (the client's placement outline) vs. the templates themselves ---
@@ -94,6 +111,27 @@ class BuildingTemplatesTest {
     void commandCenterFootprintMatchesTemplate() {
         assertFootprint("command_center", "asteriskcraft:command_center_core",
                 BuildingTemplates.COMMAND_CENTER_FOOTPRINT);
+    }
+
+    @Test
+    void barracksFootprintMatchesTemplate() {
+        assertFootprint("barracks", "asteriskcraft:barracks_core", BuildingTemplates.BARRACKS_FOOTPRINT);
+    }
+
+    @Test
+    void stargateFootprintMatchesTemplate() {
+        assertFootprint("stargate", "asteriskcraft:stargate_core", BuildingTemplates.STARGATE_FOOTPRINT);
+    }
+
+    @Test
+    void spawningPoolFootprintMatchesTemplate() {
+        assertFootprint("spawning_pool", "asteriskcraft:spawning_pool_core",
+                BuildingTemplates.SPAWNING_POOL_FOOTPRINT);
+    }
+
+    @Test
+    void spireFootprintMatchesTemplate() {
+        assertFootprint("spire", "asteriskcraft:spire_core", BuildingTemplates.SPIRE_FOOTPRINT);
     }
 
     private static void assertFootprint(String template, String coreBlockId, BuildingTemplates.Footprint footprint) {

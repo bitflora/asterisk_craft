@@ -41,6 +41,10 @@ public final class BuildingTemplates {
     public static final Identifier HIVE = AsteriskCraft.id("hive");
     public static final Identifier PYLON = AsteriskCraft.id("pylon");
     public static final Identifier COMMAND_CENTER = AsteriskCraft.id("command_center");
+    public static final Identifier BARRACKS = AsteriskCraft.id("barracks");
+    public static final Identifier STARGATE = AsteriskCraft.id("stargate");
+    public static final Identifier SPAWNING_POOL = AsteriskCraft.id("spawning_pool");
+    public static final Identifier SPIRE = AsteriskCraft.id("spire");
 
     /**
      * A template's bounding box and where its core sits inside it, declared up front so the
@@ -65,10 +69,15 @@ public final class BuildingTemplates {
     public static final Footprint HIVE_FOOTPRINT = new Footprint(new Vec3i(8, 7, 7), new BlockPos(4, 2, 3));
     public static final Footprint GATEWAY_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
     public static final Footprint PYLON_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 2, 2));
-    // The Command Center is currently nothing but its core block, so its template is a 1x1x1 and
-    // the core sits at its origin. That is the building's shape today, not a special case in the
-    // machinery: re-export a designed Command Center over the .nbt and update these two numbers.
-    public static final Footprint COMMAND_CENTER_FOOTPRINT = new Footprint(new Vec3i(1, 1, 1), BlockPos.ZERO);
+    public static final Footprint COMMAND_CENTER_FOOTPRINT = new Footprint(new Vec3i(5, 5, 5), new BlockPos(2, 0, 2));
+    // Cores that sit on a template's bottom layer (y == 0) or against one of its walls are ordinary:
+    // the anchor is the core's own column, so where it sits inside the box is the designer's call
+    // and not something the placement code has an opinion about. The Command Center's is on the
+    // floor, the Barracks' and the Stargate's are on an edge.
+    public static final Footprint BARRACKS_FOOTPRINT = new Footprint(new Vec3i(3, 5, 3), new BlockPos(1, 2, 0));
+    public static final Footprint STARGATE_FOOTPRINT = new Footprint(new Vec3i(6, 6, 4), new BlockPos(3, 3, 1));
+    public static final Footprint SPAWNING_POOL_FOOTPRINT = new Footprint(new Vec3i(6, 2, 6), new BlockPos(3, 0, 2));
+    public static final Footprint SPIRE_FOOTPRINT = new Footprint(new Vec3i(7, 8, 7), new BlockPos(3, 3, 3));
 
     /** Where a stamped template landed: its core block, its min corner, and its size. */
     public record Placed(BlockPos core, BlockPos min, Vec3i size) {

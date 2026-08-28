@@ -147,9 +147,13 @@ public class AsteriskCraft {
             Block::new,
             p -> p.mapColor(MapColor.COLOR_PURPLE).strength(15.0f, 1200.0f).lightLevel(s -> 15));
 
+    // The Spire tapers to a point instead of filling its cube (see the block model), so it must not
+    // occlude: an opaque full-cube block wearing a partial model culls its neighbours' facing sides
+    // and lights itself as solid, leaving holes in the ground around the spike.
     public static final DeferredBlock<Block> SPIRE_CORE = BLOCKS.registerBlock("spire_core",
             Block::new,
-            p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7));
+            p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7)
+                    .noOcclusion());
 
     public static final DeferredBlock<Block> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
             Block::new,
@@ -195,6 +199,38 @@ public class AsteriskCraft {
     public static final DeferredItem<BuildingKitItem> HIVE_KIT = ITEMS.registerItem("hive_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.HIVE, HIVE_CORE,
                     BuildingTemplates.HIVE_FOOTPRINT, false, true).requiringBuilder());
+
+    // The Terran expansion kit, the sibling of NEXUS_KIT and HIVE_KIT: same building as the starting
+    // base, bought from the base's own command card. No ground prerequisite — psi is Protoss and
+    // creep is Zerg — but an SCV has to come and build it, which is the Terran doctrine every one of
+    // their structures follows (ConstructionSite; Race.consumesBuilders leaves the SCV alive).
+    public static final DeferredItem<BuildingKitItem> COMMAND_CENTER_KIT = ITEMS.registerItem("command_center_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.COMMAND_CENTER, COMMAND_CENTER_CORE,
+                    BuildingTemplates.COMMAND_CENTER_FOOTPRINT, false).requiringBuilder());
+
+    // The four unit-factory kits. Each is gated by its own race's placement rule — the Stargate needs
+    // psi, the Spawning Pool and Spire need creep, the Barracks needs an SCV — so the ground rules are
+    // exercised the moment a kit goes down, even though the buildings they stamp are still the
+    // visual-only cores registered above: no BlockEntity means no warp-in countdown, no scaffold, no
+    // owner and no siege HP yet. Wiring those is a BlockEntity per core (the Gateway's shape) and
+    // changes nothing here.
+    public static final DeferredItem<BuildingKitItem> BARRACKS_KIT = ITEMS.registerItem("barracks_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.BARRACKS, BARRACKS_CORE,
+                    BuildingTemplates.BARRACKS_FOOTPRINT, false).requiringBuilder());
+
+    public static final DeferredItem<BuildingKitItem> STARGATE_KIT = ITEMS.registerItem("stargate_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.STARGATE, STARGATE_CORE,
+                    BuildingTemplates.STARGATE_FOOTPRINT, true));
+
+    // The swarm's two, both on creep and both built by a Drone that dies doing it — the Hive kit is
+    // exempt from the creep rule because it is what creates creep, and these are not.
+    public static final DeferredItem<BuildingKitItem> SPAWNING_POOL_KIT = ITEMS.registerItem("spawning_pool_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.SPAWNING_POOL, SPAWNING_POOL_CORE,
+                    BuildingTemplates.SPAWNING_POOL_FOOTPRINT, false, true, false).requiringBuilder());
+
+    public static final DeferredItem<BuildingKitItem> SPIRE_KIT = ITEMS.registerItem("spire_kit",
+            props -> new BuildingKitItem(props, BuildingTemplates.SPIRE, SPIRE_CORE,
+                    BuildingTemplates.SPIRE_FOOTPRINT, false, true, false).requiringBuilder());
 
     // The Photon Cannon is an entity now, so its kit is a faction-stamping spawn item (it warps the
     // entity in on right-click) rather than a layout-stamping BuildingKitItem. Same crafted item + recipe.
@@ -752,6 +788,11 @@ public class AsteriskCraft {
                 output.accept(PHOTON_CANNON_KIT.get());
                 output.accept(NEXUS_KIT.get());
                 output.accept(HIVE_KIT.get());
+                output.accept(SPAWNING_POOL_KIT.get());
+                output.accept(SPIRE_KIT.get());
+                output.accept(STARGATE_KIT.get());
+                output.accept(COMMAND_CENTER_KIT.get());
+                output.accept(BARRACKS_KIT.get());
                 output.accept(HIVE_CORE_ITEM.get());
                 output.accept(COMMAND_CENTER_CORE_ITEM.get());
                 output.accept(STARGATE_CORE_ITEM.get());

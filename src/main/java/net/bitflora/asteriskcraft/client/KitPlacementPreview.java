@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.BuildingKitItem;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
+import net.bitflora.asteriskcraft.building.CreepField;
 import net.bitflora.asteriskcraft.building.PsiField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -42,10 +43,11 @@ import org.jetbrains.annotations.Nullable;
  * is deliberately the more permissive of the two is Pylon <em>ownership</em> — see
  * {@link PsiField#covered(net.minecraft.world.level.BlockGetter, BlockPos)}.
  *
- * <p>Deliberately checks only {@code requiresPylon()}, not {@code requiresCreep()}: no
- * {@link BuildingKitItem} requires creep today (the Hive kit is exempt, like a Nexus is from psi), so
- * there is no {@code Verdict} for it yet. A future creep-gated kit needs one here alongside a
- * {@code CreepField} check, the same way {@code PsiField} is wired in below.
+ * <p>The ground prerequisites are two, not one, and each gets its own {@code Verdict} so the outline
+ * says which rule refused: psi for a Protoss kit ({@link PsiField}) and creep for a Zerg one
+ * ({@link CreepField}). A kit asks at most one of them — a building is one race's — and a kit exempt
+ * from both (a Nexus, a Pylon, a Hive) asks neither. Where each field actually reaches is painted on
+ * the ground by {@link PsiFieldOverlay} and {@link CreepFieldOverlay}.
  */
 @EventBusSubscriber(modid = AsteriskCraft.MODID, value = Dist.CLIENT)
 public final class KitPlacementPreview {
@@ -58,7 +60,9 @@ public final class KitPlacementPreview {
         /** Something is standing in the volume. */
         BLOCKED(0xFFFF5555),
         /** The volume is free, but no Pylon reaches it. */
-        UNPOWERED(0xFFFFCC55);
+        UNPOWERED(0xFFFFCC55),
+        /** The volume is free, but there is no creep under or near it. */
+        UNSEEDED(0xFFCC66FF);
 
         private final int color;
 
@@ -100,7 +104,7 @@ public final class KitPlacementPreview {
         BlockPos min = footprint.minCorner(origin);
         Vec3 camera = event.getLevelRenderState().cameraRenderState.pos;
         Vec3i size = footprint.size();
-        int color = verdict(level, kit, origin, min).color;
+        int color = verdict(level, player, kit, origin, min).color;
         event.getSubmitNodeCollector().submitCustomGeometry(event.getPoseStack(), RenderTypes.lines(),
                 (pose, buffer) -> submitBox(pose, buffer,
                         (float) (min.getX() - camera.x), (float) (min.getY() - camera.y), (float) (min.getZ() - camera.z),
@@ -125,22 +129,29 @@ public final class KitPlacementPreview {
         return null;
     }
 
-    private static Verdict verdict(ClientLevel level, BuildingKitItem kit, BlockPos origin, BlockPos min) {
+    private static Verdict verdict(ClientLevel level, LocalPlayer player, BuildingKitItem kit,
+            BlockPos origin, BlockPos min) {
         int tick = (int) level.getGameTime();
         if (tick != lastCheckedTick || !min.equals(lastMin)) {
             lastCheckedTick = tick;
             lastMin = min;
-            lastVerdict = compute(level, kit, origin, min);
+            lastVerdict = compute(level, player, kit, origin, min);
         }
         return lastVerdict;
     }
 
-    private static Verdict compute(ClientLevel level, BuildingKitItem kit, BlockPos origin, BlockPos min) {
+    private static Verdict compute(ClientLevel level, LocalPlayer player, BuildingKitItem kit,
+            BlockPos origin, BlockPos min) {
         if (!BuildingTemplates.isAreaClear(level, min, kit.footprint().size())) {
             return Verdict.BLOCKED;
         }
         if (kit.requiresPylon() && !PsiField.covered(level, origin)) {
             return Verdict.UNPOWERED;
+        }
+        // The same question the server asks in BuildingKitItem, through the same rule and off the
+        // same race — the kit's own placingRace, so this names no race any more than the rule does.
+        if (kit.requiresCreep() && !CreepField.covered(level, origin, kit.placingRace(level, player))) {
+            return Verdict.UNSEEDED;
         }
         return Verdict.CLEAR;
     }

@@ -81,6 +81,13 @@ KITS = {
     "photon_cannon_kit": "photon_cannon",
     "bunker_kit": "bunker",
     "missile_turret_kit": "missile_turret",
+    # The production buildings each race warps in beside its base. The Command Center's is the
+    # Terran expansion kit, the sibling of nexus_kit and hive_kit above.
+    "command_center_kit": "command_center",
+    "barracks_kit": "barracks",
+    "stargate_kit": "stargate",
+    "spawning_pool_kit": "spawning_pool",
+    "spire_kit": "spire",
 }
 
 # Every unit with an ally/enemy spawn-egg pair registered in AsteriskCraft.java.

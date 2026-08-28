@@ -217,7 +217,15 @@ public enum ProductionKind {
                     CostText.tooltip(BaseBlockEntity.MISSILE_TURRET_COST, Resource.STONE), 3,
                     new Action.GiveKit(AsteriskCraft.MISSILE_TURRET_KIT::get, Resource.STONE,
                             BaseBlockEntity.MISSILE_TURRET_COST,
-                            "message.asteriskcraft.base.missile_turret_ready"))));
+                            "message.asteriskcraft.base.missile_turret_ready")),
+            // The expansion kit gets its own column, exactly as the Nexus's and the Hive's do, and
+            // for the same price: a second base is the same purchase whoever is making it.
+            new OptionView(
+                    Icon.ofItem(AsteriskCraft.COMMAND_CENTER_KIT),
+                    CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, Resource.STONE), 4,
+                    new Action.GiveKit(AsteriskCraft.COMMAND_CENTER_KIT::get, Resource.STONE,
+                            BaseBlockEntity.BASE_KIT_COST,
+                            "message.asteriskcraft.base.command_center_kit_ready"))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),
