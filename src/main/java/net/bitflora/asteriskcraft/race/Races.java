@@ -7,6 +7,7 @@ import net.bitflora.asteriskcraft.building.WarpScaffold;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.race.RaceProfile.BaseDefence;
 import net.bitflora.asteriskcraft.race.RaceProfile.StartingStack;
+import net.bitflora.asteriskcraft.race.RaceProfile.TechBuilding;
 import net.bitflora.asteriskcraft.stats.UnitStats;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.item.Items;
@@ -110,6 +111,9 @@ public final class Races {
             // Soul fire off a building the warp rift is still pouring into place.
             ParticleTypes.SOUL_FIRE_FLAME,
             List.of(new BaseDefence(AsteriskCraft.PHOTON_CANNON, 1)),
+            // No tech buildings: nothing on the Protoss roster is gated behind one yet, so the
+            // computer's bases stand as they always did.
+            List.of(),
             // No escort: the Protoss detector is the Photon Cannon, which is already in the line
             // above, and nothing else about a Nexus wants a unit hovering over it at world start.
             List.of(),
@@ -134,12 +138,17 @@ public final class Races {
             ZERG_BANK_SLOTS,
             UnitRoster.builder()
                     .worker(UnitStats.DRONE, AsteriskCraft.DRONE)
-                    .unit(UnitStats.ZERGLING, AsteriskCraft.ZERGLING)
-                    .unit(UnitStats.HYDRALISK, AsteriskCraft.HYDRALISK)
-                    .unit(UnitStats.MUTALISK, AsteriskCraft.MUTALISK)
+                    // Everything with teeth waits on a Spawning Pool, and the flyer on a Spire:
+                    // the swarm's tech ladder, and the mod's only one. The Lurker is in the first
+                    // group because it is a Hydralisk that has dug in. The Overlord is in neither
+                    // — it carries detection rather than a weapon, and an army that had to buy a
+                    // building before it could see a Dark Templar would simply lose to one.
+                    .unit(UnitStats.ZERGLING, AsteriskCraft.ZERGLING, AsteriskCraft.SPAWNING_POOL_CORE)
+                    .unit(UnitStats.HYDRALISK, AsteriskCraft.HYDRALISK, AsteriskCraft.SPAWNING_POOL_CORE)
+                    .unit(UnitStats.MUTALISK, AsteriskCraft.MUTALISK, AsteriskCraft.SPIRE_CORE)
                     .unit(UnitStats.OVERLORD, AsteriskCraft.OVERLORD)
-                    .unit(UnitStats.ULTRALISK, AsteriskCraft.ULTRALISK)
-                    .unit(UnitStats.LURKER, AsteriskCraft.LURKER)
+                    .unit(UnitStats.ULTRALISK, AsteriskCraft.ULTRALISK, AsteriskCraft.SPAWNING_POOL_CORE)
+                    .unit(UnitStats.LURKER, AsteriskCraft.LURKER, AsteriskCraft.SPAWNING_POOL_CORE)
                     .build(),
             // The Hive is the swarm's whole production building — there is no Zerg factory to
             // build, so its card morphs combat units directly as well as training Drones.
@@ -157,6 +166,10 @@ public final class Races {
             ParticleTypes.SPORE_BLOSSOM_AIR,
             List.of(new BaseDefence(AsteriskCraft.SUNKEN_COLONY, 1),
                     new BaseDefence(AsteriskCraft.SPORE_COLONY, 1)),
+            // The two buildings the roster above gates on, planted finished with each of the
+            // computer's Hives — which is what a player razes to shut its waves down a tier.
+            List.of(new TechBuilding(BuildingTemplates.SPAWNING_POOL, AsteriskCraft.SPAWNING_POOL_CORE::get),
+                    new TechBuilding(BuildingTemplates.SPIRE, AsteriskCraft.SPIRE_CORE::get)),
             // One Overlord per Hive, on both sides. The Spore Colony above it detects too, but it is
             // rooted to this spot — the Overlord is what carries detection out with an army, which
             // is the whole answer to a Dark Templar met in the field.
@@ -221,6 +234,10 @@ public final class Races {
             // afterwards rather than as it spawns.
             List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2),
                     new BaseDefence(AsteriskCraft.MISSILE_TURRET, 1)),
+            // No tech buildings: nothing on the Terran roster is gated behind one yet. Their
+            // infantry already come out of a Barracks the player has to build, which is the same
+            // idea arrived at from the other direction.
+            List.of(),
             // No escort: the Terran have no flyer, so there is nothing a Command Center wants
             // hovering over it. Their detection is the Missile Turret above, which is rooted — so
             // unlike the swarm's Overlord, nothing carries it out with an army.

@@ -1,7 +1,9 @@
 package net.bitflora.asteriskcraft.race;
 
 import net.bitflora.asteriskcraft.building.ProductionKind;
+import net.bitflora.asteriskcraft.building.StructureBlock;
 import net.bitflora.asteriskcraft.faction.Race;
+import net.minecraft.world.level.block.Block;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,6 +94,45 @@ class RacesTest {
             assertTrue(profile.worker().isWorker(), profile.race() + "'s worker is not flagged as one");
             assertTrue(profile.roster().names().contains(profile.worker().id()),
                     profile.race() + "'s roster does not list its own worker");
+        }
+    }
+
+    @Test
+    void everyPrerequisiteNamesABuildingOfTheRostersOwnRace() {
+        // A unit gated behind another race's building could never be built at all: the census is
+        // keyed per army, and no Zerg army will ever own a Barracks. Structural, not a value check
+        // — which building gates which unit is free to move, but it has to stay in the family.
+        for (RaceProfile profile : Races.all()) {
+            for (String name : profile.roster().names()) {
+                Block requires = profile.roster().resolve(name).orElseThrow().requires();
+                if (requires == null) {
+                    continue;
+                }
+                assertTrue(requires instanceof StructureBlock structure
+                                && structure.defence().race() == profile.race(),
+                        profile.race() + "'s " + name + " is gated behind " + requires
+                                + ", which is not one of its own buildings");
+            }
+        }
+    }
+
+    @Test
+    void aRaceThatGatesUnitsPlantsTheBuildingsItsOwnComputerNeeds() {
+        // The AI places no buildings during a match, so every prerequisite its roster declares has
+        // to be stamped beside its bases at world generation or the unit is unreachable for it — a
+        // whole tier of its build script silently dead. This is what fails the build if a future
+        // race adds a gate and forgets the other half.
+        for (RaceProfile profile : Races.all()) {
+            for (String name : profile.roster().names()) {
+                Block requires = profile.roster().resolve(name).orElseThrow().requires();
+                if (requires == null) {
+                    continue;
+                }
+                assertTrue(profile.techBuildings().stream()
+                                .anyMatch(tech -> tech.coreBlock().get() == requires),
+                        profile.race() + " gates " + name + " behind " + requires
+                                + ", but plants none at its computer's bases");
+            }
         }
     }
 

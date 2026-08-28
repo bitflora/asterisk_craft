@@ -165,6 +165,8 @@ public class BaseBlockEntity extends BlockEntity
                         head == null ? 0 : queue.buildTicksOf(head) - queue.buildTicksRemaining();
                 case ProductionMenu.DATA_BUILD_TOTAL -> head == null ? 0 : queue.buildTicksOf(head);
                 case ProductionMenu.DATA_WARP -> defense.warpTicksRemaining();
+                case ProductionMenu.DATA_LOCKED ->
+                        TechCensus.lockedOptions(level, buildingFaction(), kind(), profile.roster());
                 default -> 0;
             };
         }
@@ -346,6 +348,15 @@ public class BaseBlockEntity extends BlockEntity
     private void queueUnit(Player player, UnitRoster.UnitDef def, int alternative) {
         if (this.queue.isFull()) {
             overlay(player, Component.translatable("message.asteriskcraft.base.queue_full"));
+            return;
+        }
+        // Above the payment, deliberately: a refused unit must not have been charged for.
+        Block missing = this.level instanceof ServerLevel serverLevel
+                ? TechCensus.missing(serverLevel, buildingFaction(), def)
+                : null;
+        if (missing != null) {
+            overlay(player, Component.translatable("message.asteriskcraft.base.needs_building",
+                    def.type().getDescription(), missing.getName()));
             return;
         }
         boolean paid = alternative == ANY_COST

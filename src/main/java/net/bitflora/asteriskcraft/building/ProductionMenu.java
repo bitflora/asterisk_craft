@@ -26,7 +26,13 @@ public class ProductionMenu extends AbstractContainerMenu {
     public static final int DATA_BUILD_PROGRESS = 1; // ticks elapsed on the current unit
     public static final int DATA_BUILD_TOTAL = 2;    // ticks a unit takes (for the fraction)
     public static final int DATA_WARP = 3;           // warp-in ticks remaining (0 = ready)
-    public static final int DATA_QUEUE_BASE = 4;     // queued count per option
+    // Which buttons this army has not unlocked yet, as a bitmask over option indices. One slot and
+    // not one per option because MAX_OPTIONS fits an int several times over, and because a card's
+    // lock state is one question the server answers rather than twelve. It has to travel at all
+    // because a structure publishes neither its owner nor its build state to a blockstate, so the
+    // client cannot tell whether the player owns a finished Spawning Pool. See TechCensus.
+    public static final int DATA_LOCKED = 4;
+    public static final int DATA_QUEUE_BASE = 5;     // queued count per option
     // The screen reads a queued count for every option, so this has to cover the widest card there
     // is: the Nexus spends its buttons on Wood/Stone pairs, and the Hive - which has no factory
     // building to send unit production to - on one button per unit it can morph, so the Hive's card
@@ -206,5 +212,10 @@ public class ProductionMenu extends AbstractContainerMenu {
 
     public int queuedCount(int option) {
         return this.data.get(DATA_QUEUE_BASE + option);
+    }
+
+    /** Whether this option is gated behind a building the army does not own yet. */
+    public boolean locked(int option) {
+        return (this.data.get(DATA_LOCKED) & (1 << option)) != 0;
     }
 }

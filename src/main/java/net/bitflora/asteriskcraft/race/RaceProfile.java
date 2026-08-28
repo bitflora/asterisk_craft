@@ -63,6 +63,16 @@ import java.util.function.Supplier;
  *                       <em>computer's</em> only — the human's starting base deliberately plants
  *                       none, and opens with {@link #playerKit} and {@link #playerDefences}
  *                       instead, so it mines and moves its own way up
+ * @param techBuildings  finished tech buildings stamped beside each of the <em>computer's</em>
+ *                       bases at world generation — the structures its own units are gated behind
+ *                       ({@code race.UnitRoster.UnitDef#requires}). One-sided for the same reason
+ *                       {@link #baseDefences} is, and here that asymmetry is the point: the AI
+ *                       places no buildings of its own, so without these it could never satisfy a
+ *                       prerequisite and most of its build script would be dead, while a human is
+ *                       meant to earn theirs. Standing finished rather than warping, so they count
+ *                       from the first tick — and destructible, so razing an army's tech genuinely
+ *                       cuts off what it was gating. A race whose units are all ungated leaves it
+ *                       empty
  * @param baseEscort     mobile units spawned beside every base this race starts the match with,
  *                       on <em>both</em> sides. That symmetry is the whole reason it is not folded
  *                       into {@link #baseDefences}: a rule like "every Hive comes with an Overlord"
@@ -101,6 +111,7 @@ public record RaceProfile(
         Supplier<BlockState> scaffold,
         ParticleOptions constructionParticle,
         List<BaseDefence> baseDefences,
+        List<TechBuilding> techBuildings,
         List<BaseDefence> baseEscort,
         List<BaseDefence> playerDefences,
         List<StartingStack> startingBank,
@@ -114,6 +125,14 @@ public record RaceProfile(
      * bases</em> they are walked for, not in shape.
      */
     public record BaseDefence(Supplier<? extends EntityType<? extends Mob>> type, int count) {
+    }
+
+    /**
+     * A structure stamped beside a computer-controlled base at world generation: the {@code .nbt}
+     * template to place and the core block that anchors it, exactly the pair
+     * {@code building.BuildingKitItem} carries for the same building bought by hand.
+     */
+    public record TechBuilding(Identifier template, Supplier<Block> coreBlock) {
     }
 
     /** One resource this race's bank starts stocked with. Split across slots by the seeder. */

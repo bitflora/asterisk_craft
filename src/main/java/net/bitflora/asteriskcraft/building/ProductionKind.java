@@ -96,6 +96,15 @@ public enum ProductionKind implements StringRepresentable {
                     CostText.tooltip(BaseBlockEntity.BASE_KIT_COST, 0), 5,
                     new Action.GiveKit(AsteriskCraft.NEXUS_KIT::get, BaseBlockEntity.BASE_KIT_COST, 0,
                             "message.asteriskcraft.base.base_kit_ready")))),
+    /**
+     * The Gateway's card: the Protoss ground army. The Scout is deliberately not on it — the air
+     * unit trains at {@link #PROTOSS_STARGATE}, which is what the player has already paid for by
+     * the time they can build one.
+     *
+     * <p>Its buttons are positional, dispatched through {@code GatewayBlockEntity.UnitType} rather
+     * than named by roster id, which is why they carry {@link Action#FACTORY}. That is the old
+     * shape and the reason the Gateway is not a {@link FactoryBlock}; see {@code FactoryBlockEntity}.
+     */
     GATEWAY(() -> AsteriskCraft.GATEWAY_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
                     Icon.ofIcon("zealot"),
@@ -104,11 +113,24 @@ public enum ProductionKind implements StringRepresentable {
                     Icon.ofIcon("dragoon"),
                     CostText.tooltip(UnitStats.DRAGOON.cost(), 0), 1, Action.FACTORY),
             new OptionView(
-                    Icon.ofIcon("scout"),
-                    CostText.tooltip(UnitStats.SCOUT.cost(), 0), 2, Action.FACTORY),
-            new OptionView(
                     Icon.ofIcon("dark_templar"),
-                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 3, Action.FACTORY))),
+                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 2, Action.FACTORY))),
+    /**
+     * The Stargate's card: the Protoss air unit, and nothing else. The race's second factory, and
+     * the Scout is the whole of it — where the Gateway trains everything that walks, the Stargate
+     * trains the one thing that flies, so an army that wants to answer a Mutalisk buys a building
+     * for it rather than adding a fourth button to a card it already had.
+     *
+     * <p>Its button names its unit by the same {@code UnitStat.id()} a build script spells, the
+     * {@link #TERRAN_BARRACKS}'s shape rather than the {@link #GATEWAY}'s: this card is read by
+     * {@link FactoryBlockEntity}, which resolves it against the Protoss roster, so nothing here
+     * names a Java class.
+     */
+    PROTOSS_STARGATE(() -> AsteriskCraft.STARGATE_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
+            new OptionView(
+                    Icon.ofIcon("scout"),
+                    CostText.tooltip(UnitStats.SCOUT.cost(), 0), 0,
+                    new Action.TrainUnit(UnitStats.SCOUT.id())))),
     /**
      * The Hive's card. Wider than the Protoss base's because the swarm has no factory building:
      * a Hive morphs its combat units itself, so everything an army needs is on this one card.

@@ -2,6 +2,10 @@ package net.bitflora.asteriskcraft.client;
 
 import net.bitflora.asteriskcraft.building.ProductionKind;
 import net.bitflora.asteriskcraft.building.ProductionMenu;
+import net.bitflora.asteriskcraft.command.ControlledRace;
+import net.bitflora.asteriskcraft.faction.Race;
+import net.bitflora.asteriskcraft.race.Races;
+import net.bitflora.asteriskcraft.race.UnitRoster;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -13,6 +17,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +53,14 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
     private static final int WARP_COLOR = 0xFFFFAA00;
 
     private final List<Button> optionButtons = new ArrayList<>();
+    /**
+     * Per option, the tooltip shown while it is locked ("Requires: a Spawning Pool"), or null for
+     * one that can never be. Built once in {@link #init} beside the buttons, since a
+     * {@link Tooltip} is immutable and swapping between two references costs nothing per frame.
+     */
+    private final List<Tooltip> lockedTooltips = new ArrayList<>();
+    /** Per option, its ordinary cost tooltip — the one a button carries whenever it is not locked. */
+    private final List<Tooltip> costTooltips = new ArrayList<>();
 
     public ProductionScreen(ProductionMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title, ProductionMenu.IMAGE_WIDTH, ProductionMenu.IMAGE_HEIGHT);
@@ -85,6 +99,8 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
     protected void init() {
         super.init();
         this.optionButtons.clear();
+        this.lockedTooltips.clear();
+        this.costTooltips.clear();
         ProductionKind kind = this.menu.getKind();
         List<ProductionKind.OptionView> options = kind.options();
         List<Placement> placements = layOutOptions(kind);
@@ -95,13 +111,38 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
             int bx = this.leftPos + placement.x();
             int by = this.topPos + placement.y();
             // Empty label: buttons show no name, just the icon drawn manually in extractLabels.
+            Tooltip costTooltip = Tooltip.create(option.costTooltip());
             Button button = Button.builder(Component.empty(), b -> onTrain(optionIndex))
                     .bounds(bx, by, ProductionMenu.BUTTON_W, ProductionMenu.BUTTON_H)
-                    .tooltip(Tooltip.create(option.costTooltip()))
+                    .tooltip(costTooltip)
                     .build();
             this.optionButtons.add(button);
+            this.costTooltips.add(costTooltip);
+            this.lockedTooltips.add(lockedTooltip(option));
             addRenderableWidget(button);
         }
+    }
+
+    /**
+     * What a locked button says it is waiting for, or null for one with no prerequisite. Derived
+     * rather than carried on the card: the option names a roster id, and the viewer's own race
+     * ({@link ControlledRace}, read off a <em>synced</em> attachment so it answers on the client)
+     * names the roster to look it up in. That keeps the prerequisite written down exactly once,
+     * in {@code race.Races}.
+     */
+    private @Nullable Tooltip lockedTooltip(ProductionKind.OptionView option) {
+        if (!(option.action() instanceof ProductionKind.Action.TrainUnit(String rosterId))
+                || this.minecraft == null || this.minecraft.player == null) {
+            return null;
+        }
+        Race race = ControlledRace.of(this.minecraft.player);
+        if (race == null) {
+            return null;
+        }
+        UnitRoster.UnitDef def = Races.of(race).roster().resolve(rosterId).orElse(null);
+        Block requires = def == null ? null : def.requires();
+        return requires == null ? null
+                : Tooltip.create(Component.translatable("gui.asteriskcraft.requires", requires.getName()));
     }
 
     private void onTrain(int optionIndex) {
@@ -133,8 +174,14 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         super.extractBackground(graphics, mouseX, mouseY, a);
 
         boolean warping = this.menu.warpTicks() > 0;
-        for (Button button : this.optionButtons) {
-            button.active = !warping;
+        for (int i = 0; i < this.optionButtons.size(); i++) {
+            Button button = this.optionButtons.get(i);
+            boolean locked = this.menu.locked(i);
+            button.active = !warping && !locked;
+            // Say what the button is waiting for while it is greyed out, since a disabled button
+            // cannot answer with the action-bar message the server would have sent.
+            Tooltip lockedTooltip = this.lockedTooltips.get(i);
+            button.setTooltip(locked && lockedTooltip != null ? lockedTooltip : this.costTooltips.get(i));
         }
 
         int x = this.leftPos;

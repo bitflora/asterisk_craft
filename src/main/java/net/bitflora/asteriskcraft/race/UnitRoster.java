@@ -4,6 +4,8 @@ import net.bitflora.asteriskcraft.stats.UnitCost;
 import net.bitflora.asteriskcraft.stats.UnitStat;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -30,16 +32,26 @@ import java.util.function.Supplier;
 public final class UnitRoster {
 
     /**
-     * A producible unit: its roster id, its entity type, its cost and build time, and whether it is
-     * the worker. The id is carried so a production queue can be saved by name rather than by
-     * position — see {@code building.BaseBlockEntity}, whose saved queue must survive a command
-     * card being reordered.
+     * A producible unit: its roster id, its entity type, its cost and build time, whether it is
+     * the worker, and the building its army must already own before it may be produced. The id is
+     * carried so a production queue can be saved by name rather than by position — see
+     * {@code building.BaseBlockEntity}, whose saved queue must survive a command card being
+     * reordered.
+     *
+     * <p>{@code requires} is the whole of the mod's tech tree, and it lives here rather than in the
+     * balance CSV or on a command card for one reason: it is the only fact both production paths
+     * can see. The player's card ({@code building.BaseBlockEntity#trainOption}) and the computer's
+     * script ({@code director.AiDirector}'s {@code canAffordAndSpawn}) share no chokepoint at all
+     * except that both resolve a unit through {@link #resolve}, so a prerequisite written anywhere
+     * else would have to be written twice. Null for a unit anyone may build from the first tick.
+     * {@code building.TechCensus} is what answers whether it is satisfied.
      */
     public record UnitDef(String id, EntityType<? extends Mob> type, UnitCost cost, int buildTicks,
-                          boolean isWorker) {
+                          boolean isWorker, @Nullable Block requires) {
     }
 
-    private record Entry(UnitStat stat, Supplier<? extends EntityType<? extends Mob>> type, boolean isWorker) {
+    private record Entry(UnitStat stat, Supplier<? extends EntityType<? extends Mob>> type, boolean isWorker,
+                         @Nullable Supplier<? extends Block> requires) {
     }
 
     private final List<Entry> entries;
@@ -91,7 +103,8 @@ public final class UnitRoster {
         for (Entry entry : this.entries) {
             UnitStat stat = entry.stat();
             map.put(stat.id(),
-                    new UnitDef(stat.id(), entry.type().get(), stat.cost(), stat.buildTicks(), entry.isWorker()));
+                    new UnitDef(stat.id(), entry.type().get(), stat.cost(), stat.buildTicks(), entry.isWorker(),
+                            entry.requires() == null ? null : entry.requires().get()));
         }
         return Map.copyOf(map);
     }
@@ -119,12 +132,24 @@ public final class UnitRoster {
                 throw new IllegalStateException("roster already has worker " + this.workerId);
             }
             this.workerId = stat.id();
-            this.entries.add(new Entry(stat, type, true));
+            this.entries.add(new Entry(stat, type, true, null));
             return this;
         }
 
+        /** A unit this race may produce from the first tick of the match. */
         public Builder unit(UnitStat stat, Supplier<? extends EntityType<? extends Mob>> type) {
-            this.entries.add(new Entry(stat, type, false));
+            this.entries.add(new Entry(stat, type, false, null));
+            return this;
+        }
+
+        /**
+         * A unit gated behind a building: it may not be produced until this army owns a finished
+         * one. A {@link Supplier} for the reason every registry value in these tables is one — the
+         * rosters are assembled at {@code Races} class-init, before block registration completes.
+         */
+        public Builder unit(UnitStat stat, Supplier<? extends EntityType<? extends Mob>> type,
+                Supplier<? extends Block> requires) {
+            this.entries.add(new Entry(stat, type, false, requires));
             return this;
         }
 

@@ -24,7 +24,6 @@ class GatewayEconomyTest {
         // ordered. One assertion per UnitType the Gateway can produce.
         assertTrue(UnitStats.ZEALOT.buildTicks() > 0, "a Zealot must take time to build");
         assertTrue(UnitStats.DRAGOON.buildTicks() > 0, "a Dragoon must take time to build");
-        assertTrue(UnitStats.SCOUT.buildTicks() > 0, "a Scout must take time to build");
         assertTrue(UnitStats.DARK_TEMPLAR.buildTicks() > 0, "a Dark Templar must take time to build");
     }
 }

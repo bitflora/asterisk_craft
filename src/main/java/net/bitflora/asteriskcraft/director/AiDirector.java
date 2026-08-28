@@ -3,6 +3,7 @@ package net.bitflora.asteriskcraft.director;
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.bitflora.asteriskcraft.building.CoreCensus;
+import net.bitflora.asteriskcraft.building.TechCensus;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.command.CommandOrder;
@@ -186,6 +187,13 @@ public final class AiDirector {
             BaseBlockEntity spawnBase = findAwake(awake, site);
             if (spawnBase == null) {
                 spawnBase = awake.get(this.level.getRandom().nextInt(awake.size()));
+            }
+            // The same gate the player's command card applies, reached through the same roster
+            // column — which is the whole reason the prerequisite lives there and not on a card the
+            // director never opens. UNAFFORDABLE rather than a new result: "wait and retry" is
+            // exactly right for a Spire that has been razed and could be rebuilt.
+            if (TechCensus.missing(this.level, this.aiFaction, def.get()) != null) {
+                return SpawnResult.UNAFFORDABLE;
             }
             if (!CostPayment.payAny(spawnBase, def.get().cost())) {
                 return SpawnResult.UNAFFORDABLE;

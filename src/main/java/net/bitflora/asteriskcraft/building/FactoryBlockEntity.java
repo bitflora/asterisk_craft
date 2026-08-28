@@ -21,6 +21,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -60,6 +61,8 @@ public class FactoryBlockEntity extends StructureBlockEntity
                         head == null ? 0 : queue.buildTicksOf(head) - queue.buildTicksRemaining();
                 case ProductionMenu.DATA_BUILD_TOTAL -> head == null ? 0 : queue.buildTicksOf(head);
                 case ProductionMenu.DATA_WARP -> defense().warpTicksRemaining();
+                case ProductionMenu.DATA_LOCKED ->
+                        TechCensus.lockedOptions(level, buildingFaction(), kind(), profile().roster());
                 default -> 0;
             };
         }
@@ -143,6 +146,15 @@ public class FactoryBlockEntity extends StructureBlockEntity
     private void queueUnit(Player player, UnitRoster.UnitDef def) {
         if (this.queue.isFull()) {
             overlay(player, Component.translatable("message.asteriskcraft.base.queue_full"));
+            return;
+        }
+        // Above the payment, deliberately: a refused unit must not have been charged for.
+        Block missing = this.level instanceof ServerLevel serverLevel
+                ? TechCensus.missing(serverLevel, buildingFaction(), def)
+                : null;
+        if (missing != null) {
+            overlay(player, Component.translatable("message.asteriskcraft.base.needs_building",
+                    def.type().getDescription(), missing.getName()));
             return;
         }
         if (!CostPayment.payAny(this, def.cost())) {

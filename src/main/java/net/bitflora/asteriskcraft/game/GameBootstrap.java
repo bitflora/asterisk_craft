@@ -6,6 +6,7 @@ import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.bitflora.asteriskcraft.building.CoreCensus;
 import net.bitflora.asteriskcraft.building.PrePlaced;
+import net.bitflora.asteriskcraft.building.StructureBlockEntity;
 import net.bitflora.asteriskcraft.building.UnitSpawns;
 import net.bitflora.asteriskcraft.command.CommandAttachments;
 import net.bitflora.asteriskcraft.entity.WorkerEntity;
@@ -86,6 +87,10 @@ public final class GameBootstrap {
     // exposed natural-ground surface block within this radius is overrun. A race that lays none
     // (RaceProfile.creep) skips the sweep entirely.
     private static final int CREEP_RADIUS = 20;
+    // How far out from a computer-controlled base its tech buildings are planted. Outside
+    // MineralField.OUTER_RADIUS so they never land on the worker line, and comfortably inside
+    // CREEP_RADIUS so they stand on ground clearTrees and coverGround have already swept.
+    private static final int TECH_BUILDING_RADIUS = 14;
 
     /**
      * Salt for the per-base mineral-field RNG. Seeded off the world seed and the base's own
@@ -674,9 +679,51 @@ public final class GameBootstrap {
                 }
             }
             crewDefences(defences);
+            placeTechBuildings(level, x, z, profile, faction);
             spawnBaseEscort(level, core, profile, faction);
         }
         return core;
+    }
+
+    /**
+     * Stamps the computer's tech buildings around one of its bases — the structures its own roster
+     * gates units behind ({@link RaceProfile#techBuildings}). They go down finished, at full
+     * strength, exactly as the base beside them does: the AI places no buildings during a match, so
+     * a warping one would leave it unable to produce for the first two minutes of every game, and
+     * a missing one would leave it unable to produce at all.
+     *
+     * <p>Spread evenly around a ring so two never overlap, and each seated at its own footprint's
+     * {@link #platformHeight} rather than the base's, so one on the downhill side of a slope
+     * settles into the ground instead of standing over it. A template that fails to load is logged
+     * and skipped — a broken install should cost the computer a tier, not the world.
+     */
+    private static void placeTechBuildings(ServerLevel level, int baseX, int baseZ, RaceProfile profile,
+            Faction faction) {
+        List<RaceProfile.TechBuilding> tech = profile.techBuildings();
+        for (int i = 0; i < tech.size(); i++) {
+            RaceProfile.TechBuilding building = tech.get(i);
+            Vec3i size = BuildingTemplates.size(level, building.template());
+            if (size == null) {
+                AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the {} template", building.template());
+                continue;
+            }
+            float angle = Mth.TWO_PI * i / tech.size();
+            int x = baseX + Math.round(Mth.cos(angle) * TECH_BUILDING_RADIUS);
+            int z = baseZ + Math.round(Mth.sin(angle) * TECH_BUILDING_RADIUS);
+            int y = platformHeight(level, x, z, BuildingTemplates.footprintRadius(size));
+            BuildingTemplates.Placed placed = BuildingTemplates.place(level, new BlockPos(x, y, z),
+                    building.template(), building.coreBlock().get(), support(profile));
+            if (placed == null) {
+                AsteriskCraft.LOGGER.error("AsteriskCraft: the {} template holds no core block", building.template());
+                continue;
+            }
+            if (level.getBlockEntity(placed.core()) instanceof StructureBlockEntity structure) {
+                structure.setFaction(faction);
+                // Pre-placed, so it is standing finished before the world starts — which is also
+                // what lets it enrol in the TechCensus on its very first tick.
+                structure.defense().skipWarpIn();
+            }
+        }
     }
 
     /**

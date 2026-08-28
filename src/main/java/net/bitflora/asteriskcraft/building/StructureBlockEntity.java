@@ -5,6 +5,7 @@ import net.bitflora.asteriskcraft.faction.Faction;
 import net.bitflora.asteriskcraft.faction.Race;
 import net.bitflora.asteriskcraft.game.MatchSetup;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -43,6 +44,12 @@ public class StructureBlockEntity extends BlockEntity
      * which {@code MatchSetup.sidePlaying} answers even in a mirror.
      */
     private @Nullable Faction faction;
+    /**
+     * Whether this building has been entered in {@link TechCensus}. Not persisted, so a reload
+     * re-enrols from the tick — which is exactly what back-fills a world saved before the census
+     * existed. Mirrors {@code BaseBlockEntity}'s own enrolment flag.
+     */
+    private boolean enrolled;
 
     public StructureBlockEntity(BlockPos pos, BlockState state) {
         this(AsteriskCraft.STRUCTURE_BLOCK_ENTITY.get(), pos, state);
@@ -76,6 +83,13 @@ public class StructureBlockEntity extends BlockEntity
             StructureBlockEntity structure) {
         if (structure.defense.tickWarpIn(level, pos)) {
             structure.setChanged();
+        }
+        // Enrolled only once the countdown has run out, which is what makes "this army owns one"
+        // mean a finished one: nothing at the query end has to ask about warp state.
+        if (!structure.enrolled && !structure.defense.isWarping()) {
+            TechCensus.ensureRegistered(level, structure.buildingFaction(),
+                    BuiltInRegistries.BLOCK.getKey(state.getBlock()), pos);
+            structure.enrolled = true;
         }
     }
 
@@ -120,6 +134,7 @@ public class StructureBlockEntity extends BlockEntity
         super.preRemoveSideEffects(pos, state);
         if (this.level != null) {
             this.defense.collapseScaffold(this.level, pos);
+            TechCensus.unregister(this.level, pos);
         }
     }
 

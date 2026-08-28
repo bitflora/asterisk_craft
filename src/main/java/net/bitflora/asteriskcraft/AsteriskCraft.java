@@ -7,6 +7,7 @@ import net.bitflora.asteriskcraft.building.BaseBlock;
 import net.bitflora.asteriskcraft.building.BaseBlockEntity;
 import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.bitflora.asteriskcraft.building.CoreCensus;
+import net.bitflora.asteriskcraft.building.TechCensus;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlock;
 import net.bitflora.asteriskcraft.building.DepletedNodeBlockEntity;
 import net.bitflora.asteriskcraft.building.FactoryBlock;
@@ -140,13 +141,13 @@ public class AsteriskCraft {
             props -> new BaseBlock(Race.TERRAN, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
-    // The cores of the four buildings a kit stamps but that produce nothing yet. They share one
+    // The cores of the four buildings a kit stamps. Two of them produce nothing and share one
     // StructureBlock/StructureBlockEntity pair, so each is a line of numbers rather than a class:
     // whose building it is (for resolving an owner that was never set), what it takes to raze, and
     // its build time — the warp-in countdown the kit starts, which is what a "build time" is once
     // the kit itself is instant. Appearance is borrowed via the block model's "parent", not copied
-    // pixels. Adding a command card to one of these is the Gateway's shape and graduates it off this
-    // block; it is not a case to add here.
+    // pixels. The other two carry a command card, which is the same block plus that card
+    // (FactoryBlock) rather than a case added here.
     /** 70s, the quickest of the four: the Stargate is the priciest thing on any card already. */
     private static final int STARGATE_BUILD_TICKS = 20 * 70;
     private static final int BARRACKS_BUILD_TICKS = 20 * 80;
@@ -157,9 +158,12 @@ public class AsteriskCraft {
     private static final int FACTORY_HEALTH = 250;
     private static final int PROTOSS_FACTORY_SHIELD = 250;
 
-    public static final DeferredBlock<StructureBlock> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
-            props -> new StructureBlock(new StructureBlock.Defence(Race.PROTOSS, FACTORY_HEALTH,
-                    PROTOSS_FACTORY_SHIELD, STARGATE_BUILD_TICKS), props),
+    // A FactoryBlock, like the Barracks: the Protoss air unit is built here rather than at the
+    // Gateway, so the Stargate is a structure plus a command card. The card is a supplier because
+    // ProductionKind's constants name blocks.
+    public static final DeferredBlock<FactoryBlock> STARGATE_CORE = BLOCKS.registerBlock("stargate_core",
+            props -> new FactoryBlock(new StructureBlock.Defence(Race.PROTOSS, FACTORY_HEALTH,
+                    PROTOSS_FACTORY_SHIELD, STARGATE_BUILD_TICKS), () -> ProductionKind.PROTOSS_STARGATE, props),
             p -> p.mapColor(MapColor.COLOR_CYAN).strength(15.0f, 1200.0f).lightLevel(s -> 8));
 
     public static final DeferredBlock<StructureBlock> SPAWNING_POOL_CORE = BLOCKS.registerBlock("spawning_pool_core",
@@ -176,8 +180,7 @@ public class AsteriskCraft {
             p -> p.mapColor(MapColor.CRIMSON_HYPHAE).strength(15.0f, 1200.0f).lightLevel(s -> 7)
                     .noOcclusion());
 
-    // The one of the four that produces something, so it is a FactoryBlock: the same structure plus
-    // a command card. The card is a supplier because ProductionKind's constants name blocks.
+    // A FactoryBlock for the same reason the Stargate is: the same structure plus a command card.
     public static final DeferredBlock<FactoryBlock> BARRACKS_CORE = BLOCKS.registerBlock("barracks_core",
             props -> new FactoryBlock(new StructureBlock.Defence(Race.TERRAN, FACTORY_HEALTH, 0,
                     BARRACKS_BUILD_TICKS), () -> ProductionKind.TERRAN_BARRACKS, props),
@@ -237,9 +240,9 @@ public class AsteriskCraft {
     // The four unit-factory kits, sold at their own race's base (building/ProductionKind). Each is
     // gated by its race's placement rule — the Stargate needs psi, the Spawning Pool and Spire need
     // creep, the Barracks needs an SCV — and each stamps a StructureBlock core, which is where its
-    // build time, its scaffold, its owner and its siege HP live. What they still do not have is
-    // anything to produce: a command card on one of these is the Gateway's shape and would take it
-    // off StructureBlock, and it changes nothing here.
+    // build time, its scaffold, its owner and its siege HP live. Whether the building that goes up
+    // then produces anything is a question about its core block, not about the kit: the Barracks and
+    // the Stargate carry a command card and the swarm's two do not, and nothing here says so.
     public static final DeferredItem<BuildingKitItem> BARRACKS_KIT = ITEMS.registerItem("barracks_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.BARRACKS, BARRACKS_CORE,
                     BuildingTemplates.BARRACKS_FOOTPRINT, false).requiringBuilder());
@@ -307,14 +310,15 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StructureBlockEntity>> STRUCTURE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("structure",
                     () -> new BlockEntityType<>(StructureBlockEntity::new,
-                            STARGATE_CORE.get(), SPAWNING_POOL_CORE.get(), SPIRE_CORE.get()));
+                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get()));
 
     // One type for every unit factory, as BASE_BLOCK_ENTITY is one for every base. The Gateway keeps
     // its own — it predates the roster and dispatches its card positionally through an enum of
     // Protoss units, which is a merge worth doing on its own rather than as a side effect of this.
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FactoryBlockEntity>> FACTORY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("factory",
-                    () -> new BlockEntityType<>(FactoryBlockEntity::new, BARRACKS_CORE.get()));
+                    () -> new BlockEntityType<>(FactoryBlockEntity::new,
+                            BARRACKS_CORE.get(), STARGATE_CORE.get()));
 
     // --- Menus ---
 
@@ -904,6 +908,7 @@ public class AsteriskCraft {
         RegenAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ArmyBank.ATTACHMENT_TYPES.register(modEventBus);
         CoreCensus.ATTACHMENT_TYPES.register(modEventBus);
+        TechCensus.ATTACHMENT_TYPES.register(modEventBus);
         AsteriskCraftGameRules.GAME_RULES.register(modEventBus);
 
         modEventBus.addListener(this::registerEntityAttributes);
