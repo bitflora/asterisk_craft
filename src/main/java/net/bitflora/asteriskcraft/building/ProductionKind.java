@@ -116,21 +116,27 @@ public enum ProductionKind implements StringRepresentable {
                     Icon.ofIcon("dark_templar"),
                     CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 2, Action.FACTORY))),
     /**
-     * The Stargate's card: the Protoss air unit, and nothing else. The race's second factory, and
-     * the Scout is the whole of it — where the Gateway trains everything that walks, the Stargate
-     * trains the one thing that flies, so an army that wants to answer a Mutalisk buys a building
-     * for it rather than adding a fourth button to a card it already had.
+     * The Stargate's card: everything Protoss that flies, and nothing that walks. The race's second
+     * factory — an army that wants to answer a Mutalisk, or to see a Dark Templar coming, buys a
+     * building for it rather than adding buttons to the card it already had.
      *
-     * <p>Its button names its unit by the same {@code UnitStat.id()} a build script spells, the
-     * {@link #TERRAN_BARRACKS}'s shape rather than the {@link #GATEWAY}'s: this card is read by
-     * {@link FactoryBlockEntity}, which resolves it against the Protoss roster, so nothing here
-     * names a Java class.
+     * <p>Two units, and they are the two halves of what air is for: the Scout intercepts, the
+     * Observer looks. One button each, in their own columns, the {@link #TERRAN_BARRACKS}'s shape
+     * rather than the {@link #GATEWAY}'s — and each names its unit by the same {@code UnitStat.id()}
+     * a build script spells, because this card is read by {@link FactoryBlockEntity}, which resolves
+     * it against the Protoss roster, so nothing here names a Java class.
      */
     PROTOSS_STARGATE(() -> AsteriskCraft.STARGATE_CORE.get(), Races.PROTOSS.bankSlots(), List.of(
             new OptionView(
                     Icon.ofIcon("scout"),
                     CostText.tooltip(UnitStats.SCOUT.cost(), 0), 0,
-                    new Action.TrainUnit(UnitStats.SCOUT.id())))),
+                    new Action.TrainUnit(UnitStats.SCOUT.id())),
+            // One button, not a Wood/Stone pair: the Observer's cost is a single bundle that must be
+            // paid in full, so there is no alternative to choose between.
+            new OptionView(
+                    Icon.ofIcon("observer"),
+                    CostText.tooltip(UnitStats.OBSERVER.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.OBSERVER.id())))),
     /**
      * The Hive's card. Wider than the Protoss base's because the swarm has no factory building:
      * a Hive morphs its combat units itself, so everything an army needs is on this one card.

@@ -1,14 +1,4 @@
 - Control/Supply/Psi limits
-- Fix training times for Zerg Colonies, use noxious_gas and item_slime
 - Fix unit costs for AI players vs Zerg
-- New Structures
-    - Spawning Pool
-    - Spire
-    - StarGate
-    - Everything terran
-- Terran Units
-    - SCVs [DONE]
-    - Marines [DONE]
-    - Firebats
-    - Ghosts
-    - Bunker [DONE]
+- Units
+    - Terran Science Vessel

@@ -24,7 +24,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(23, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(24, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -227,9 +227,9 @@ class UnitStatsTest {
     }
 
     /**
-     * The units that never attack anything: two of the three workers, and the Overlord, whose whole
-     * job is to carry a detection bubble around and which pays for that by being unable to defend
-     * itself.
+     * The units that never attack anything: two of the three workers, and the two detectors that
+     * fly — the Overlord and the Observer — whose whole job is to carry a detection bubble around
+     * and which pay for that by being unable to defend themselves.
      *
      * <p>The Bunker is the odd one: it is a structure rather than a unit, and it has no attack because
      * everything it does to an enemy is done by whatever is inside it. Which is also why it is the
@@ -244,6 +244,7 @@ class UnitStatsTest {
         return stat == UnitStats.PROBE
                 || stat == UnitStats.DRONE
                 || stat == UnitStats.OVERLORD
+                || stat == UnitStats.OBSERVER
                 || stat == UnitStats.BUNKER;
     }
 

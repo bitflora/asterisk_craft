@@ -56,6 +56,11 @@ class ModelBakeTest {
     }
 
     @Test
+    void observerModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new ObserverModel(ObserverModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
     void wraithModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new WraithModel(WraithModel.createBodyLayer().bakeRoot()));
     }

@@ -12,6 +12,7 @@ import net.bitflora.asteriskcraft.client.protoss.DragoonModel;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
 import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
 import net.bitflora.asteriskcraft.client.protoss.DarkTemplarModel;
+import net.bitflora.asteriskcraft.client.protoss.ObserverModel;
 import net.bitflora.asteriskcraft.client.protoss.ScoutModel;
 import net.bitflora.asteriskcraft.client.protoss.ZealotModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
@@ -151,6 +152,7 @@ final class ModelGeometry {
         map.put("zealot", ZealotModel::createBodyLayer);
         map.put("dragoon", DragoonModel::createBodyLayer);
         map.put("scout", ScoutModel::createBodyLayer);
+        map.put("observer", ObserverModel::createBodyLayer);
         map.put("dark_templar", DarkTemplarModel::createBodyLayer);
         map.put("photon_cannon", PhotonCannonModel::createBodyLayer);
         map.put("zergling", ZerglingModel::createBodyLayer);

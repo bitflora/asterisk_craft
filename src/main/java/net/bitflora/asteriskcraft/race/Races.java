@@ -97,6 +97,10 @@ public final class Races {
                     .unit(UnitStats.ZEALOT, AsteriskCraft.ZEALOT)
                     .unit(UnitStats.DRAGOON, AsteriskCraft.DRAGOON)
                     .unit(UnitStats.SCOUT, AsteriskCraft.SCOUT)
+                    // Ungated, exactly as the Scout is: the Stargate's command card is what a
+                    // human buys it through, and a roster gate would strand the computer, whose
+                    // script has no card to open. See RacesTest.
+                    .unit(UnitStats.OBSERVER, AsteriskCraft.OBSERVER)
                     .unit(UnitStats.DARK_TEMPLAR, AsteriskCraft.DARK_TEMPLAR)
                     .build(),
             () -> ProductionKind.PROTOSS_BASE,

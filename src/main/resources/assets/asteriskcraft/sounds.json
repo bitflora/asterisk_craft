@@ -305,6 +305,19 @@
     "subtitle": "subtitles.entity.asteriskcraft.scout.attack",
     "sounds": ["asteriskcraft:mob/scout/scout-attack"]
   },
+  "entity.observer.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.observer.ambient",
+    "sounds": [
+      "asteriskcraft:mob/observer/observer-live1",
+      "asteriskcraft:mob/observer/observer-live2"
+    ]
+  },
+  "entity.observer.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.observer.death",
+    "sounds": ["asteriskcraft:mob/observer/observer-death"]
+  },
   "entity.mutalisk.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.mutalisk.attack",

@@ -12,7 +12,9 @@
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Zealot, 1 Dragoon". Qty may be a range "3-5".
 #   Units: Zealot (melee), Dragoon (ranged), Scout (air), Dark Templar (permanently cloaked
-#          melee — nothing without a detector can shoot back), Probe (worker).
+#          melee — nothing without a detector can shoot back), Observer (air, no attack and
+#          permanently cloaked — a flying detector that nothing without a detector of its own can
+#          shoot at), Probe (worker).
 #
 # The AI waits until it can afford each unit, so a wave only leaves once fully trained. Each unit
 # also takes its own build time, so adding one lengthens a wave.
@@ -44,8 +46,10 @@ Defence: 1 Dragoon
 Defence: 1 Dragoon
 Wait 220
 
-# Endless combined waves from here on.
-Wave: 4-7 Zealot, 2-3 Dragoon, 1-2 Scout
+# Endless combined waves from here on. The Observer travels with them rather than sitting at the
+# base: the Cannon already detects where the Nexus stands, and what an army walking across the map
+# cannot see is a Lurker dug in on the approach.
+Wave: 4-7 Zealot, 2-3 Dragoon, 1-2 Scout, 1 Observer
 Wait 220
 
 Wave: 4-7 Zealot, 2-3 Dragoon, 1-2 Scout
@@ -53,6 +57,6 @@ Wait 220
 
 Defence: 1 Dark Templar
 
-Wave: 2-8 Zealot, 2-5 Dragoon, 1-4 Scout, 1-2 Dark Templar
+Wave: 2-8 Zealot, 2-5 Dragoon, 1-4 Scout, 1-2 Dark Templar, 1 Observer
 Wait 220
 Repeat 2

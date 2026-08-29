@@ -44,6 +44,7 @@ import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.terran.WraithEntity;
+import net.bitflora.asteriskcraft.entity.protoss.ObserverEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
@@ -488,6 +489,16 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("scout"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<ObserverEntity>> OBSERVER =
+            ENTITY_TYPES.register("observer", () -> EntityType.Builder.of(ObserverEntity::new, MobCategory.MONSTER)
+                    // Small and square, unlike the two fighters either side of it: the silhouette is
+                    // a pod inside a cage rather than a craft with a wingspan, so it has no reason to
+                    // be wide and every reason to slip through the gaps a Scout cannot.
+                    .sized(1.0f, 1.0f)
+                    // Larger than the ground units': it cruises 4 blocks up, so it enters view sooner.
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("observer"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<DarkTemplarEntity>> DARK_TEMPLAR =
             ENTITY_TYPES.register("dark_templar", () -> EntityType.Builder.of(DarkTemplarEntity::new, MobCategory.MONSTER)
                     // Identical to the Zealot's, deliberately: it is the same frame, and the same
@@ -667,6 +678,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, SCOUT, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> SCOUT_SPAWN_EGG_ENEMY = ITEMS.registerItem("scout_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, SCOUT, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> OBSERVER_SPAWN_EGG_ALLY = ITEMS.registerItem("observer_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, OBSERVER, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> OBSERVER_SPAWN_EGG_ENEMY = ITEMS.registerItem("observer_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, OBSERVER, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ALLY = ITEMS.registerItem("dark_templar_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, FactionSpawnEggItem.Side.ALLY));
@@ -862,6 +877,14 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.scout.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.ambient")));
     public static final DeferredHolder<SoundEvent, SoundEvent> SCOUT_ATTACK =
             SOUND_EVENTS.register("entity.scout.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.scout.attack")));
+
+    // No hurt or attack event, for the Overlord's two reasons: the Observer has no attack at all,
+    // and the source clips include no hurt bark, so it keeps the vanilla hurt sound rather than
+    // borrowing another unit's voice.
+    public static final DeferredHolder<SoundEvent, SoundEvent> OBSERVER_AMBIENT =
+            SOUND_EVENTS.register("entity.observer.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.observer.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> OBSERVER_DEATH =
+            SOUND_EVENTS.register("entity.observer.death", () -> SoundEvent.createVariableRangeEvent(id("entity.observer.death")));
     public static final DeferredHolder<SoundEvent, SoundEvent> MUTALISK_ATTACK =
             SOUND_EVENTS.register("entity.mutalisk.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.mutalisk.attack")));
     public static final DeferredHolder<SoundEvent, SoundEvent> PHOTON_CANNON_ATTACK =
@@ -933,6 +956,8 @@ public class AsteriskCraft {
                 output.accept(DRAGOON_SPAWN_EGG_ENEMY.get());
                 output.accept(SCOUT_SPAWN_EGG_ALLY.get());
                 output.accept(SCOUT_SPAWN_EGG_ENEMY.get());
+                output.accept(OBSERVER_SPAWN_EGG_ALLY.get());
+                output.accept(OBSERVER_SPAWN_EGG_ENEMY.get());
             output.accept(DARK_TEMPLAR_SPAWN_EGG_ALLY.get());
             output.accept(DARK_TEMPLAR_SPAWN_EGG_ENEMY.get());
                 output.accept(DRONE_SPAWN_EGG_ALLY.get());
@@ -1019,6 +1044,7 @@ public class AsteriskCraft {
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
         event.put(DRAGOON.get(), DragoonEntity.createAttributes().build());
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());
+        event.put(OBSERVER.get(), ObserverEntity.createAttributes().build());
         event.put(DARK_TEMPLAR.get(), DarkTemplarEntity.createAttributes().build());
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());

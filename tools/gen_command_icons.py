@@ -64,7 +64,7 @@ RENAMED = {"infested_villager": "infested_terran"}
 
 # Units with a train button on some command card, and so a GUI icon (building/ProductionKind).
 TRAINED = [
-    "probe", "zealot", "dragoon", "scout", "dark_templar",
+    "probe", "zealot", "dragoon", "scout", "observer", "dark_templar",
     # The Hive's card (ProductionKind.ZERG_BASE) morphs every Zerg unit itself - the swarm has no
     # factory building - so all of them need a train button once a human can play Zerg.
     "drone", "zergling", "hydralisk", "mutalisk", "lurker", "ultralisk", "overlord",
@@ -93,7 +93,7 @@ KITS = {
 
 # Every unit with an ally/enemy spawn-egg pair registered in AsteriskCraft.java.
 EGGS = [
-    "probe", "zealot", "dragoon", "scout", "dark_templar",
+    "probe", "zealot", "dragoon", "scout", "observer", "dark_templar",
     "drone", "zergling", "ultralisk", "hydralisk", "mutalisk", "lurker", "overlord",
     "infested_villager", "sunken_colony", "spore_colony",
     "scv", "marine", "firebat", "ghost", "wraith", "bunker", "missile_turret",

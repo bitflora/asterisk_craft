@@ -79,6 +79,7 @@ UNITS = {
     "zealot": ("protoss", "ZealotModel"),
     "dragoon": ("protoss", "DragoonModel"),
     "scout": ("protoss", "ScoutModel"),
+    "observer": ("protoss", "ObserverModel"),
     "dark_templar": ("protoss", "DarkTemplarModel"),
     "photon_cannon": ("protoss", "PhotonCannonModel"),
     "zergling": ("zerg", "ZerglingModel"),

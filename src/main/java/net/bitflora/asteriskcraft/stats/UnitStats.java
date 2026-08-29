@@ -64,6 +64,22 @@ public final class UnitStats {
     public static final UnitStat SCOUT = TABLE.get("scout");
 
     /**
+     * The Protoss eye, and the counterpart to the {@link #OVERLORD}: a Stargate-trained flyer that
+     * carries the same detection envelope every other detector has and is itself permanently
+     * cloaked, so it goes and looks at things nothing on the other side can shoot at it for.
+     *
+     * <p>It has no attack — the only Protoss unit that doesn't, and one of the four the rule
+     * {@code UnitStatsTest.onlyNonCombatUnitsLackAttackDamage} names. What it pays for the cloak
+     * with is being the flimsiest thing either side can field: 20 HP behind 10 shields is under a
+     * third of a Scout's pool, so a detector on the other side turns it from untouchable into a
+     * single volley, and it is far cheaper than the Overlord because it cannot soak anything.
+     *
+     * <p>It cruises at the Scout's speed rather than the Overlord's drift: it is a scout that has to
+     * get somewhere and look at it, not a sac that follows an army around.
+     */
+    public static final UnitStat OBSERVER = TABLE.get("observer");
+
+    /**
      * The first unit in the mod to carry {@code faction.Cloaked}, and priced for it. Hits harder than
      * anything else the Gateway makes and cannot be fought back at while undetected — so it is
      * deliberately the most fragile thing on the Protoss roster behind the Probe: a single Sunken

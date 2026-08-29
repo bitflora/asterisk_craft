@@ -36,6 +36,9 @@ public final class UnitLabels {
             Map.entry("zealot", "Z"),
             Map.entry("dragoon", "D"),
             Map.entry("scout", "S"),
+            // O for Observer, which is also the Overlord's — letters only need to be unique
+            // within a roster, and these two are never on the same one.
+            Map.entry("observer", "O"),
             Map.entry("photon_cannon", "C"),
             // T for Templar: D is the Dragoon's, and the letters only need to be unique per roster.
             Map.entry("dark_templar", "T"),
