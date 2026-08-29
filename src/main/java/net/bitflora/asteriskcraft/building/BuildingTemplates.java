@@ -94,10 +94,19 @@ public final class BuildingTemplates {
     /** Bounds the support fill so a deep or void column can't carve a shaft down to bedrock. */
     private static final int MAX_SUPPORT_DEPTH = 6;
 
-    /** Templates are stamped in their authored orientation — no rotation, no mirroring. */
+    /**
+     * Templates are stamped in their authored orientation — no rotation, no mirroring.
+     *
+     * <p>Entities captured in the export are stamped too (the default; nothing calls
+     * {@code setIgnoreEntities}). A building's decoration is part of its design, and the designer
+     * reaches for an entity when a block can't do the job — the Stargate's warp ring is a row of
+     * glow item frames, which is exactly the kind of thing that has to survive the re-export the
+     * {@code .nbt} is the source of truth for. The templates that hold no entities are unaffected,
+     * and nothing here spawns a <em>unit</em>: {@code shouldFinalizeEntities} stays off, so anything
+     * a template does carry arrives with the NBT it was exported with and no spawn logic on top.
+     */
     private static StructurePlaceSettings settings() {
         return new StructurePlaceSettings()
-                .setIgnoreEntities(true)
                 // Without this, waterloggable stairs/slabs soak up the water they replace and a
                 // shoreline base warps in flooded.
                 .setLiquidSettings(LiquidSettings.IGNORE_WATERLOGGING);
