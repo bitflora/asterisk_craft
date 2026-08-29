@@ -217,6 +217,11 @@ public final class Races {
                     .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
                     .unit(UnitStats.FIREBAT, AsteriskCraft.FIREBAT)
                     .unit(UnitStats.GHOST, AsteriskCraft.GHOST)
+                    // The race's one gated unit, and its only flyer: a Wraith needs a Starport
+                    // standing, the way a Mutalisk needs a Spire. The infantry above are gated by a
+                    // Barracks in practice — that is where their buttons live — but not by the
+                    // roster, since the Command Center's card could sell one again without lying.
+                    .unit(UnitStats.WRAITH, AsteriskCraft.WRAITH, AsteriskCraft.STARPORT_CORE)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),
@@ -234,10 +239,13 @@ public final class Races {
             // afterwards rather than as it spawns.
             List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2),
                     new BaseDefence(AsteriskCraft.MISSILE_TURRET, 1)),
-            // No tech buildings: nothing on the Terran roster is gated behind one yet. Their
-            // infantry already come out of a Barracks the player has to build, which is the same
-            // idea arrived at from the other direction.
-            List.of(),
+            // The Starport, planted finished with each of the computer's Command Centers — the Zerg
+            // Spire's opposite number, and gated for the same reason: the Wraith is the one Terran
+            // unit its roster makes conditional, so a build script that names one gets nothing until
+            // this is standing. It is also what a player razes to shut the air waves down a tier.
+            // The Barracks is deliberately not here: the race's infantry are ungated on the roster,
+            // so a computer Command Center already trains them without one.
+            List.of(new TechBuilding(BuildingTemplates.STARPORT, AsteriskCraft.STARPORT_CORE::get)),
             // No escort: the Terran have no flyer, so there is nothing a Command Center wants
             // hovering over it. Their detection is the Missile Turret above, which is rooted — so
             // unlike the swarm's Overlord, nothing carries it out with an army.

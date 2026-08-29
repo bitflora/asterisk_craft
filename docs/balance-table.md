@@ -135,8 +135,10 @@ blank — the Probe, the Drone, the Overlord and the Bunker — and
 `UnitStatsTest.onlyNonCombatUnitsLackAttackDamage` pins that list.
 
 ### `anti_air_bonus` — extra health points against an air target
-Added flat on top of `attack_damage` when the target is an `entity/Flyer`. Only the Scout has one:
-11 to anything on the ground, 21 to a Mutalisk. `0.0` means the unit hits air and ground alike.
+Added flat on top of `attack_damage` when the target is an `entity/Flyer`. Two rows have one, and the
+gap between them is the design: the Scout is 11 on the ground and 21 to a Mutalisk, while the Wraith
+is 2.5 and 10 — a fighter that can also strafe, against an interceptor that can do nothing else.
+`0.0` means the unit hits air and ground alike.
 
 It is a bonus rather than a second damage number so that one attribute still describes the attack —
 nothing about targeting or acquisition changes with it. The builder rejects a non-zero bonus on a row
@@ -185,7 +187,8 @@ the ranged attack goal and pick up the Bunker firing-slit bonus.
   knows a flyer from a walker.
 - **`path_length`** — blocks. The navigation's `requiredPathLength`. **It must be at least the unit's
   `follow_range`**, or the flyer gives up on distant targets mid-approach; `UnitStatsTest` enforces
-  it. All three flyers use 64 against a follow range of 32.
+  it. All four flyers use 64, against a follow range of 32 on the Protoss and Zerg ones and 48 on the
+  Wraith (every Terran combat unit uses 48).
 
 An *armed* flyer must also out-range its own cruising altitude with room to spare — a unit hovering
 4 up with a range of 4 would have to be directly overhead to shoot. `UnitStatsTest` requires at least

@@ -43,6 +43,7 @@ import net.bitflora.asteriskcraft.entity.terran.GhostEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
+import net.bitflora.asteriskcraft.entity.terran.WraithEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ZealotEntity;
 import net.bitflora.asteriskcraft.entity.zerg.InfestedVillagerEntity;
@@ -202,11 +203,12 @@ public class AsteriskCraft {
     // that can be placed at all can be shot at, and a block with no block entity behind it has no HP
     // to shoot off. It is a plain StructureBlock and not a FactoryBlock because it produces nothing
     // yet; that is a command card away, and it graduates the way the Barracks did.
-    // The Terran air building. A plain StructureBlock and not a FactoryBlock because it produces
-    // nothing yet — that is a command card away, and it graduates the way the Barracks did.
-    public static final DeferredBlock<StructureBlock> STARPORT_CORE = BLOCKS.registerBlock("starport_core",
-            props -> new StructureBlock(new StructureBlock.Defence(Race.TERRAN, STARPORT_HEALTH, 0,
-                    STARPORT_BUILD_TICKS), props),
+    // The Terran air building, and a FactoryBlock for the same reason the Stargate is: the same
+    // structure plus a command card. It graduated off StructureBlock the way the Barracks did, the
+    // moment the race had something that flies to train on it.
+    public static final DeferredBlock<FactoryBlock> STARPORT_CORE = BLOCKS.registerBlock("starport_core",
+            props -> new FactoryBlock(new StructureBlock.Defence(Race.TERRAN, STARPORT_HEALTH, 0,
+                    STARPORT_BUILD_TICKS), () -> ProductionKind.TERRAN_STARPORT, props),
             p -> p.mapColor(MapColor.METAL).strength(15.0f, 1200.0f).lightLevel(s -> 10));
 
     public static final DeferredBlock<StructureBlock> FACTORY_CORE = BLOCKS.registerBlock("factory_core",
@@ -270,9 +272,8 @@ public class AsteriskCraft {
             props -> new BuildingKitItem(props, BuildingTemplates.BARRACKS, BARRACKS_CORE,
                     BuildingTemplates.BARRACKS_FOOTPRINT, false).requiringBuilder());
 
-    // The Terran air building, sold at the Command Center beside the Barracks. Its .nbt is still the
-    // placeholder core emitted by tools/make_core_template.py, so what it stamps today is one block —
-    // designing the building is a re-export over that file and no change here.
+    // The Terran air building, sold at the Command Center beside the Barracks — and, since the
+    // Wraith, the thing that has to be standing before the race can put anything in the air.
     public static final DeferredItem<BuildingKitItem> STARPORT_KIT = ITEMS.registerItem("starport_kit",
             props -> new BuildingKitItem(props, BuildingTemplates.STARPORT, STARPORT_CORE,
                     BuildingTemplates.STARPORT_FOOTPRINT, false).requiringBuilder());
@@ -340,8 +341,7 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StructureBlockEntity>> STRUCTURE_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("structure",
                     () -> new BlockEntityType<>(StructureBlockEntity::new,
-                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get(), FACTORY_CORE.get(),
-                            STARPORT_CORE.get()));
+                            SPAWNING_POOL_CORE.get(), SPIRE_CORE.get(), FACTORY_CORE.get()));
 
     // One type for every unit factory, as BASE_BLOCK_ENTITY is one for every base. The Gateway keeps
     // its own — it predates the roster and dispatches its card positionally through an enum of
@@ -349,7 +349,7 @@ public class AsteriskCraft {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FactoryBlockEntity>> FACTORY_BLOCK_ENTITY =
             BLOCK_ENTITY_TYPES.register("factory",
                     () -> new BlockEntityType<>(FactoryBlockEntity::new,
-                            BARRACKS_CORE.get(), STARGATE_CORE.get()));
+                            BARRACKS_CORE.get(), STARGATE_CORE.get(), STARPORT_CORE.get()));
 
     // --- Menus ---
 
@@ -401,6 +401,16 @@ public class AsteriskCraft {
                     .sized(0.6f, 1.95f)
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("ghost"))));
+
+    // The Scout's footprint, and for the same reasons: wide and shallow because it is a craft rather
+    // than a person, and tracked further out than the ground units because it cruises 4 blocks up and
+    // so enters view sooner. A touch narrower than the Scout — the Wraith's wings sweep back along the
+    // hull rather than out to either side.
+    public static final DeferredHolder<EntityType<?>, EntityType<WraithEntity>> WRAITH =
+            ENTITY_TYPES.register("wraith", () -> EntityType.Builder.of(WraithEntity::new, MobCategory.MONSTER)
+                    .sized(1.4f, 0.9f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("wraith"))));
 
     // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
     // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
@@ -628,6 +638,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, GHOST, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> GHOST_SPAWN_EGG_ENEMY = ITEMS.registerItem("ghost_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, GHOST, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> WRAITH_SPAWN_EGG_ALLY = ITEMS.registerItem("wraith_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, WRAITH, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> WRAITH_SPAWN_EGG_ENEMY = ITEMS.registerItem("wraith_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, WRAITH, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
@@ -810,6 +824,22 @@ public class AsteriskCraft {
     public static final DeferredHolder<SoundEvent, SoundEvent> GHOST_ATTACK =
             SOUND_EVENTS.register("entity.ghost.attack", () -> SoundEvent.createVariableRangeEvent(id("entity.ghost.attack")));
 
+    // No WRAITH_HURT, for the fifth time and the same reason: the archive has two acknowledgement
+    // lines and one death line for the Wraith, and no pain line. Its attack is the exception to the
+    // one-shot-sound-per-unit rule every other unit follows — the archive ships a separate ground
+    // and air firing clip, which is the same split the unit's damage already makes, so the branch
+    // that picks the damage picks the sound with it (see WraithEntity.performRangedAttack).
+    public static final DeferredHolder<SoundEvent, SoundEvent> WRAITH_AMBIENT =
+            SOUND_EVENTS.register("entity.wraith.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.wraith.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> WRAITH_DEATH =
+            SOUND_EVENTS.register("entity.wraith.death", () -> SoundEvent.createVariableRangeEvent(id("entity.wraith.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> WRAITH_ATTACK_GROUND =
+            SOUND_EVENTS.register("entity.wraith.attack_ground",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.wraith.attack_ground")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> WRAITH_ATTACK_AIR =
+            SOUND_EVENTS.register("entity.wraith.attack_air",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.wraith.attack_air")));
+
     // The Missile Turret's only sound. A structure has no ambient line, no pain line and no death
     // cry — the Photon Cannon and the two colonies are the same, and only the shot makes noise.
     public static final DeferredHolder<SoundEvent, SoundEvent> MISSILE_TURRET_ATTACK =
@@ -891,6 +921,8 @@ public class AsteriskCraft {
                 output.accept(FIREBAT_SPAWN_EGG_ENEMY.get());
                 output.accept(GHOST_SPAWN_EGG_ALLY.get());
                 output.accept(GHOST_SPAWN_EGG_ENEMY.get());
+                output.accept(WRAITH_SPAWN_EGG_ALLY.get());
+                output.accept(WRAITH_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(MISSILE_TURRET_SPAWN_EGG_ALLY.get());
@@ -981,6 +1013,7 @@ public class AsteriskCraft {
         event.put(MARINE.get(), MarineEntity.createAttributes().build());
         event.put(FIREBAT.get(), FirebatEntity.createAttributes().build());
         event.put(GHOST.get(), GhostEntity.createAttributes().build());
+        event.put(WRAITH.get(), WraithEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(MISSILE_TURRET.get(), MissileTurretEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());

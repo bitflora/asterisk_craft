@@ -310,7 +310,22 @@ public enum ProductionKind implements StringRepresentable {
             new OptionView(
                     Icon.ofIcon("ghost"),
                     CostText.tooltip(UnitStats.GHOST.cost(), 0), 2,
-                    new Action.TrainUnit(UnitStats.GHOST.id()))));
+                    new Action.TrainUnit(UnitStats.GHOST.id())))),
+    /**
+     * The Starport's card: the Terran air unit, and nothing else. Exactly {@link #PROTOSS_STARGATE}'s
+     * shape and for exactly its reason — where the {@link #TERRAN_BARRACKS} trains everything that
+     * walks, the Starport trains the one thing that flies, so an army that wants to answer a Mutalisk
+     * (or a Scout) buys a building for it rather than adding a fourth button to a card it already had.
+     *
+     * <p>Its button names its unit by the same {@code UnitStat.id()} a build script spells, so
+     * {@link FactoryBlockEntity} resolves it against the Terran roster and this card names no Java
+     * class.
+     */
+    TERRAN_STARPORT(() -> AsteriskCraft.STARPORT_CORE.get(), Races.TERRAN.bankSlots(), List.of(
+            new OptionView(
+                    Icon.ofIcon("wraith"),
+                    CostText.tooltip(UnitStats.WRAITH.cost(), 0), 0,
+                    new Action.TrainUnit(UnitStats.WRAITH.id()))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

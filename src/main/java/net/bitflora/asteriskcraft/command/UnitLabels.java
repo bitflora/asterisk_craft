@@ -60,7 +60,8 @@ public final class UnitLabels {
             Map.entry("bunker", "B"),
             // T for Turret. It is the Dark Templar's letter too, and free here for the reason K was
             // free for the Sunken Colony: the rosters are checked one race at a time.
-            Map.entry("missile_turret", "T"));
+            Map.entry("missile_turret", "T"),
+            Map.entry("wraith", "W"));
 
     private UnitLabels() {
     }

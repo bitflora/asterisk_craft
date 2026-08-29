@@ -77,13 +77,16 @@ public final class AsteriskCraftDamageTypes {
     /** The Missile Turret's ordnance. The only Terran damage type that can only ever be dealt to
      * something off the ground. */
     public static final ResourceKey<DamageType> LONGBOLT_MISSILE = key("longbolt_missile");
+    /** The Wraith's burst lasers. The only Terran damage type dealt <em>from</em> the air, and the
+     * second in the mod (after the Scout's) whose amount depends on whether its target is a flyer. */
+    public static final ResourceKey<DamageType> BURST_LASERS = key("burst_lasers");
 
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
             SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER,
-            C10_CANISTER_RIFLE, LONGBOLT_MISSILE);
+            C10_CANISTER_RIFLE, LONGBOLT_MISSILE, BURST_LASERS);
 
     private AsteriskCraftDamageTypes() {
     }

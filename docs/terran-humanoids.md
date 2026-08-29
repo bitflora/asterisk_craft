@@ -12,6 +12,7 @@ Worked examples, in the order they are useful:
 | `client/terran/FirebatModel` + `FirebatHeadLayer` | the second one — pillager head, bare, red plate |
 | `client/terran/GhostModel` + `GhostHeadLayer` | the third — villager head wearing **two** vanilla profession overlays |
 | `client/terran/ScvModel` + `ScvPilotLayer` | the **counter-example**: a mech, deliberately not this pose |
+| `client/terran/WraithModel` | the other **counter-example**: an aircraft. No pose, no borrowed head, nothing on this page applies — model it against `client/protoss/ScoutModel` instead |
 
 `entity/terran/MarineEntity` and `entity/terran/FirebatEntity` are the matching entity classes, and the
 Firebat's git history is the cleanest end-to-end record of what adding one costs.

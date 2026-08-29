@@ -6,6 +6,7 @@ import net.bitflora.asteriskcraft.client.terran.BunkerModel;
 import net.bitflora.asteriskcraft.client.terran.MissileTurretModel;
 import net.bitflora.asteriskcraft.client.terran.FirebatModel;
 import net.bitflora.asteriskcraft.client.terran.GhostModel;
+import net.bitflora.asteriskcraft.client.terran.WraithModel;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
 import net.bitflora.asteriskcraft.client.zerg.DroneModel;
@@ -52,6 +53,11 @@ class ModelBakeTest {
     @Test
     void ghostModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new GhostModel(GhostModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void wraithModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new WraithModel(WraithModel.createBodyLayer().bakeRoot()));
     }
 
     @Test

@@ -214,6 +214,29 @@
     "subtitle": "subtitles.entity.asteriskcraft.ghost.attack",
     "sounds": ["asteriskcraft:mob/ghost/ghost-attack"]
   },
+  "entity.wraith.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.wraith.ambient",
+    "sounds": [
+      "asteriskcraft:mob/wraith/wraith-live1",
+      "asteriskcraft:mob/wraith/wraith-live2"
+    ]
+  },
+  "entity.wraith.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.wraith.death",
+    "sounds": ["asteriskcraft:mob/wraith/wraith-death1"]
+  },
+  "entity.wraith.attack_ground": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.wraith.attack_ground",
+    "sounds": ["asteriskcraft:mob/wraith/wraith-attack-ground"]
+  },
+  "entity.wraith.attack_air": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.wraith.attack_air",
+    "sounds": ["asteriskcraft:mob/wraith/wraith-attack-air"]
+  },
   "entity.missile_turret.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.missile_turret.attack",

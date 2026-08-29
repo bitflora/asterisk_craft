@@ -12,7 +12,8 @@
 #
 #   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
 #   Units: Marine (ranged infantry), Firebat (short-range flamethrower), Ghost (long-range
-#          marksman that cloaks when hit), SCV (worker).
+#          marksman that cloaks when hit), Wraith (cloaking fighter, needs a Starport standing),
+#          SCV (worker).
 #
 # The Terran open with counts and close with a mix. A Marine is the cheapest combat unit in the mod,
 # comes out in 24 seconds, and dies to almost anything on its own — so the early waves below grow in
@@ -52,11 +53,19 @@ Wait 200
 Wave: 8-10 Marine, 2 Firebat, 1 Ghost
 Wait 200
 
+# The Wraith arrives after the Ghost and for a steeper price still: 50 seconds, 150 wood, 100
+# cobblestone and 2 iron out of a Starport, which every computer Command Center is planted with
+# (RaceProfile.techBuildings) — raze it and no wave from here on has anything in the air. Two of them
+# are what finally lets the race answer a Mutalisk flock or a Scout, since nothing else it fields
+# reaches a flyer holding altitude except a turret bolted to the floor. Against ground troops a
+# Wraith is nearly harmless (2.5 a shot), so it is escort, not a push on its own.
+Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith
+Wait 200
+
 # Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes
-# on them, and a Ghost or two behind both. Note what the race still cannot do — nothing here detects,
-# so a Dark Templar or a burrowed Lurker walks through a Terran army untouched, and nothing here
-# shoots down a Mutalisk that stays high. Those are real holes in the roster, deliberately left
-# standing until the race has more in it.
-Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost
+# on them, a Ghost or two behind both, and Wraiths overhead. The one hole left in the roster is
+# detection — nothing a Terran army carries into the field sees a Dark Templar or a burrowed Lurker,
+# so both still walk straight through it. That is deliberate, and left standing.
+Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost, 2-3 Wraith
 Wait 220
 Repeat 2

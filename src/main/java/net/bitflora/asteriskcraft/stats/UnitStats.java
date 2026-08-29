@@ -249,6 +249,35 @@ public final class UnitStats {
     public static final UnitStat GHOST = TABLE.get("ghost");
 
     /**
+     * The Wraith — the Terran fighter, and the race's first unit that leaves the ground. It is
+     * built out of two units the mod already had, and both halves are load-bearing.
+     *
+     * <p><b>From the Scout, the split attack.</b> 2.5 damage to anything on the ground and 10 to
+     * anything airborne, written as a base of 2.5 plus a 7.5 anti-air bonus, so one attribute still
+     * describes the shot (see {@code UnitStat#antiAirBonus}). The ratio is far steeper than the
+     * Scout's 11/21: a Scout is a fighter that can also strafe, while a Wraith that shoots at ground
+     * targets is a Wraith being wasted — 2.5 on a 1.5-second cadence is under 1.7 a second, the
+     * feeblest sustained damage in the mod. Against a Mutalisk or another Wraith it is 6.7 a second,
+     * which beats every Terran gun that is not bolted to the floor.
+     *
+     * <p><b>From the Ghost, the reactive cloak.</b> Same {@code entity.terran.CloakClock}, same
+     * minute up and two minutes locked out. That is what the 60 HP is priced against: a Wraith is
+     * tougher than any Terran infantry and still frail for an air unit — a Mutalisk matches it at 60
+     * and a Scout beats it at 75-behind-50-shields — because the first hit it takes is supposed to be
+     * answered by vanishing rather than by absorbing.
+     *
+     * <p>Range 8 rather than the Scout's and the Mutalisk's 9, so it out-reaches nothing it will meet
+     * in the air; it wins those fights by not being shootable, not by standing further off. Eight is
+     * also the floor the shared 4-block cruising altitude leaves — see
+     * {@code UnitStatsTest.everyFlyerOutrangesItsOwnCruisingAltitude}.
+     *
+     * <p>150 wood, 100 cobblestone and 2 iron over 50 seconds, out of a Starport that costs the same
+     * shape again. The second Terran unit to spend iron and the second to take 50 seconds, which puts
+     * it beside the Ghost as a decision rather than a body.
+     */
+    public static final UnitStat WRAITH = TABLE.get("wraith");
+
+    /**
      * The Bunker. The first unit in the mod that holds other units, and the only structure with no
      * weapon of its own: everything it does to an enemy is done by whatever is inside it.
      *
