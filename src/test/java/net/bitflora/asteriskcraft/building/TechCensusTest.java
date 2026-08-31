@@ -2,8 +2,13 @@ package net.bitflora.asteriskcraft.building;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
 import net.bitflora.asteriskcraft.faction.Faction;
+import net.bitflora.asteriskcraft.race.RaceProfile;
+import net.bitflora.asteriskcraft.race.Races;
+import net.bitflora.asteriskcraft.race.UnitRoster;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -70,5 +75,28 @@ class TechCensusTest {
     @Test
     void theUnfactionedWorldHoldsNothing() {
         assertFalse(TechCensus.holds(List.of(owned(Faction.BLUE, POOL)), Faction.NEUTRAL, POOL));
+    }
+
+    /**
+     * A {@link StructureBlockEntity} is the only thing that ever enrols itself here, so a unit gated
+     * behind a block that has no such block entity is gated behind a prerequisite nothing can ever
+     * satisfy — the button is locked for the whole match and the refusal names a building the player
+     * is already standing on. Nothing complains at runtime, which is why it is checked here.
+     */
+    @Test
+    void everyGatedUnitNeedsABuildingThatCanEnrol() {
+        for (RaceProfile profile : Races.all()) {
+            UnitRoster roster = profile.roster();
+            for (String name : roster.names()) {
+                Block required = roster.resolve(name).orElseThrow().requires();
+                if (required == null) {
+                    continue;
+                }
+                assertTrue(required instanceof StructureBlock,
+                        profile.race() + "'s " + name + " is gated behind "
+                                + BuiltInRegistries.BLOCK.getKey(required)
+                                + ", which never enrols in the census — it can never be produced");
+            }
+        }
     }
 }

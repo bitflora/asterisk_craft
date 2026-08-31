@@ -87,9 +87,12 @@ public class FactoryBlockEntity extends StructureBlockEntity
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, FactoryBlockEntity factory) {
-        // Ticked before the queue so shields recharge whether or not anything is in production.
-        if (factory.defense().tickWarpIn(level, pos)) {
-            factory.setChanged();
+        // Delegated rather than re-implemented: a factory is a structure that also produces, so it
+        // owes the base tick everything a plain one does — the warp countdown, and the TechCensus
+        // enrolment that makes it count as standing tech. Skipping the latter is what left a
+        // Starport unable to satisfy the Wraith's own prerequisite.
+        StructureBlockEntity.serverTick(level, pos, state, factory);
+        if (factory.defense().isWarping()) {
             return; // still going up: no production yet
         }
         if (factory.queue.isEmpty()) {
@@ -237,6 +240,7 @@ public class FactoryBlockEntity extends StructureBlockEntity
         // Barracks falling must not dump or clear what the rest of the army is still spending.
         if (this.level != null) {
             defense().collapseScaffold(this.level, pos);
+            TechCensus.unregister(this.level, pos);
         }
     }
 
