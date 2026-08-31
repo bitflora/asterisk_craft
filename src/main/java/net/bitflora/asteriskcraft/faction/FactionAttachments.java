@@ -25,10 +25,19 @@ public final class FactionAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, AsteriskCraft.MODID);
 
+    /**
+     * Which side this entity fights for.
+     *
+     * <p>{@code copyOnDeath} because a respawn builds a <em>fresh</em> player entity and NeoForge
+     * copies only the attachments that ask for it (see {@code AttachmentInternals.onPlayerClone});
+     * without it a player who died came back {@link Faction#NEUTRAL} and so commanded nothing —
+     * their own base refused to open its command card — until the next login re-tagged them.
+     */
     public static final Supplier<AttachmentType<Faction>> FACTION = ATTACHMENT_TYPES.register(
             "faction", () -> AttachmentType.builder(() -> Faction.NEUTRAL)
                     .serialize(Faction.CODEC.fieldOf("faction"))
                     .sync(Faction.STREAM_CODEC)
+                    .copyOnDeath()
                     .build());
 
     /**
@@ -44,11 +53,15 @@ public final class FactionAttachments {
      *
      * <p>Empty rather than a default race: {@link Faction#NEUTRAL} is nobody's army, and a wild cow
      * that answered "Protoss" would carry shields.
+     *
+     * <p>{@code copyOnDeath} for the same reason {@link #FACTION} is: the two are set together and
+     * a player who came back with a side but no race would be an army that is nothing.
      */
     public static final Supplier<AttachmentType<Optional<Race>>> RACE = ATTACHMENT_TYPES.register(
             "race", () -> AttachmentType.<Optional<Race>>builder(Optional::empty)
                     .serialize(Race.CODEC.optionalFieldOf("race"))
                     .sync(ByteBufCodecs.optional(Race.STREAM_CODEC))
+                    .copyOnDeath()
                     .build());
 
     /**
