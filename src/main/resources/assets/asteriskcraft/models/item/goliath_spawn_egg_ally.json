@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "asteriskcraft:item/goliath_spawn_egg_ally"
+  }
+}

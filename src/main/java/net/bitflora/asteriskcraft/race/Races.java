@@ -221,11 +221,17 @@ public final class Races {
                     .unit(UnitStats.MARINE, AsteriskCraft.MARINE)
                     .unit(UnitStats.FIREBAT, AsteriskCraft.FIREBAT)
                     .unit(UnitStats.GHOST, AsteriskCraft.GHOST)
-                    // The race's one gated unit, and its only flyer: a Wraith needs a Starport
-                    // standing, the way a Mutalisk needs a Spire. The infantry above are gated by a
-                    // Barracks in practice — that is where their buttons live — but not by the
-                    // roster, since the Command Center's card could sell one again without lying.
+                    // The race's two gated units, and the only two on any roster that share a
+                    // gate: both need a Starport standing, the way a Mutalisk needs a Spire. The
+                    // infantry above are gated by a Barracks in practice — that is where their
+                    // buttons live — but not by the roster, since the Command Center's card could
+                    // sell one again without lying.
                     .unit(UnitStats.WRAITH, AsteriskCraft.WRAITH, AsteriskCraft.STARPORT_CORE)
+                    // The Goliath is not a flyer; it is the answer to one. It comes out of the air
+                    // building anyway because that is what the Starport is *for* on this roster —
+                    // the tier a player buys when the sky becomes the problem — and it means one
+                    // razed building takes the whole answer with it, air half and ground half.
+                    .unit(UnitStats.GOLIATH, AsteriskCraft.GOLIATH, AsteriskCraft.STARPORT_CORE)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),
@@ -244,9 +250,9 @@ public final class Races {
             List.of(new BaseDefence(AsteriskCraft.BUNKER, 1), new BaseDefence(AsteriskCraft.MARINE, 2),
                     new BaseDefence(AsteriskCraft.MISSILE_TURRET, 1)),
             // The Starport, planted finished with each of the computer's Command Centers — the Zerg
-            // Spire's opposite number, and gated for the same reason: the Wraith is the one Terran
-            // unit its roster makes conditional, so a build script that names one gets nothing until
-            // this is standing. It is also what a player razes to shut the air waves down a tier.
+            // Spire's opposite number, and gated for the same reason: the Wraith and the Goliath are
+            // the Terran units the roster makes conditional, so a build script that names one gets
+            // nothing until this is standing. It is also what a player razes to shut the air waves down a tier.
             // The Barracks is deliberately not here: the race's infantry are ungated on the roster,
             // so a computer Command Center already trains them without one.
             List.of(new TechBuilding(BuildingTemplates.STARPORT, AsteriskCraft.STARPORT_CORE::get)),

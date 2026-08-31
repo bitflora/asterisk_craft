@@ -13,6 +13,7 @@ Worked examples, in the order they are useful:
 | `client/terran/GhostModel` + `GhostHeadLayer` | the third — villager head wearing **two** vanilla profession overlays |
 | `client/terran/ScvModel` + `ScvPilotLayer` | the **counter-example**: a mech, deliberately not this pose |
 | `client/terran/WraithModel` | the other **counter-example**: an aircraft. No pose, no borrowed head, nothing on this page applies — model it against `client/protoss/ScoutModel` instead |
+| `client/terran/GoliathModel` + `GoliathGolemLayer` + `GoliathPilotLayer` | the third **counter-example**: a mech with a rider. Nothing on this page applies either — but it is the reference for borrowing a vanilla model that **animates**, and for a borrowed *body* rather than a head. Its pilot is the second user of the profession-overlay trick in §2 |
 
 `entity/terran/MarineEntity` and `entity/terran/FirebatEntity` are the matching entity classes, and the
 Firebat's git history is the cleanest end-to-end record of what adding one costs.

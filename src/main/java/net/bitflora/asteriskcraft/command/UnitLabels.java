@@ -64,7 +64,10 @@ public final class UnitLabels {
             // T for Turret. It is the Dark Templar's letter too, and free here for the reason K was
             // free for the Sunken Colony: the rosters are checked one race at a time.
             Map.entry("missile_turret", "T"),
-            Map.entry("wraith", "W"));
+            Map.entry("wraith", "W"),
+            // L for goLiath: G is the Ghost's, and it is the Lurker's on the Zerg side, which is
+            // free here for the reason K was free for the Sunken Colony — one roster at a time.
+            Map.entry("goliath", "L"));
 
     private UnitLabels() {
     }

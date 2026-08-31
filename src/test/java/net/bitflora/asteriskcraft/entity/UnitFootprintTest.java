@@ -60,6 +60,7 @@ class UnitFootprintTest {
                 new Ground(AsteriskCraft.MARINE.get(), UnitStats.MARINE),
                 new Ground(AsteriskCraft.FIREBAT.get(), UnitStats.FIREBAT),
                 new Ground(AsteriskCraft.GHOST.get(), UnitStats.GHOST),
+                new Ground(AsteriskCraft.GOLIATH.get(), UnitStats.GOLIATH),
         };
     }
 

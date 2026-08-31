@@ -31,9 +31,11 @@ import java.util.List;
 
 /**
  * A <b>unit factory</b>: a {@link StructureBlockEntity} that also runs a production queue. The
- * Barracks is the only one today, and it is race-generic — everything it produces it looks up in its
- * own race's {@link UnitRoster} by the id its card names, so a second race's factory is a
- * {@link ProductionKind} entry and a registration, the way a second race's base always was.
+ * Barracks, the Stargate and the Starport are the three today, and it is race-generic — everything
+ * it produces it looks up in its own race's {@link UnitRoster} by the id its card names, so another
+ * factory is a {@link ProductionKind} entry and a registration, the way a second race's base always
+ * was. A second unit on a card it already has is not even that: the Goliath joined the Starport as
+ * one {@code OptionView}, and nothing here changed.
  *
  * <p>It is deliberately <em>not</em> a merge with {@link GatewayBlockEntity}, which predates the
  * roster and dispatches its buttons positionally through an enum of Protoss units. Folding that in

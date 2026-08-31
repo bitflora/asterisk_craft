@@ -15,6 +15,8 @@ import net.bitflora.asteriskcraft.client.terran.FirebatModel;
 import net.bitflora.asteriskcraft.client.terran.FirebatRenderer;
 import net.bitflora.asteriskcraft.client.terran.GhostModel;
 import net.bitflora.asteriskcraft.client.terran.GhostRenderer;
+import net.bitflora.asteriskcraft.client.terran.GoliathModel;
+import net.bitflora.asteriskcraft.client.terran.GoliathRenderer;
 import net.bitflora.asteriskcraft.client.terran.WraithModel;
 import net.bitflora.asteriskcraft.client.terran.WraithRenderer;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
@@ -67,6 +69,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation FIREBAT_LAYER = new ModelLayerLocation(AsteriskCraft.id("firebat"), "main");
     public static final ModelLayerLocation GHOST_LAYER = new ModelLayerLocation(AsteriskCraft.id("ghost"), "main");
     public static final ModelLayerLocation WRAITH_LAYER = new ModelLayerLocation(AsteriskCraft.id("wraith"), "main");
+    public static final ModelLayerLocation GOLIATH_LAYER = new ModelLayerLocation(AsteriskCraft.id("goliath"), "main");
     public static final ModelLayerLocation BUNKER_LAYER = new ModelLayerLocation(AsteriskCraft.id("bunker"), "main");
     public static final ModelLayerLocation MISSILE_TURRET_LAYER = new ModelLayerLocation(AsteriskCraft.id("missile_turret"), "main");
     public static final ModelLayerLocation ZEALOT_LAYER = new ModelLayerLocation(AsteriskCraft.id("zealot"), "main");
@@ -95,6 +98,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(FIREBAT_LAYER, FirebatModel::createBodyLayer);
         event.registerLayerDefinition(GHOST_LAYER, GhostModel::createBodyLayer);
         event.registerLayerDefinition(WRAITH_LAYER, WraithModel::createBodyLayer);
+        event.registerLayerDefinition(GOLIATH_LAYER, GoliathModel::createBodyLayer);
         event.registerLayerDefinition(BUNKER_LAYER, BunkerModel::createBodyLayer);
         event.registerLayerDefinition(MISSILE_TURRET_LAYER, MissileTurretModel::createBodyLayer);
         event.registerLayerDefinition(ZEALOT_LAYER, ZealotModel::createBodyLayer);
@@ -123,6 +127,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.FIREBAT.get(), FirebatRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.GHOST.get(), GhostRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.WRAITH.get(), WraithRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.GOLIATH.get(), GoliathRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.BUNKER.get(), BunkerRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.MISSILE_TURRET.get(), MissileTurretRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZEALOT.get(), ZealotRenderer::new);

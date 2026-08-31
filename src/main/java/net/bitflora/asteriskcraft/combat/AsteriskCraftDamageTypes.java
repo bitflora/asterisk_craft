@@ -81,12 +81,16 @@ public final class AsteriskCraftDamageTypes {
      * second in the mod (after the Scout's) whose amount depends on whether its target is a flyer. */
     public static final ResourceKey<DamageType> BURST_LASERS = key("burst_lasers");
 
+    /** The Goliath's twin autocannons. Named for its ground gun though it fires the same burst at
+     * both layers, the way the Wraith's {@link #BURST_LASERS} is: one attacking unit, one type. */
+    public static final ResourceKey<DamageType> TWIN_AUTOCANNONS = key("twin_autocannons");
+
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
             SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER,
-            C10_CANISTER_RIFLE, LONGBOLT_MISSILE, BURST_LASERS);
+            C10_CANISTER_RIFLE, LONGBOLT_MISSILE, BURST_LASERS, TWIN_AUTOCANNONS);
 
     private AsteriskCraftDamageTypes() {
     }

@@ -237,6 +237,29 @@
     "subtitle": "subtitles.entity.asteriskcraft.wraith.attack_air",
     "sounds": ["asteriskcraft:mob/wraith/wraith-attack-air"]
   },
+  "entity.goliath.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.goliath.ambient",
+    "sounds": [
+      "asteriskcraft:mob/goliath/goliath-live1",
+      "asteriskcraft:mob/goliath/goliath-live2"
+    ]
+  },
+  "entity.goliath.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.goliath.death",
+    "sounds": ["asteriskcraft:mob/goliath/goliath-death1"]
+  },
+  "entity.goliath.attack_ground": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.goliath.attack_ground",
+    "sounds": ["asteriskcraft:mob/goliath/goliath-attack-ground"]
+  },
+  "entity.goliath.attack_air": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.goliath.attack_air",
+    "sounds": ["asteriskcraft:mob/goliath/goliath-attack-air"]
+  },
   "entity.missile_turret.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.missile_turret.attack",

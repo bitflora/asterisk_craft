@@ -26,6 +26,7 @@ import net.bitflora.asteriskcraft.client.zerg.InfestedVillagerModel;
 import net.bitflora.asteriskcraft.client.terran.BunkerModel;
 import net.bitflora.asteriskcraft.client.terran.FirebatModel;
 import net.bitflora.asteriskcraft.client.terran.GhostModel;
+import net.bitflora.asteriskcraft.client.terran.GoliathModel;
 import net.bitflora.asteriskcraft.client.terran.WraithModel;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.MissileTurretModel;
@@ -169,6 +170,7 @@ final class ModelGeometry {
         map.put("firebat", FirebatModel::createBodyLayer);
         map.put("ghost", GhostModel::createBodyLayer);
         map.put("wraith", WraithModel::createBodyLayer);
+        map.put("goliath", GoliathModel::createBodyLayer);
         map.put("bunker", BunkerModel::createBodyLayer);
         map.put("missile_turret", MissileTurretModel::createBodyLayer);
         // Collections.unmodifiableMap, not Map.copyOf — the latter does not preserve insertion order.

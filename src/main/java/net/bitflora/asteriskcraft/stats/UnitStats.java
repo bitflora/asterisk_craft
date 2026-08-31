@@ -294,6 +294,32 @@ public final class UnitStats {
     public static final UnitStat WRAITH = TABLE.get("wraith");
 
     /**
+     * The Goliath — the Terran walking mech, and the first thing the race has that can look up
+     * <em>while moving</em>. A Missile Turret is bolted to the floor and a Wraith has to be in the
+     * air itself, so until this a Mutalisk flock over a marching column was answered by walking the
+     * column home. It is the third row in the table with an anti-air bonus, and the only one on legs.
+     *
+     * <p><b>6 to the ground and 10 to the air</b>, written as a base of 6 plus a 4 anti-air bonus so
+     * one attribute still describes the shot (see {@code UnitStat#antiAirBonus}). The ratio is the
+     * shallowest of the three deliberately: a Scout is 11/21 and a Wraith 2.5/10, both of which say
+     * "this is an interceptor". Six a second on the ground is the second-best sustained output the
+     * race fields on foot, so a Goliath is a line unit that also happens to answer the sky rather
+     * than a specialist that is useless without one — it escorts, it does not need escorting.
+     *
+     * <p>Range 6, which is the one number that keeps it honest. Flyers cruise at
+     * {@link #HOVER_HEIGHT} 4, so six leaves {@code sqrt(36-16) = 4.5} blocks of horizontal reach
+     * against something holding altitude: a Goliath has to stand nearly under a Mutalisk to shoot it,
+     * where a Missile Turret's 14 covers a whole base from one spot. Mobility is what it is paying
+     * for, and short reach is the bill.
+     *
+     * <p>65 HP behind 1 armour is the sturdiest Terran unit that walks — more than three Marines'
+     * worth of health on one body — which is what a mech at 100 cobblestone and 50 wood over 40
+     * seconds should buy. It spends no iron, unlike the Ghost and the Wraith: it is meant to be
+     * massed out of a Starport rather than committed to one at a time.
+     */
+    public static final UnitStat GOLIATH = TABLE.get("goliath");
+
+    /**
      * The Bunker. The first unit in the mod that holds other units, and the only structure with no
      * weapon of its own: everything it does to an enemy is done by whatever is inside it.
      *

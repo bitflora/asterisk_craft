@@ -318,12 +318,17 @@ public enum ProductionKind implements StringRepresentable {
                     CostText.tooltip(UnitStats.GHOST.cost(), 0), 2,
                     new Action.TrainUnit(UnitStats.GHOST.id())))),
     /**
-     * The Starport's card: the Terran air unit, and nothing else. Exactly {@link #PROTOSS_STARGATE}'s
-     * shape and for exactly its reason — where the {@link #TERRAN_BARRACKS} trains everything that
-     * walks, the Starport trains the one thing that flies, so an army that wants to answer a Mutalisk
-     * (or a Scout) buys a building for it rather than adding a fourth button to a card it already had.
+     * The Starport's card: the Terran <em>answer to the sky</em>, which is not the same thing as the
+     * Terran air units. It began as {@link #PROTOSS_STARGATE}'s shape — the one thing that flies,
+     * bought as a building rather than as a fourth button on the {@link #TERRAN_BARRACKS}' card —
+     * and the Goliath widened it, because a mech that walks is still something a player comes here
+     * for. What the two buttons have in common is the problem they solve, not the layer they fight
+     * on, and razing this building takes both halves of that answer at once.
      *
-     * <p>Its button names its unit by the same {@code UnitStat.id()} a build script spells, so
+     * <p>One button per column, as the Barracks' card is laid out: the two are alternatives rather
+     * than a pair, and a column of two would read as a tier.
+     *
+     * <p>Each button names its unit by the same {@code UnitStat.id()} a build script spells, so
      * {@link FactoryBlockEntity} resolves it against the Terran roster and this card names no Java
      * class.
      */
@@ -331,7 +336,11 @@ public enum ProductionKind implements StringRepresentable {
             new OptionView(
                     Icon.ofIcon("wraith"),
                     CostText.tooltip(UnitStats.WRAITH.cost(), 0), 0,
-                    new Action.TrainUnit(UnitStats.WRAITH.id()))));
+                    new Action.TrainUnit(UnitStats.WRAITH.id())),
+            new OptionView(
+                    Icon.ofIcon("goliath"),
+                    CostText.tooltip(UnitStats.GOLIATH.cost(), 0), 1,
+                    new Action.TrainUnit(UnitStats.GOLIATH.id()))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

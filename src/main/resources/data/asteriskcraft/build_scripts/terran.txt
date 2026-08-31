@@ -13,7 +13,7 @@
 #   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
 #   Units: Marine (ranged infantry), Firebat (short-range flamethrower), Ghost (long-range
 #          marksman that cloaks when hit), Wraith (cloaking fighter, needs a Starport standing),
-#          SCV (worker).
+#          Goliath (walking mech, hits air hard, also needs a Starport), SCV (worker).
 #
 # The Terran open with counts and close with a mix. A Marine is the cheapest combat unit in the mod,
 # comes out in 24 seconds, and dies to almost anything on its own — so the early waves below grow in
@@ -62,10 +62,19 @@ Wait 200
 Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith
 Wait 200
 
+# The Goliath comes out of the same Starport, and it is what stops a defender simply massing air.
+# A Wraith is nearly harmless to anything on the ground; a Goliath is the opposite bargain — six a
+# shot at anything walking and ten at anything flying, on legs, from four blocks under whatever it
+# is shooting at. Two of them in a wave means the push no longer stops for a Mutalisk flock, and
+# they are cheap enough (no iron, 40 seconds) to arrive in pairs rather than in ones.
+Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath
+Wait 200
+
 # Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes
-# on them, a Ghost or two behind both, and Wraiths overhead. The one hole left in the roster is
-# detection — nothing a Terran army carries into the field sees a Dark Templar or a burrowed Lurker,
-# so both still walk straight through it. That is deliberate, and left standing.
-Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost, 2-3 Wraith
+# on them, a Ghost or two behind both, Wraiths overhead and Goliaths under them covering both. The
+# one hole left in the roster is detection — nothing a Terran army carries into the field sees a
+# Dark Templar or a burrowed Lurker, so both still walk straight through it. That is deliberate,
+# and left standing.
+Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost, 2-3 Wraith, 2-3 Goliath
 Wait 220
 Repeat 2

@@ -135,10 +135,11 @@ blank — the Probe, the Drone, the Overlord and the Bunker — and
 `UnitStatsTest.onlyNonCombatUnitsLackAttackDamage` pins that list.
 
 ### `anti_air_bonus` — extra health points against an air target
-Added flat on top of `attack_damage` when the target is an `entity/Flyer`. Two rows have one, and the
-gap between them is the design: the Scout is 11 on the ground and 21 to a Mutalisk, while the Wraith
-is 2.5 and 10 — a fighter that can also strafe, against an interceptor that can do nothing else.
-`0.0` means the unit hits air and ground alike.
+Added flat on top of `attack_damage` when the target is an `entity/Flyer`. Three rows have one, and
+the gaps between them are the design: the Scout is 11 on the ground and 21 to a Mutalisk, the Wraith
+2.5 and 10, and the Goliath 6 and 10 — a fighter that can also strafe, an interceptor that can do
+nothing else, and a line unit that also happens to answer the sky. `0.0` means the unit hits air and
+ground alike.
 
 It is a bonus rather than a second damage number so that one attribute still describes the attack —
 nothing about targeting or acquisition changes with it. The builder rejects a non-zero bonus on a row

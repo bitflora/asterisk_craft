@@ -43,6 +43,7 @@ import net.bitflora.asteriskcraft.entity.terran.GhostEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
+import net.bitflora.asteriskcraft.entity.terran.GoliathEntity;
 import net.bitflora.asteriskcraft.entity.terran.WraithEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ObserverEntity;
 import net.bitflora.asteriskcraft.entity.protoss.ScoutEntity;
@@ -413,6 +414,19 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("wraith"))));
 
+    // Narrow for its bulk, and forced to be. The model is vanilla's iron golem, which stands 43
+    // pixels (2.69 blocks) — and UnitFootprintTest admits no ground unit over 2.0 tall, since
+    // NodeEvaluator would then demand three blocks of clearance and the unit would refuse every
+    // doorway. GoliathRenderer scales the whole thing to 0.72 to fit under that ceiling, which
+    // leaves the chassis 0.81 wide: one pathfinding node, so no wide-unit exception and no raised
+    // step height. The gun mounts overhang either side, and are left overhanging as the Marine's
+    // rifle is. Tracked as far out as the Wraith — a mech is a landmark on the field.
+    public static final DeferredHolder<EntityType<?>, EntityType<GoliathEntity>> GOLIATH =
+            ENTITY_TYPES.register("goliath", () -> EntityType.Builder.of(GoliathEntity::new, MobCategory.MONSTER)
+                    .sized(0.9f, 1.95f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("goliath"))));
+
     // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
     // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
     // behind rather than a tower. Rooted, so none of the pathfinder footprint reasoning above applies.
@@ -653,6 +667,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, WRAITH, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> WRAITH_SPAWN_EGG_ENEMY = ITEMS.registerItem("wraith_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, WRAITH, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> GOLIATH_SPAWN_EGG_ALLY = ITEMS.registerItem("goliath_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, GOLIATH, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> GOLIATH_SPAWN_EGG_ENEMY = ITEMS.registerItem("goliath_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, GOLIATH, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
@@ -855,6 +873,21 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.wraith.attack_air",
                     () -> SoundEvent.createVariableRangeEvent(id("entity.wraith.attack_air")));
 
+    // No GOLIATH_HURT, for the sixth time and the same reason: two acknowledgement lines and one
+    // death line in the archive, and no pain line. It is the second unit with a split firing clip,
+    // and for the Wraith's reason — its damage already splits on the same test, so the branch that
+    // picks the damage picks the sound with it (see GoliathEntity.performRangedAttack).
+    public static final DeferredHolder<SoundEvent, SoundEvent> GOLIATH_AMBIENT =
+            SOUND_EVENTS.register("entity.goliath.ambient", () -> SoundEvent.createVariableRangeEvent(id("entity.goliath.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GOLIATH_DEATH =
+            SOUND_EVENTS.register("entity.goliath.death", () -> SoundEvent.createVariableRangeEvent(id("entity.goliath.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GOLIATH_ATTACK_GROUND =
+            SOUND_EVENTS.register("entity.goliath.attack_ground",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.goliath.attack_ground")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GOLIATH_ATTACK_AIR =
+            SOUND_EVENTS.register("entity.goliath.attack_air",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.goliath.attack_air")));
+
     // The Missile Turret's only sound. A structure has no ambient line, no pain line and no death
     // cry — the Photon Cannon and the two colonies are the same, and only the shot makes noise.
     public static final DeferredHolder<SoundEvent, SoundEvent> MISSILE_TURRET_ATTACK =
@@ -946,6 +979,8 @@ public class AsteriskCraft {
                 output.accept(GHOST_SPAWN_EGG_ENEMY.get());
                 output.accept(WRAITH_SPAWN_EGG_ALLY.get());
                 output.accept(WRAITH_SPAWN_EGG_ENEMY.get());
+                output.accept(GOLIATH_SPAWN_EGG_ALLY.get());
+                output.accept(GOLIATH_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(MISSILE_TURRET_SPAWN_EGG_ALLY.get());
@@ -1039,6 +1074,7 @@ public class AsteriskCraft {
         event.put(FIREBAT.get(), FirebatEntity.createAttributes().build());
         event.put(GHOST.get(), GhostEntity.createAttributes().build());
         event.put(WRAITH.get(), WraithEntity.createAttributes().build());
+        event.put(GOLIATH.get(), GoliathEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(MISSILE_TURRET.get(), MissileTurretEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
