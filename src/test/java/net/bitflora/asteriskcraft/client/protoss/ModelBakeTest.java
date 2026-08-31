@@ -7,6 +7,7 @@ import net.bitflora.asteriskcraft.client.terran.MissileTurretModel;
 import net.bitflora.asteriskcraft.client.terran.FirebatModel;
 import net.bitflora.asteriskcraft.client.terran.GhostModel;
 import net.bitflora.asteriskcraft.client.terran.GoliathModel;
+import net.bitflora.asteriskcraft.client.terran.ScienceVesselModel;
 import net.bitflora.asteriskcraft.client.terran.WraithModel;
 import net.bitflora.asteriskcraft.client.terran.MarineModel;
 import net.bitflora.asteriskcraft.client.terran.ScvModel;
@@ -69,6 +70,11 @@ class ModelBakeTest {
     @Test
     void goliathModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new GoliathModel(GoliathModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
+    void scienceVesselModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new ScienceVesselModel(ScienceVesselModel.createBodyLayer().bakeRoot()));
     }
 
     @Test

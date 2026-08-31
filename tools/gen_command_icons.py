@@ -60,7 +60,9 @@ RED_RAMP = [
 
 # Icons whose source frame is not named after the mod's own unit: the Infested Villager is the
 # mod's take on StarCraft's Infested Terran.
-RENAMED = {"infested_villager": "infested_terran"}
+# The archive's own filenames, where they differ from ours. "science vessel" keeps the space
+# it shipped with (as "supply depot" does) and has no manifest.tsv row at all.
+RENAMED = {"infested_villager": "infested_terran", "science_vessel": "science vessel"}
 
 # Units with a train button on some command card, and so a GUI icon (building/ProductionKind).
 TRAINED = [
@@ -68,7 +70,7 @@ TRAINED = [
     # The Hive's card (ProductionKind.ZERG_BASE) morphs every Zerg unit itself - the swarm has no
     # factory building - so all of them need a train button once a human can play Zerg.
     "drone", "zergling", "hydralisk", "mutalisk", "lurker", "ultralisk", "overlord",
-    "scv", "marine", "firebat", "ghost", "wraith", "goliath",
+    "scv", "marine", "firebat", "ghost", "wraith", "goliath", "science_vessel",
 ]
 
 # Building kit items -> the building's icon. These double as the base command card's buttons for
@@ -97,6 +99,7 @@ EGGS = [
     "drone", "zergling", "ultralisk", "hydralisk", "mutalisk", "lurker", "overlord",
     "infested_villager", "sunken_colony", "spore_colony",
     "scv", "marine", "firebat", "ghost", "wraith", "goliath", "bunker", "missile_turret",
+    "science_vessel",
 ]
 
 

@@ -11,12 +11,16 @@
   "entity.dark_templar.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dark_templar.attack",
-    "sounds": ["asteriskcraft:mob/dark_templar/dark_templar-attack"]
+    "sounds": [
+      "asteriskcraft:mob/dark_templar/dark_templar-attack"
+    ]
   },
   "entity.dark_templar.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dark_templar.death",
-    "sounds": ["asteriskcraft:mob/dark_templar/dark_templar-death"]
+    "sounds": [
+      "asteriskcraft:mob/dark_templar/dark_templar-death"
+    ]
   },
   "entity.zealot.ambient": {
     "category": "hostile",
@@ -31,12 +35,16 @@
   "entity.zealot.hurt": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zealot.hurt",
-    "sounds": ["asteriskcraft:mob/zealot/zealot-hurt"]
+    "sounds": [
+      "asteriskcraft:mob/zealot/zealot-hurt"
+    ]
   },
   "entity.zealot.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zealot.death",
-    "sounds": ["asteriskcraft:mob/zealot/zealot-death"]
+    "sounds": [
+      "asteriskcraft:mob/zealot/zealot-death"
+    ]
   },
   "entity.zealot.attack": {
     "category": "hostile",
@@ -59,12 +67,16 @@
   "entity.zergling.hurt": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zergling.hurt",
-    "sounds": ["asteriskcraft:mob/zergling/zergling-hurt"]
+    "sounds": [
+      "asteriskcraft:mob/zergling/zergling-hurt"
+    ]
   },
   "entity.zergling.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.zergling.death",
-    "sounds": ["asteriskcraft:mob/zergling/zergling-death"]
+    "sounds": [
+      "asteriskcraft:mob/zergling/zergling-death"
+    ]
   },
   "entity.ultralisk.ambient": {
     "category": "hostile",
@@ -77,7 +89,9 @@
   "entity.ultralisk.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.ultralisk.death",
-    "sounds": ["asteriskcraft:mob/ultralisk/ultralisk-death"]
+    "sounds": [
+      "asteriskcraft:mob/ultralisk/ultralisk-death"
+    ]
   },
   "entity.ultralisk.attack": {
     "category": "hostile",
@@ -101,12 +115,16 @@
   "entity.hydralisk.hurt": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.hydralisk.hurt",
-    "sounds": ["asteriskcraft:mob/hydralisk/hydralisk-hurt"]
+    "sounds": [
+      "asteriskcraft:mob/hydralisk/hydralisk-hurt"
+    ]
   },
   "entity.hydralisk.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.hydralisk.death",
-    "sounds": ["asteriskcraft:mob/hydralisk/hydralisk-death"]
+    "sounds": [
+      "asteriskcraft:mob/hydralisk/hydralisk-death"
+    ]
   },
   "entity.lurker.ambient": {
     "category": "hostile",
@@ -119,7 +137,9 @@
   "entity.lurker.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.lurker.attack",
-    "sounds": ["asteriskcraft:mob/lurker/lurker-attack"]
+    "sounds": [
+      "asteriskcraft:mob/lurker/lurker-attack"
+    ]
   },
   "entity.infested_villager.ambient": {
     "category": "hostile",
@@ -132,7 +152,9 @@
   "entity.lurker.burrow": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.lurker.burrow",
-    "sounds": ["asteriskcraft:mob/lurker/lurker-burrow"]
+    "sounds": [
+      "asteriskcraft:mob/lurker/lurker-burrow"
+    ]
   },
   "entity.scv.ambient": {
     "category": "neutral",
@@ -207,12 +229,16 @@
   "entity.ghost.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.ghost.death",
-    "sounds": ["asteriskcraft:mob/ghost/ghost-death1"]
+    "sounds": [
+      "asteriskcraft:mob/ghost/ghost-death1"
+    ]
   },
   "entity.ghost.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.ghost.attack",
-    "sounds": ["asteriskcraft:mob/ghost/ghost-attack"]
+    "sounds": [
+      "asteriskcraft:mob/ghost/ghost-attack"
+    ]
   },
   "entity.wraith.ambient": {
     "category": "hostile",
@@ -225,17 +251,23 @@
   "entity.wraith.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.wraith.death",
-    "sounds": ["asteriskcraft:mob/wraith/wraith-death1"]
+    "sounds": [
+      "asteriskcraft:mob/wraith/wraith-death1"
+    ]
   },
   "entity.wraith.attack_ground": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.wraith.attack_ground",
-    "sounds": ["asteriskcraft:mob/wraith/wraith-attack-ground"]
+    "sounds": [
+      "asteriskcraft:mob/wraith/wraith-attack-ground"
+    ]
   },
   "entity.wraith.attack_air": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.wraith.attack_air",
-    "sounds": ["asteriskcraft:mob/wraith/wraith-attack-air"]
+    "sounds": [
+      "asteriskcraft:mob/wraith/wraith-attack-air"
+    ]
   },
   "entity.goliath.ambient": {
     "category": "hostile",
@@ -248,52 +280,72 @@
   "entity.goliath.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.goliath.death",
-    "sounds": ["asteriskcraft:mob/goliath/goliath-death1"]
+    "sounds": [
+      "asteriskcraft:mob/goliath/goliath-death1"
+    ]
   },
   "entity.goliath.attack_ground": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.goliath.attack_ground",
-    "sounds": ["asteriskcraft:mob/goliath/goliath-attack-ground"]
+    "sounds": [
+      "asteriskcraft:mob/goliath/goliath-attack-ground"
+    ]
   },
   "entity.goliath.attack_air": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.goliath.attack_air",
-    "sounds": ["asteriskcraft:mob/goliath/goliath-attack-air"]
+    "sounds": [
+      "asteriskcraft:mob/goliath/goliath-attack-air"
+    ]
   },
   "entity.missile_turret.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.missile_turret.attack",
-    "sounds": ["asteriskcraft:mob/missile_turret/missile_turret-attack"]
+    "sounds": [
+      "asteriskcraft:mob/missile_turret/missile_turret-attack"
+    ]
   },
   "entity.probe.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.ambient",
-    "sounds": ["asteriskcraft:mob/probe/probe-live1"]
+    "sounds": [
+      "asteriskcraft:mob/probe/probe-live1"
+    ]
   },
   "entity.probe.hurt": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.hurt",
-    "sounds": ["asteriskcraft:mob/probe/probe-hurt"]
+    "sounds": [
+      "asteriskcraft:mob/probe/probe-hurt"
+    ]
   },
   "entity.probe.death": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.probe.death",
-    "sounds": ["asteriskcraft:mob/probe/probe-death"]
+    "sounds": [
+      "asteriskcraft:mob/probe/probe-death"
+    ]
   },
   "entity.drone.ambient": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.drone.ambient",
-    "sounds": ["asteriskcraft:mob/drone/drone-live1"]
+    "sounds": [
+      "asteriskcraft:mob/drone/drone-live1"
+    ]
   },
   "entity.drone.hurt": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.drone.hurt",
-    "sounds": ["asteriskcraft:mob/drone/drone-hurt"]
+    "sounds": [
+      "asteriskcraft:mob/drone/drone-hurt"
+    ]
   },
   "entity.drone.death": {
     "category": "neutral",
     "subtitle": "subtitles.entity.asteriskcraft.drone.death",
-    "sounds": ["asteriskcraft:mob/drone/drone-death"]
+    "sounds": [
+      "asteriskcraft:mob/drone/drone-death"
+    ]
   },
   "entity.dragoon.ambient": {
     "category": "hostile",
@@ -306,12 +358,16 @@
   "entity.dragoon.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dragoon.attack",
-    "sounds": ["asteriskcraft:mob/dragoon/dragoon-attack"]
+    "sounds": [
+      "asteriskcraft:mob/dragoon/dragoon-attack"
+    ]
   },
   "entity.dragoon.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dragoon.death",
-    "sounds": ["asteriskcraft:mob/dragoon/dragoon-death"]
+    "sounds": [
+      "asteriskcraft:mob/dragoon/dragoon-death"
+    ]
   },
   "entity.scout.ambient": {
     "category": "hostile",
@@ -326,7 +382,9 @@
   "entity.scout.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.scout.attack",
-    "sounds": ["asteriskcraft:mob/scout/scout-attack"]
+    "sounds": [
+      "asteriskcraft:mob/scout/scout-attack"
+    ]
   },
   "entity.observer.ambient": {
     "category": "hostile",
@@ -339,26 +397,65 @@
   "entity.observer.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.observer.death",
-    "sounds": ["asteriskcraft:mob/observer/observer-death"]
+    "sounds": [
+      "asteriskcraft:mob/observer/observer-death"
+    ]
   },
   "entity.mutalisk.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.mutalisk.attack",
-    "sounds": ["asteriskcraft:mob/mutalisk/mutalisk-attack"]
+    "sounds": [
+      "asteriskcraft:mob/mutalisk/mutalisk-attack"
+    ]
   },
   "entity.overlord.ambient": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.overlord.ambient",
-    "sounds": ["asteriskcraft:mob/overlord/overlord-live1"]
+    "sounds": [
+      "asteriskcraft:mob/overlord/overlord-live1"
+    ]
   },
   "entity.overlord.death": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.overlord.death",
-    "sounds": ["asteriskcraft:mob/overlord/overlord-death"]
+    "sounds": [
+      "asteriskcraft:mob/overlord/overlord-death"
+    ]
   },
   "entity.photon_cannon.attack": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.photon_cannon.attack",
-    "sounds": ["asteriskcraft:mob/photon_cannon/photon_cannon-attack"]
+    "sounds": [
+      "asteriskcraft:mob/photon_cannon/photon_cannon-attack"
+    ]
+  },
+  "entity.science_vessel.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.science_vessel.ambient",
+    "sounds": [
+      "asteriskcraft:mob/science_vessel/science_vessel-live1",
+      "asteriskcraft:mob/science_vessel/science_vessel-live2"
+    ]
+  },
+  "entity.science_vessel.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.science_vessel.death",
+    "sounds": [
+      "asteriskcraft:mob/science_vessel/science_vessel-death1"
+    ]
+  },
+  "entity.science_vessel.irradiate": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.science_vessel.irradiate",
+    "sounds": [
+      "asteriskcraft:mob/science_vessel/science_vessel-irradiate"
+    ]
+  },
+  "entity.science_vessel.matrix": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.science_vessel.matrix",
+    "sounds": [
+      "asteriskcraft:mob/science_vessel/science_vessel-matrix"
+    ]
   }
 }

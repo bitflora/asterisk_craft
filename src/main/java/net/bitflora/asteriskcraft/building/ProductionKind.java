@@ -325,8 +325,13 @@ public enum ProductionKind implements StringRepresentable {
      * for. What the two buttons have in common is the problem they solve, not the layer they fight
      * on, and razing this building takes both halves of that answer at once.
      *
-     * <p>One button per column, as the Barracks' card is laid out: the two are alternatives rather
-     * than a pair, and a column of two would read as a tier.
+     * <p>One button per column, as the Barracks' card is laid out: the three are alternatives rather
+     * than tiers, and a column of two would read as one.
+     *
+     * <p>The Science Vessel is the third, and it widens the card's claim once more without breaking
+     * it: it neither flies at anything nor shoots anything, but a player comes here for it for the
+     * same reason they come here for the Goliath — the sky has become the problem, and this is what
+     * you buy when the problem is something you cannot see rather than something you cannot reach.
      *
      * <p>Each button names its unit by the same {@code UnitStat.id()} a build script spells, so
      * {@link FactoryBlockEntity} resolves it against the Terran roster and this card names no Java
@@ -340,7 +345,11 @@ public enum ProductionKind implements StringRepresentable {
             new OptionView(
                     Icon.ofIcon("goliath"),
                     CostText.tooltip(UnitStats.GOLIATH.cost(), 0), 1,
-                    new Action.TrainUnit(UnitStats.GOLIATH.id()))));
+                    new Action.TrainUnit(UnitStats.GOLIATH.id())),
+            new OptionView(
+                    Icon.ofIcon("science_vessel"),
+                    CostText.tooltip(UnitStats.SCIENCE_VESSEL.cost(), 0), 2,
+                    new Action.TrainUnit(UnitStats.SCIENCE_VESSEL.id()))));
 
     /**
      * One train button: an icon, a cost tooltip, the unit column it stacks into (see class docs),

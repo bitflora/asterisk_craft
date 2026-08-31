@@ -67,7 +67,10 @@ public final class UnitLabels {
             Map.entry("wraith", "W"),
             // L for goLiath: G is the Ghost's, and it is the Lurker's on the Zerg side, which is
             // free here for the reason K was free for the Sunken Colony — one roster at a time.
-            Map.entry("goliath", "L"));
+            Map.entry("goliath", "L"),
+            // V for Vessel: S is the SCV's and the Science Vessel is the only other unit on this
+            // roster whose name starts with one.
+            Map.entry("science_vessel", "V"));
 
     private UnitLabels() {
     }

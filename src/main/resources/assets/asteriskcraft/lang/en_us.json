@@ -267,5 +267,12 @@
   "gamerule.asteriskcraft.ai_race.description": "Which race the computer plays. Setting it to your own race moves it to another.",
   "race.asteriskcraft.protoss": "Protoss",
   "race.asteriskcraft.zerg": "Zerg",
-  "race.asteriskcraft.terran": "Terran"
+  "race.asteriskcraft.terran": "Terran",
+  "item.asteriskcraft.science_vessel_spawn_egg_ally": "Allied Science Vessel Spawn Egg",
+  "item.asteriskcraft.science_vessel_spawn_egg_enemy": "Enemy Science Vessel Spawn Egg",
+  "entity.asteriskcraft.science_vessel": "Science Vessel",
+  "subtitles.entity.asteriskcraft.science_vessel.ambient": "Science Vessel reports in",
+  "subtitles.entity.asteriskcraft.science_vessel.death": "Science Vessel breaks up",
+  "subtitles.entity.asteriskcraft.science_vessel.irradiate": "Science Vessel irradiates",
+  "subtitles.entity.asteriskcraft.science_vessel.matrix": "Science Vessel raises a matrix"
 }

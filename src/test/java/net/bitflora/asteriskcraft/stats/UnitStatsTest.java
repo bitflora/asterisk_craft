@@ -24,7 +24,7 @@ class UnitStatsTest {
 
     @Test
     void rosterIsCompleteAndUnique() {
-        assertEquals(25, UnitStats.all().size(), "one entry per unit type in the mod");
+        assertEquals(26, UnitStats.all().size(), "one entry per unit type in the mod");
         Set<String> ids = new HashSet<>();
         for (UnitStat stat : UnitStats.all()) {
             assertFalse(stat.id().isBlank(), "id must not be blank");
@@ -245,7 +245,8 @@ class UnitStatsTest {
                 || stat == UnitStats.DRONE
                 || stat == UnitStats.OVERLORD
                 || stat == UnitStats.OBSERVER
-                || stat == UnitStats.BUNKER;
+                || stat == UnitStats.BUNKER
+                || stat == UnitStats.SCIENCE_VESSEL;
     }
 
     /**

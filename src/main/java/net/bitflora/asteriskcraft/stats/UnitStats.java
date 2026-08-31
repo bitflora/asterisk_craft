@@ -363,6 +363,38 @@ public final class UnitStats {
     public static final UnitStat MISSILE_TURRET = TABLE.get("missile_turret");
 
     /**
+     * The Science Vessel — the Terran eye that <em>walks</em>. The Missile Turret above is the
+     * race's other detector and it is bolted to the floor, so until this the Terran could see a
+     * Dark Templar or a burrowed Lurker exactly where they had already built and nowhere else. This
+     * is the Observer's job done the Terran way, and the two units are deliberately opposite in
+     * every number: an Observer is 20 HP that survives by being permanently cloaked, while a Vessel
+     * is <b>100 HP behind 1 armour</b> and survives by being hard to kill. It is the toughest thing
+     * either race flies.
+     *
+     * <p><b>No attack at all</b> — the {@code attack_damage} cell is blank, which is what puts it in
+     * {@code UnitStatsTest}'s non-combatant list beside the Observer, the Overlord and the two
+     * workers. What it does instead is on a timer rather than in the table: every 45 seconds it
+     * poisons one enemy in its bubble or, seeing none, grants Resistance to an ally. Those constants
+     * live on {@code entity.terran.ScienceVesselEntity}, not here, for the reason
+     * {@code CloakClock.CLOAK_TICKS} does — see docs/balance-table.md. Poison floors its victim at
+     * 1 HP, so a Vessel genuinely cannot secure a kill; "no attack" is honest rather than a rounding
+     * error.
+     *
+     * <p><b>Detection is 10, and it is the first detector off the shared 16 / 20 / 60 envelope.</b>
+     * Every other one is rooted or, in the Observer's case, invisible — a bubble you can neither
+     * move nor shoot. A Vessel is 100 HP flying in the open at the front of an army, so the shorter
+     * reach is what it pays for being able to walk its detection into an ambush instead of waiting
+     * for one. The sweep and reveal halves stay on the common 20 / 60 so a revealed unit behaves
+     * identically whichever eye found it.
+     *
+     * <p>100 cobblestone and 225 wood over 80 seconds, out of the Starport behind the Wraith and the
+     * Goliath. The steepest price and the longest build time on the roster, in both resources rather
+     * than either: this is a commitment, not a body, and it is the only Terran unit whose value is
+     * entirely in what it lets the rest of the army do.
+     */
+    public static final UnitStat SCIENCE_VESSEL = TABLE.get("science_vessel");
+
+    /**
      * The Protoss roster, for balance grouping and the "Protoss stays picky" cost invariant. Derived
      * from the CSV's {@code race} column rather than hand-listed, so a unit added to the file cannot
      * be left out of its own race's roster.

@@ -205,9 +205,18 @@ Makes the unit a detector: it periodically lights up cloaked enemies around it, 
 
 **`detect_reveal` must exceed `detect_sweep`**, or consecutive sweeps leave a gap and a detected unit
 strobes in and out of view. The builder rejects it. The excess is also the tactical tail: a unit that
-has just slipped out of range stays lit for the difference. All four detectors share one envelope
-(`16 / 20 / 60` — 16 blocks, once a second, three seconds of reveal), deliberately, so a player
-learns one radius rather than one per building.
+has just slipped out of range stays lit for the difference. Every detector but one shares an
+envelope (`16 / 20 / 60` — 16 blocks, once a second, three seconds of reveal), deliberately, so a
+player learns one radius rather than one per building.
+
+**The Science Vessel is the deliberate exception, at `10 / 20 / 60`.** Every other detector is
+either rooted (Photon Cannon, Spore Colony, Missile Turret) or unkillable in practice because it is
+permanently cloaked (Observer) — in both cases a bubble the enemy can neither move nor meaningfully
+shoot. A Vessel is 100 HP flying in the open at the front of a push, and the shorter radius is what
+it pays for being able to walk its detection wherever the army goes. Only the *radius* moves: the
+sweep and reveal halves stay on the common `20 / 60`, so a revealed unit behaves identically
+whichever eye found it. Do not treat this as licence for a third figure — the reason here is a
+detector that is mobile <em>and</em> fragile, and nothing else in the mod is.
 
 ### `bounce_hits`, `bounce_falloff`, `bounce_radius` — a chaining attack
 
@@ -290,6 +299,7 @@ Numbers a balance pass often goes looking for and will not find here:
 | Photon Cannon warp-in, Bunker and Missile Turret construction | `PhotonCannonEntity.WARP_TICKS` (200) / `BunkerEntity.BUILD_TICKS` (600) / `MissileTurretEntity.BUILD_TICKS` (600) — these are structures standing up, not units being trained |
 | Lurker burrow/surface transition | `entity/zerg/BurrowClock.TRANSITION_TICKS` (60) |
 | Ghost cloak duration and cooldown | `entity/terran/CloakClock.CLOAK_TICKS` / `COOLDOWN_TICKS` |
+| Science Vessel pulse interval and effect durations | `entity/terran/ScienceVesselEntity.PULSE_INTERVAL` (900) / `POISON_TICKS` (300) / `MATRIX_TICKS` (600) / `MATRIX_AMPLIFIER` — an ability's cadence is not a combat stat, and the effects themselves are vanilla |
 | Bunker firing-slit range bonus | `BunkerEntity.rangeBonus()` — a property of the vehicle, added to a passenger's `range` at runtime |
 | Wave composition and timing | the per-race build scripts in `data/asteriskcraft/build_scripts/` |
 | Which race has shields, HP regen, infestation, and what it hunts in the wild | `faction/Race` — cheap traits, per race rather than per unit |

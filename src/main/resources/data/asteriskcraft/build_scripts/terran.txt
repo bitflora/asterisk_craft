@@ -13,7 +13,8 @@
 #   <units> = comma list of "Qty Unit", e.g. "3 Marine". Qty may be a range "3-5".
 #   Units: Marine (ranged infantry), Firebat (short-range flamethrower), Ghost (long-range
 #          marksman that cloaks when hit), Wraith (cloaking fighter, needs a Starport standing),
-#          Goliath (walking mech, hits air hard, also needs a Starport), SCV (worker).
+#          Goliath (walking mech, hits air hard, also needs a Starport), Science Vessel (unarmed
+#          flying detector that poisons and shields, also needs a Starport), SCV (worker).
 #
 # The Terran open with counts and close with a mix. A Marine is the cheapest combat unit in the mod,
 # comes out in 24 seconds, and dies to almost anything on its own — so the early waves below grow in
@@ -70,11 +71,23 @@ Wait 200
 Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath
 Wait 200
 
+# The Science Vessel is the last thing off the Starport and the most expensive unit the race fields:
+# 100 cobblestone, 225 wood and 80 seconds for something that cannot shoot at all. What it buys is
+# the hole the closing comment below used to describe — it carries a 10-block detection bubble at
+# the front of the push, so a Dark Templar ambush or a dug-in Lurker is lit up for everything
+# escorting it. Every 45 seconds it also poisons whatever is nearest, or, seeing nothing, throws a
+# defensive matrix over one of the units around it. One per wave: it is an enabler, and two of them
+# is 450 wood not spent on the army they are enabling.
+Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath, 1 Science Vessel
+Wait 200
+
 # Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes
-# on them, a Ghost or two behind both, Wraiths overhead and Goliaths under them covering both. The
-# one hole left in the roster is detection — nothing a Terran army carries into the field sees a
-# Dark Templar or a burrowed Lurker, so both still walk straight through it. That is deliberate,
-# and left standing.
-Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost, 2-3 Wraith, 2-3 Goliath
+# on them, a Ghost or two behind both, Wraiths overhead, Goliaths under them covering both, and a
+# Science Vessel over the lot of it. That last one closes the hole this comment used to describe:
+# until it, nothing a Terran army carried into the field saw a Dark Templar or a burrowed Lurker,
+# so both walked straight through every push above. They no longer do — but the Vessel is one
+# unarmed unit with 100 HP flying in the open, so killing it re-opens the hole for the rest of the
+# wave, which is the trade this build order is now making.
+Wave: 10-14 Marine, 3-4 Firebat, 1-2 Ghost, 2-3 Wraith, 2-3 Goliath, 1-2 Science Vessel
 Wait 220
 Repeat 2

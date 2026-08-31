@@ -232,6 +232,11 @@ public final class Races {
                     // the tier a player buys when the sky becomes the problem — and it means one
                     // razed building takes the whole answer with it, air half and ground half.
                     .unit(UnitStats.GOLIATH, AsteriskCraft.GOLIATH, AsteriskCraft.STARPORT_CORE)
+                    // The third and last thing behind the Starport gate, and the only unit on any
+                    // roster with no attack at all. It is on the roster rather than sold as a kit
+                    // because it is genuinely trained — the Bunker's exclusion above is about
+                    // things bought as buildings, not about things that cannot shoot.
+                    .unit(UnitStats.SCIENCE_VESSEL, AsteriskCraft.SCIENCE_VESSEL, AsteriskCraft.STARPORT_CORE)
                     .build(),
             () -> ProductionKind.TERRAN_BASE,
             AsteriskCraft.id("build_scripts/terran.txt"),

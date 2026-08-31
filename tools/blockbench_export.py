@@ -97,6 +97,7 @@ UNITS = {
     "ghost": ("terran", "GhostModel"),
     "wraith": ("terran", "WraithModel"),
     "goliath": ("terran", "GoliathModel"),
+    "science_vessel": ("terran", "ScienceVesselModel"),
     "bunker": ("terran", "BunkerModel"),
     "missile_turret": ("terran", "MissileTurretModel"),
 }

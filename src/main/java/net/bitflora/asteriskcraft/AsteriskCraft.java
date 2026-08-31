@@ -42,6 +42,7 @@ import net.bitflora.asteriskcraft.entity.terran.FirebatEntity;
 import net.bitflora.asteriskcraft.entity.terran.GhostEntity;
 import net.bitflora.asteriskcraft.entity.terran.MarineEntity;
 import net.bitflora.asteriskcraft.entity.terran.MissileTurretEntity;
+import net.bitflora.asteriskcraft.entity.terran.ScienceVesselEntity;
 import net.bitflora.asteriskcraft.entity.terran.ScvEntity;
 import net.bitflora.asteriskcraft.entity.terran.GoliathEntity;
 import net.bitflora.asteriskcraft.entity.terran.WraithEntity;
@@ -427,6 +428,26 @@ public class AsteriskCraft {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("goliath"))));
 
+    // Ghast-sized, and by far the largest thing the mod fields: a Ghast is 4.0 x 4.0, and this
+    // matches its width exactly. The height does not, and deliberately — the mod fits a hitbox to
+    // the aircraft inside it (the Wraith is 1.4 x 0.9 for the same reason), and a saucer padded out
+    // to a 4-tall cube would be two blocks of empty box that arrows still collide with.
+    //
+    // The numbers are not free-floating: the model spans 28 model units across the outrigger pods
+    // and 16 from dome crown to keel tip, so ScienceVesselRenderer's 2.3 scale lands it at 4.03 x
+    // 2.30 blocks — flush inside this box on both axes. Change one and the other has to move.
+    //
+    // Note for anyone widening it further: building.SpawnSpots must clear the whole spawn AABB, and
+    // its ring search stops at 6. A 4x4 footprint is comfortably findable beside a Starport on
+    // prepared ground; much past that and a fresh Vessel starts falling through to the last-resort
+    // spot above the core. It is a flyer, so HoverGoal lifts it straight back out, but it is the
+    // reason not to keep growing this.
+    public static final DeferredHolder<EntityType<?>, EntityType<ScienceVesselEntity>> SCIENCE_VESSEL =
+            ENTITY_TYPES.register("science_vessel", () -> EntityType.Builder.of(ScienceVesselEntity::new, MobCategory.MONSTER)
+                    .sized(4.0f, 2.4f)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("science_vessel"))));
+
     // Squat where the other static defences are tall: the shared 2.6 bulk so a Bunker reads as the
     // Terran counterpart of a Photon Cannon, but 2.0 high, because a bunker is a thing you crouch
     // behind rather than a tower. Rooted, so none of the pathfinder footprint reasoning above applies.
@@ -671,6 +692,10 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, GOLIATH, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> GOLIATH_SPAWN_EGG_ENEMY = ITEMS.registerItem("goliath_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, GOLIATH, FactionSpawnEggItem.Side.ENEMY));
+    public static final DeferredItem<FactionSpawnEggItem> SCIENCE_VESSEL_SPAWN_EGG_ALLY = ITEMS.registerItem("science_vessel_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, SCIENCE_VESSEL, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> SCIENCE_VESSEL_SPAWN_EGG_ENEMY = ITEMS.registerItem("science_vessel_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, SCIENCE_VESSEL, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> BUNKER_SPAWN_EGG_ALLY = ITEMS.registerItem("bunker_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, BUNKER, FactionSpawnEggItem.Side.ALLY));
@@ -888,6 +913,23 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.goliath.attack_air",
                     () -> SoundEvent.createVariableRangeEvent(id("entity.goliath.attack_air")));
 
+    // No SCIENCE_VESSEL_HURT, for the seventh time and the same reason: two acknowledgement lines
+    // and one death line in the archive, and no pain line. The other two are the first ability
+    // barks in the mod rather than attack clips — this unit has no attack — so nothing passes them
+    // to HitscanAttacks; ScienceVesselEntity.pulse plays whichever way its pulse went.
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCIENCE_VESSEL_AMBIENT =
+            SOUND_EVENTS.register("entity.science_vessel.ambient",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.science_vessel.ambient")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCIENCE_VESSEL_DEATH =
+            SOUND_EVENTS.register("entity.science_vessel.death",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.science_vessel.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCIENCE_VESSEL_IRRADIATE =
+            SOUND_EVENTS.register("entity.science_vessel.irradiate",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.science_vessel.irradiate")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SCIENCE_VESSEL_MATRIX =
+            SOUND_EVENTS.register("entity.science_vessel.matrix",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.science_vessel.matrix")));
+
     // The Missile Turret's only sound. A structure has no ambient line, no pain line and no death
     // cry — the Photon Cannon and the two colonies are the same, and only the shot makes noise.
     public static final DeferredHolder<SoundEvent, SoundEvent> MISSILE_TURRET_ATTACK =
@@ -981,6 +1023,8 @@ public class AsteriskCraft {
                 output.accept(WRAITH_SPAWN_EGG_ENEMY.get());
                 output.accept(GOLIATH_SPAWN_EGG_ALLY.get());
                 output.accept(GOLIATH_SPAWN_EGG_ENEMY.get());
+                output.accept(SCIENCE_VESSEL_SPAWN_EGG_ALLY.get());
+                output.accept(SCIENCE_VESSEL_SPAWN_EGG_ENEMY.get());
                 output.accept(BUNKER_SPAWN_EGG_ALLY.get());
                 output.accept(BUNKER_SPAWN_EGG_ENEMY.get());
                 output.accept(MISSILE_TURRET_SPAWN_EGG_ALLY.get());
@@ -1075,6 +1119,7 @@ public class AsteriskCraft {
         event.put(GHOST.get(), GhostEntity.createAttributes().build());
         event.put(WRAITH.get(), WraithEntity.createAttributes().build());
         event.put(GOLIATH.get(), GoliathEntity.createAttributes().build());
+        event.put(SCIENCE_VESSEL.get(), ScienceVesselEntity.createAttributes().build());
         event.put(BUNKER.get(), BunkerEntity.createAttributes().build());
         event.put(MISSILE_TURRET.get(), MissileTurretEntity.createAttributes().build());
         event.put(ZEALOT.get(), ZealotEntity.createAttributes().build());
