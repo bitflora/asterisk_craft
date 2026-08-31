@@ -135,6 +135,6 @@ class DamageTypeResourceTest {
             assertTrue(seen.add(key), "duplicate damage type key: " + key.identifier());
         }
         assertEquals(AsteriskCraftDamageTypes.ALL.size(), seen.size(), "duplicate keys in ALL");
-        assertEquals(20, seen.size(), "one damage type per attacking unit is expected");
+        assertEquals(21, seen.size(), "one damage type per attacking unit is expected");
     }
 }

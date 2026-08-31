@@ -102,6 +102,7 @@ public final class Races {
                     // script has no card to open. See RacesTest.
                     .unit(UnitStats.OBSERVER, AsteriskCraft.OBSERVER)
                     .unit(UnitStats.DARK_TEMPLAR, AsteriskCraft.DARK_TEMPLAR)
+                    .unit(UnitStats.ARCHON, AsteriskCraft.ARCHON)
                     .build(),
             () -> ProductionKind.PROTOSS_BASE,
             AsteriskCraft.id("build_scripts/protoss.txt"),

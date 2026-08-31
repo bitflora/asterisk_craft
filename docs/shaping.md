@@ -358,6 +358,51 @@ Three decisions are worth writing down. **The rule lives in exactly one place**,
 
 The choice itself is `combat/SupportPulse`, pure and generic over its candidate type in the shape `combat/FlameCone` and `combat/BounceChain` already use, so *enemy before ally* and *never itself* are pinned by a test with no `ServerLevel` in sight. The AI fields one from its last two waves, and the build script's closing comment is rewritten: the hole is closed, but a Vessel is one unarmed unit flying in the open, so killing it re-opens it for the rest of the wave. *Demo: play Zerg against the Terran, mass Lurkers on the approach, and watch the wave that finally arrives with an eye over it.*
 
+**V6s — The Archon: the Protoss answer a crowd. `[DONE]`** Every unit the Gateway made answered one
+body. A Zealot kills a Zergling and then kills the next one; a Dragoon shoots a Hydralisk and then
+shoots the one behind it. Against a swarm that arrives as a swarm, the whole Protoss ground army was
+a queue. The Terran got their answer to that in V6f's Firebat, whose cone gets better the more things
+are standing together, and the Protoss have had nothing like it. **The Archon closes it: 15 damage at
+2 blocks on a one-second cadence, which then washes a full block off the target onto every other
+enemy standing with it for half as much, and sets the target itself alight for four seconds.** 300
+wood and 100 cobblestone over 75 seconds — the priciest unit and the longest build time the race has,
+out of the Gateway.
+
+**Its pool is the unit, and it is a weakness written as a big number: 5 HP behind 175 shields.** No
+other unit on any roster is close to that split, and it matters because the two halves behave
+differently — shields recharge on `combat/ShieldEventHandler`'s delay and health does not. An Archon
+pulled out of a fight is whole again in seconds; one caught a second time before the delay has run is
+five points from dead. Nothing else in the mod rewards retreating a damaged unit this hard, and
+nothing else punishes leaving it in this hard either. The short reach is the other half of the
+bargain: it has to walk into whatever it is about to splash.
+
+**The splash is a new mechanism and deliberately not a reused one.** The mod already had three
+multi-target damage paths, and the interesting part of this slice was deciding that none of them was
+this. `combat/BounceChain` walks body to body, so it caps a hit count, compounds its falloff along a
+hop order and reaches a multiple of one hop away; `combat/FlameCone` is a wedge cast from the
+attacker; `combat/SuicideBlast` resolves no hostility at all. A splash is one sphere centred on the
+*target*, hostility-filtered, uncapped, with every bystander equally far down a single falloff — so
+it got its own `UnitStat.Splash` sub-record, its own all-or-nothing CSV column pair, and one method,
+`HitscanAttacks.fireSplash`. It got **no** pure geometry companion class, unlike those two: chain
+resolution and cone/SAT geometry are what silently regress, and "is it within r of a point" is not.
+What it did get for free is everything that matters — candidates are filtered through
+`FactionAttachments.isHostile`, so **cloak, garrison and the per-race wild carve-out apply to a
+shockwave with nothing written for them**, and a friendly unit standing in the blast takes nothing.
+
+**And the ball of light needed no new render machinery, which is the part worth copying.** The model
+hangs the figure inside four large `orb*` shells whose UV islands are left *fully transparent* in
+`archon.png` — `MobRenderer`'s pass is a cutout, so it discards them outright — and painted in
+`archon_glow.png`, which the existing `client/UnitGlowLayer` submits with `RenderTypes.eyes`: full
+bright, additive, no depth write. The near faces add light over the figure and the far ones are
+hidden behind it by the depth test, so a cluster of cubes reads as a glowing sphere with somebody
+inside it. Three shells of one volume stretched along each axis in turn, turning against each other,
+because a single box has a silhouette no lighting hides. The one mistake that ruins it is painting an
+`orb*` island into the body texture, which turns the ball into an opaque crate — so
+`tools/gen_archon_texture.py` refuses to do it rather than trusting the palette to stay right.
+*Demo: play Zerg, walk a pack of Zerglings into a Protoss push, and watch one shot take the middle
+one and everything touching it.*
+
+
 ## Verification
 
 - `./gradlew test` for deterministic logic (faction rules, site-prep geometry, economy constants) — tags and item components aren't bound in the JUnit bootstrap, and structure templates need a running server's resource manager, so tag-dependent behavior (e.g. block→item yield mapping) and template placement aren't unit-testable and need the checks below instead. `BuildingTemplatesTest` covers what it can by reading the `.nbt` files as raw NBT.

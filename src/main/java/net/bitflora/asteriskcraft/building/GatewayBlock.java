@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * The Gateway core block. Right-click to open the production GUI (load resources, train
- * Zealots/Dragoons). Production is disabled while the building is still warping in.
+ * the Protoss ground army). Production is disabled while the building is still warping in.
  */
 public class GatewayBlock extends BaseEntityBlock {
     public static final MapCodec<GatewayBlock> CODEC = simpleCodec(GatewayBlock::new);

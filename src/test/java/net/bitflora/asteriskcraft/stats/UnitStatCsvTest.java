@@ -23,11 +23,12 @@ class UnitStatCsvTest {
             "race,id,health,armor,speed,knockback_resistance,step_height,follow_range,shield,"
                     + "attack_damage,anti_air_bonus,attack_anim_ticks,range,cooldown,"
                     + "fly_speed,hover_height,path_length,detect_radius,detect_sweep,detect_reveal,"
-                    + "bounce_hits,bounce_falloff,bounce_radius,blast_radius,blast_fuse,build_ticks,cost";
+                    + "bounce_hits,bounce_falloff,bounce_radius,splash_radius,splash_fraction,"
+                    + "blast_radius,blast_fuse,build_ticks,cost";
 
     /** A minimal, valid row; every test below is this with one or two cells changed. */
     private static final String MINIMAL =
-            "zerg,thing,10.0,0.0,0.25,0.0,0.6,32.0,0,,0.0,0,,,,,,,,,,,,,,20,any 25";
+            "zerg,thing,10.0,0.0,0.25,0.0,0.6,32.0,0,,0.0,0,,,,,,,,,,,,,,,,20,any 25";
 
     @Test
     void aRowBecomesTheStatItDescribes() {
@@ -75,6 +76,35 @@ class UnitStatCsvTest {
         String row = cells(MINIMAL, "attack_damage", "5.0", "range", "6.0");
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> one(row));
         assertTrue(e.getMessage().contains("cooldown"), e.getMessage());
+    }
+
+    @Test
+    void aSplashNeedsDamageToTakeAFractionOf() {
+        // The rule is the builder's, not the parser's: splash_fraction is a share of attack_damage,
+        // so a row that fills the group and leaves the damage blank has described nothing.
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> one(cells(MINIMAL, "range", "2.0", "cooldown", "20",
+                        "splash_radius", "1.0", "splash_fraction", "0.5")));
+        assertTrue(e.getMessage().contains("attackDamage"), e.getMessage());
+    }
+
+    @Test
+    void aSplashFractionAboveOneIsRejected() {
+        // It is the falloff onto everyone who was not aimed at. Above 1 the bystanders take more
+        // than the target, which is not a balance choice but a misread of what the column means.
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> one(cells(MINIMAL, "attack_damage", "15.0", "range", "2.0", "cooldown", "20",
+                        "splash_radius", "1.0", "splash_fraction", "1.5")));
+        assertTrue(e.getMessage().contains("damageFraction"), e.getMessage());
+    }
+
+    @Test
+    void aSplashRadiusOfZeroIsRejected() {
+        // Zero reaches nobody, so the row would claim a splash and behave as a plain single hit.
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> one(cells(MINIMAL, "attack_damage", "15.0", "range", "2.0", "cooldown", "20",
+                        "splash_radius", "0.0", "splash_fraction", "0.5")));
+        assertTrue(e.getMessage().contains("radius"), e.getMessage());
     }
 
     @Test

@@ -60,6 +60,8 @@ public final class UnitStatCsv {
     private static final String BOUNCE_HITS = "bounce_hits";
     private static final String BOUNCE_FALLOFF = "bounce_falloff";
     private static final String BOUNCE_RADIUS = "bounce_radius";
+    private static final String SPLASH_RADIUS = "splash_radius";
+    private static final String SPLASH_FRACTION = "splash_fraction";
     private static final String BLAST_RADIUS = "blast_radius";
     private static final String BLAST_FUSE = "blast_fuse";
     private static final String BUILD_TICKS = "build_ticks";
@@ -78,6 +80,7 @@ public final class UnitStatCsv {
             FLY_SPEED, HOVER_HEIGHT, PATH_LENGTH,
             DETECT_RADIUS, DETECT_SWEEP, DETECT_REVEAL,
             BOUNCE_HITS, BOUNCE_FALLOFF, BOUNCE_RADIUS,
+            SPLASH_RADIUS, SPLASH_FRACTION,
             BLAST_RADIUS, BLAST_FUSE,
             BUILD_TICKS, COST);
 
@@ -168,6 +171,9 @@ public final class UnitStatCsv {
         if (row.group("a bouncing attack", BOUNCE_HITS, BOUNCE_FALLOFF, BOUNCE_RADIUS)) {
             builder.bounce(row.integer(BOUNCE_HITS), (float) row.number(BOUNCE_FALLOFF),
                     (float) row.number(BOUNCE_RADIUS));
+        }
+        if (row.group("a splash attack", SPLASH_RADIUS, SPLASH_FRACTION)) {
+            builder.splash((float) row.number(SPLASH_RADIUS), (float) row.number(SPLASH_FRACTION));
         }
         if (row.group("a blast", BLAST_RADIUS, BLAST_FUSE)) {
             builder.blast((float) row.number(BLAST_RADIUS), row.integer(BLAST_FUSE));

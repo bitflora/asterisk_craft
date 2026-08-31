@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import net.bitflora.asteriskcraft.client.protoss.DragoonModel;
 import net.bitflora.asteriskcraft.client.protoss.PhotonCannonModel;
 import net.bitflora.asteriskcraft.client.protoss.ProbeModel;
+import net.bitflora.asteriskcraft.client.protoss.ArchonModel;
 import net.bitflora.asteriskcraft.client.protoss.DarkTemplarModel;
 import net.bitflora.asteriskcraft.client.protoss.ObserverModel;
 import net.bitflora.asteriskcraft.client.protoss.ScoutModel;
@@ -156,6 +157,7 @@ final class ModelGeometry {
         map.put("scout", ScoutModel::createBodyLayer);
         map.put("observer", ObserverModel::createBodyLayer);
         map.put("dark_templar", DarkTemplarModel::createBodyLayer);
+        map.put("archon", ArchonModel::createBodyLayer);
         map.put("photon_cannon", PhotonCannonModel::createBodyLayer);
         map.put("zergling", ZerglingModel::createBodyLayer);
         map.put("infested_villager", InfestedVillagerModel::createBodyLayer);

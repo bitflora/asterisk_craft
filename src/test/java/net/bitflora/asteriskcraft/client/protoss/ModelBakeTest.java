@@ -38,6 +38,11 @@ class ModelBakeTest {
     }
 
     @Test
+    void archonModelBakesAndResolvesAnimatedParts() {
+        assertNotNull(new ArchonModel(ArchonModel.createBodyLayer().bakeRoot()));
+    }
+
+    @Test
     void scvModelBakesAndResolvesAnimatedParts() {
         assertNotNull(new ScvModel(ScvModel.createBodyLayer().bakeRoot()));
     }

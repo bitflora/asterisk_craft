@@ -36,11 +36,11 @@ unit_stats.csv:16: detect_radius/detect_sweep/detect_reveal: detection needs eve
 | Written in | Columns |
 | --- | --- |
 | **Ticks** (20 ticks = 1 second) | `attack_anim_ticks`, `cooldown`, `detect_sweep`, `detect_reveal`, `blast_fuse`, `build_ticks` |
-| **Blocks** | `step_height`, `follow_range`, `range`, `hover_height`, `path_length`, `detect_radius`, `bounce_radius`, `blast_radius` |
+| **Blocks** | `step_height`, `follow_range`, `range`, `hover_height`, `path_length`, `detect_radius`, `bounce_radius`, `splash_radius`, `blast_radius` |
 | **Health points** (2 per heart) | `health`, `shield`, `attack_damage`, `anti_air_bonus` |
 | **Item counts** | the amounts inside `cost` |
 | **Vanilla attribute values** (unitless) | `armor`, `speed`, `knockback_resistance` |
-| **Plain counts / multipliers** | `bounce_hits`, `bounce_falloff` |
+| **Plain counts / multipliers** | `bounce_hits`, `bounce_falloff`, `splash_fraction` |
 
 There are no seconds anywhere in the file. `build_ticks` of `1000` is 50 seconds; a `cooldown` of
 `30` is 1.5 seconds.
@@ -158,7 +158,7 @@ when the next shot fires; `UnitStatsTest.strikeAnimationsFitInsideTheirCooldown`
 
 ## The optional groups
 
-The remaining columns come in five groups, each mapping to one of `UnitStat`'s `Optional`
+The remaining columns come in six groups, each mapping to one of `UnitStat`'s `Optional`
 sub-records. **Each group is all-or-nothing**: fill every column of a group to give the unit that
 capability, or leave every one blank. A half-filled group is rejected at startup, because the missing
 half would otherwise be read as a default nobody designed.
@@ -230,6 +230,27 @@ detector that is mobile <em>and</em> fragile, and nothing else in the mod is.
 
 A bounce needs a `range` group to chain from and an `attack_damage` to fall off; `UnitStatsTest`
 enforces both.
+
+### `splash_radius`, `splash_fraction` — a splashing attack
+
+- **`splash_radius`** — blocks, measured **from the target**, not from the attacker. Everything
+  hostile whose centre is inside that sphere is caught.
+- **`splash_fraction`** — what share of `attack_damage` each of those bystanders takes. Must be
+  greater than 0 and at most 1: this is the falloff onto everyone who was not aimed at, so above 1
+  the bystanders would outrank the target. The Archon's `0.5` means 15 to the target and 7.5 to
+  everything standing with it.
+
+The target itself always takes the full `attack_damage`, so this is not a second damage number. A
+splash needs an `attack_damage` to take a fraction of; the builder requires one.
+
+**Not a bounce with different numbers**, and the distinction is the shape rather than the values. A
+bounce walks from body to body, so it caps its hit count, compounds its falloff along the hop order,
+and reaches a multiple of one hop away. A splash is one sphere around one point: no cap, no order,
+every bystander equally far down a single falloff. Reach for whichever the attack actually is.
+
+Unlike a blast, a splash **does** resolve hostility — friendly units standing in it take nothing.
+Buildings are never caught by one either way: a building's health lives on its block entity rather
+than on a living target.
 
 ### `blast_radius`, `blast_fuse` — a suicide detonation
 
@@ -325,7 +346,8 @@ Collected from `UnitStat.Builder.build()` (which fails at startup, naming the ro
 - `build_ticks` is positive exactly when `cost` is not `none`.
 - A rooted attacker's `follow_range` equals its `range`.
 - `attack_anim_ticks` is less than `cooldown` whenever both are present.
-- `anti_air_bonus` and the blast group need an `attack_damage`; the bounce group needs a `range` too.
+- `anti_air_bonus` and the blast and splash groups need an `attack_damage`; the bounce group needs a
+  `range` too.
 - `detect_reveal` > `detect_sweep`, and all three detection values are positive.
 - Every flyer's `hover_height` equals `UnitStats.HOVER_HEIGHT`; its `path_length` is at least its
   `follow_range`; and an armed one keeps 6 blocks of horizontal stand-off after its altitude.

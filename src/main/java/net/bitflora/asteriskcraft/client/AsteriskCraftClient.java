@@ -1,6 +1,8 @@
 package net.bitflora.asteriskcraft.client;
 
 import net.bitflora.asteriskcraft.AsteriskCraft;
+import net.bitflora.asteriskcraft.client.protoss.ArchonModel;
+import net.bitflora.asteriskcraft.client.protoss.ArchonRenderer;
 import net.bitflora.asteriskcraft.client.protoss.DarkTemplarModel;
 import net.bitflora.asteriskcraft.client.protoss.DarkTemplarRenderer;
 import net.bitflora.asteriskcraft.client.protoss.DragoonModel;
@@ -81,6 +83,7 @@ public class AsteriskCraftClient {
     public static final ModelLayerLocation SCOUT_LAYER = new ModelLayerLocation(AsteriskCraft.id("scout"), "main");
     public static final ModelLayerLocation OBSERVER_LAYER = new ModelLayerLocation(AsteriskCraft.id("observer"), "main");
     public static final ModelLayerLocation DARK_TEMPLAR_LAYER = new ModelLayerLocation(AsteriskCraft.id("dark_templar"), "main");
+    public static final ModelLayerLocation ARCHON_LAYER = new ModelLayerLocation(AsteriskCraft.id("archon"), "main");
     public static final ModelLayerLocation ZERGLING_LAYER = new ModelLayerLocation(AsteriskCraft.id("zergling"), "main");
     /** Same geometry as the Zergling, baked separately so the Ultralisk can fork its model later. */
     public static final ModelLayerLocation INFESTED_VILLAGER_LAYER = new ModelLayerLocation(AsteriskCraft.id("infested_villager"), "main");
@@ -111,6 +114,7 @@ public class AsteriskCraftClient {
         event.registerLayerDefinition(SCOUT_LAYER, ScoutModel::createBodyLayer);
         event.registerLayerDefinition(OBSERVER_LAYER, ObserverModel::createBodyLayer);
         event.registerLayerDefinition(DARK_TEMPLAR_LAYER, DarkTemplarModel::createBodyLayer);
+        event.registerLayerDefinition(ARCHON_LAYER, ArchonModel::createBodyLayer);
         event.registerLayerDefinition(ZERGLING_LAYER, ZerglingModel::createBodyLayer);
         event.registerLayerDefinition(INFESTED_VILLAGER_LAYER, InfestedVillagerModel::createBodyLayer);
         event.registerLayerDefinition(ULTRALISK_LAYER, ZerglingModel::createBodyLayer);
@@ -141,6 +145,7 @@ public class AsteriskCraftClient {
         event.registerEntityRenderer(AsteriskCraft.SCOUT.get(), ScoutRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.OBSERVER.get(), ObserverRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DARK_TEMPLAR.get(), DarkTemplarRenderer::new);
+        event.registerEntityRenderer(AsteriskCraft.ARCHON.get(), ArchonRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.DRONE.get(), DroneRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.ZERGLING.get(), ZerglingRenderer::new);
         event.registerEntityRenderer(AsteriskCraft.INFESTED_VILLAGER.get(), InfestedVillagerRenderer::new);

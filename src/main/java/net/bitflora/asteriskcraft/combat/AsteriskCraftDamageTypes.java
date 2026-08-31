@@ -51,6 +51,9 @@ public final class AsteriskCraftDamageTypes {
     public static final ResourceKey<DamageType> ANTI_MATTER_MISSILE = key("anti_matter_missile");
     public static final ResourceKey<DamageType> PHOTON_BLAST = key("photon_blast");
     public static final ResourceKey<DamageType> WARP_BLADE = key("warp_blade");
+    /** The Archon's psionic shockwave. The mod's only attack that splashes off its target — see
+     * {@link net.bitflora.asteriskcraft.entity.ai.HitscanAttacks#fireSplash}. */
+    public static final ResourceKey<DamageType> PSIONIC_SHOCKWAVE = key("psionic_shockwave");
 
     // Zerg
     public static final ResourceKey<DamageType> ZERGLING_CLAWS = key("zergling_claws");
@@ -88,6 +91,7 @@ public final class AsteriskCraftDamageTypes {
     /** Every key above — what {@code DamageTypeResourceTest} iterates to check each one's data files. */
     public static final List<ResourceKey<DamageType>> ALL = List.of(
             PSI_BLADES, PHASE_DISRUPTOR, ANTI_MATTER_MISSILE, PHOTON_BLAST, WARP_BLADE,
+            PSIONIC_SHOCKWAVE,
             ZERGLING_CLAWS, NEEDLE_SPINES, GLAVE_WURM, KAISER_BLADES, SUBTERRANEAN_TENTACLE,
             SUBTERRANEAN_SPINES, SEEKER_SPORES, INFESTED_BLAST, FUSION_CUTTER, GAUSS_RIFLE, FLAME_THROWER,
             C10_CANISTER_RIFLE, LONGBOLT_MISSILE, BURST_LASERS, TWIN_AUTOCANNONS);

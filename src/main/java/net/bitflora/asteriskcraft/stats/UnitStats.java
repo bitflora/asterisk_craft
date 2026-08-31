@@ -89,6 +89,26 @@ public final class UnitStats {
     public static final UnitStat DARK_TEMPLAR = TABLE.get("dark_templar");
 
     /**
+     * The mod's only splash attacker, and the answer to a pack rather than to a body — the hole a
+     * Gateway of single-target units left open, and the Protoss counterpart to what the Firebat's
+     * cone did for the Terran. Its shot washes a full block off the target onto everything hostile
+     * standing with it, for half of what the target took, and leaves the target itself burning.
+     *
+     * <p>Its pool is the point of it: 5 HP behind 175 shields is the most extreme split on any
+     * roster, and it is a real weakness rather than a big number written oddly. Shields recharge
+     * (see {@code combat.ShieldEventHandler}) and health does not, so an Archon that walks away
+     * from a fight is whole again in seconds, while one that is caught a second time before the
+     * recharge delay has run is five points from dead. Nothing else in the mod rewards pulling a
+     * damaged unit out this hard.
+     *
+     * <p>A one-second cooldown at two blocks of reach is deliberately short for the damage, because
+     * both halves of the trade are already paid for: it has to close to arm's length to fire at
+     * all, and 300 wood is the largest single-resource line any unit asks for. It is the most
+     * expensive thing the Protoss train and takes the longest to do it.
+     */
+    public static final UnitStat ARCHON = TABLE.get("archon");
+
+    /**
      * Kit-bought at a base for {@code BaseBlockEntity.BUILDING_COST}, not trained directly — hence a
      * cost of none, and hence no build time either.
      *

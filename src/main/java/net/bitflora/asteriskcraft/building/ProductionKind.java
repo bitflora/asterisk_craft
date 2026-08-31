@@ -114,7 +114,10 @@ public enum ProductionKind implements StringRepresentable {
                     CostText.tooltip(UnitStats.DRAGOON.cost(), 0), 1, Action.FACTORY),
             new OptionView(
                     Icon.ofIcon("dark_templar"),
-                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 2, Action.FACTORY))),
+                    CostText.tooltip(UnitStats.DARK_TEMPLAR.cost(), 0), 2, Action.FACTORY),
+            new OptionView(
+                    Icon.ofIcon("archon"),
+                    CostText.tooltip(UnitStats.ARCHON.cost(), 0), 3, Action.FACTORY))),
     /**
      * The Stargate's card: everything Protoss that flies, and nothing that walks. The race's second
      * factory — an army that wants to answer a Mutalisk, or to see a Dark Templar coming, buys a

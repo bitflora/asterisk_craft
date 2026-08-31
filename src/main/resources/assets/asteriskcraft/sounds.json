@@ -347,6 +347,28 @@
       "asteriskcraft:mob/drone/drone-death"
     ]
   },
+  "entity.archon.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.archon.ambient",
+    "sounds": [
+      "asteriskcraft:mob/archon/archon-live1",
+      "asteriskcraft:mob/archon/archon-live2"
+    ]
+  },
+  "entity.archon.attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.archon.attack",
+    "sounds": [
+      "asteriskcraft:mob/archon/archon-attack"
+    ]
+  },
+  "entity.archon.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.entity.asteriskcraft.archon.death",
+    "sounds": [
+      "asteriskcraft:mob/archon/archon-death"
+    ]
+  },
   "entity.dragoon.ambient": {
     "category": "hostile",
     "subtitle": "subtitles.entity.asteriskcraft.dragoon.ambient",

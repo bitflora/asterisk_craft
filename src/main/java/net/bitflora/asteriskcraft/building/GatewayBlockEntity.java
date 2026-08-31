@@ -38,7 +38,8 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Production logic for the Gateway: a Zealot/Dragoon/Dark Templar queue — the Protoss ground army,
+ * Production logic for the Gateway: a Zealot/Dragoon/Dark Templar/Archon queue — the Protoss ground
+ * army,
  * the flyer having moved to the Stargate ({@link FactoryBlockEntity}) — gated by a one-time warp-in
  * countdown after the kit places the structure. Costs are paid atomically out of the shared Protoss
  * army bank (surfaced through {@link ProductionMenu}).
@@ -46,6 +47,9 @@ import java.util.List;
  * <p>{@link UnitType}'s constants are this building's saved queue, so a queue saved by a build that
  * still trained Scouts here no longer decodes and comes back empty. Deliberate: the alternative is
  * a dead enum constant nothing can produce, and what is lost is at most five units in progress.
+ * For the same reason a <em>new</em> unit is always <b>appended</b>: the codec is by name, but the
+ * ordinals are the menu's queue-count slots, so inserting one in the middle renumbers every button
+ * below it.
  *
  * <p>Acts as a "linked chest" onto its faction's {@link ArmyBank}: {@link BaseBlockEntity}
  * reads and writes the same underlying data, so every Protoss production building draws from
@@ -59,7 +63,7 @@ import java.util.List;
 public class GatewayBlockEntity extends BlockEntity
         implements ArmyLinkedContainer, ProductionBuilding, WarpInBuilding, SiegeTarget {
     public enum UnitType implements StringRepresentable {
-        ZEALOT("zealot"), DRAGOON("dragoon"), DARK_TEMPLAR("dark_templar");
+        ZEALOT("zealot"), DRAGOON("dragoon"), DARK_TEMPLAR("dark_templar"), ARCHON("archon");
 
         public static final Codec<UnitType> CODEC = StringRepresentable.fromEnum(UnitType::values);
         public static final Codec<List<UnitType>> LIST_CODEC = CODEC.listOf();
@@ -107,6 +111,7 @@ public class GatewayBlockEntity extends BlockEntity
                 case ProductionMenu.DATA_QUEUE_BASE -> countQueued(UnitType.ZEALOT);
                 case ProductionMenu.DATA_QUEUE_BASE + 1 -> countQueued(UnitType.DRAGOON);
                 case ProductionMenu.DATA_QUEUE_BASE + 2 -> countQueued(UnitType.DARK_TEMPLAR);
+                case ProductionMenu.DATA_QUEUE_BASE + 3 -> countQueued(UnitType.ARCHON);
                 default -> 0;
             };
         }
@@ -217,6 +222,7 @@ public class GatewayBlockEntity extends BlockEntity
             case 0 -> UnitType.ZEALOT;
             case 1 -> UnitType.DRAGOON;
             case 2 -> UnitType.DARK_TEMPLAR;
+            case 3 -> UnitType.ARCHON;
             default -> null;
         };
         if (type != null) {
@@ -266,6 +272,7 @@ public class GatewayBlockEntity extends BlockEntity
             case ZEALOT -> UnitStats.ZEALOT;
             case DRAGOON -> UnitStats.DRAGOON;
             case DARK_TEMPLAR -> UnitStats.DARK_TEMPLAR;
+            case ARCHON -> UnitStats.ARCHON;
         };
     }
 
@@ -274,6 +281,7 @@ public class GatewayBlockEntity extends BlockEntity
             case ZEALOT -> AsteriskCraft.ZEALOT.get();
             case DRAGOON -> AsteriskCraft.DRAGOON.get();
             case DARK_TEMPLAR -> AsteriskCraft.DARK_TEMPLAR.get();
+            case ARCHON -> AsteriskCraft.ARCHON.get();
         };
         UnitSpawns.spawn(level, pos, entityType, buildingFaction(), Race.PROTOSS, false);
     }

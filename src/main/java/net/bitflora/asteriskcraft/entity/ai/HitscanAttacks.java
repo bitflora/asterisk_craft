@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -92,6 +93,59 @@ public final class HitscanAttacks {
             beam(level, from, to, particle);
             from = to;
         }
+        level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, 1.0f);
+    }
+
+    /**
+     * As {@link #fire(Mob, LivingEntity, double, ResourceKey, ParticleOptions, SoundEvent)}, but the
+     * hit also washes onto every other enemy standing within {@code splash.radius()} of the target
+     * (the Archon's psionic shockwave). Each of those takes
+     * {@link UnitStat.Splash#damageFraction()} of what the target took; the target itself takes the
+     * full amount.
+     *
+     * <p>Not a {@link #fireChained} with different numbers. A chain walks from body to body, so its
+     * falloff compounds along a hop order and its reach is a multiple of one hop; a splash is a
+     * single sphere around one point, so every bystander is equally far down the falloff and there
+     * is no order for anything to compound along.
+     *
+     * <p>Candidates are filtered through {@code FactionAttachments.isHostile}, exactly as the bounce
+     * chain and the Firebat's cone are, so cloak, garrison and the per-race wild carve-out all apply
+     * to a shockwave with nothing written for them here. Only living entities are candidates:
+     * buildings are {@code SiegeTarget} block entities holding their health on the block entity
+     * rather than on a target, so a shockwave never washes onto a core.
+     *
+     * <p>{@code igniteTicks} sets <em>the target alone</em> alight, not the bystanders — unlike
+     * {@link FlameAttacks#sweep}, where the flame is the thing that spreads. Here the shockwave is
+     * what spreads and the psionic contact is what burns, so a unit merely caught in the blast is
+     * hurt without catching fire. Pass 0 for a splash that does not ignite at all.
+     */
+    public static void fireSplash(Mob attacker, LivingEntity target, double damage,
+            ResourceKey<DamageType> damageType, ParticleOptions particle, SoundEvent sound,
+            UnitStat.Splash splash, int igniteTicks) {
+        if (!(attacker.level() instanceof ServerLevel level)) {
+            return;
+        }
+        DamageSource source = level.damageSources().source(damageType, attacker);
+        if (target.hurtServer(level, source, (float) damage) && igniteTicks > 0
+                && !target.fireImmune()) {
+            target.igniteForTicks(igniteTicks);
+        }
+
+        double radius = splash.radius();
+        // The broad phase is a box, so each candidate is then measured against the radius proper —
+        // otherwise the corners of that box would reach nearly twice as far as the stated splash.
+        double radiusSq = radius * radius;
+        Vec3 centre = target.position();
+        float wash = (float) (damage * splash.damageFraction());
+        for (LivingEntity caught : level.getEntitiesOfClass(LivingEntity.class,
+                target.getBoundingBox().inflate(radius),
+                e -> e.isAlive() && e != target && FactionAttachments.isHostile(attacker, e))) {
+            if (caught.distanceToSqr(centre) <= radiusSq) {
+                caught.hurtServer(level, source, wash);
+            }
+        }
+
+        beam(level, attacker.getEyePosition(), target.getEyePosition(), particle);
         level.playSound(null, attacker.blockPosition(), sound, SoundSource.HOSTILE, 1.0f, 1.0f);
     }
 

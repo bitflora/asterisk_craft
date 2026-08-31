@@ -56,6 +56,8 @@ public record UnitStat(
         Optional<Bounce> bounce,
         /** Absent = this unit does not detonate; present = it is a suicide bomber. */
         Optional<Blast> blast,
+        /** Absent = a hit lands on the target alone; present = it splashes onto everything around it. */
+        Optional<Splash> splash,
         /**
          * Extra damage this unit's attack deals to an air target (an {@code entity.Flyer}), on top of
          * {@link #attackDamage}; 0 = it hits air and ground alike. It is a flat bonus rather than a
@@ -117,6 +119,20 @@ public record UnitStat(
     public record Blast(float radius, int fuseTicks) {
     }
 
+    /**
+     * A splash attack: how far from the <em>target</em> the shockwave reaches, and what fraction of
+     * {@link #attackDamage} every other enemy inside that radius takes. The target itself always
+     * takes the full amount — this is the falloff onto bystanders, not a second damage number.
+     *
+     * <p>Deliberately not a {@link Bounce}, and the difference is the shape of the attack rather
+     * than its numbers: a chain hops body to body, is capped at a hit count, and compounds its
+     * falloff along that order, while this is one sphere centred on a point with no cap and no
+     * order at all. Folding the two together would put two different attacks in one table row and
+     * let them drift into each other.
+     */
+    public record Splash(float radius, float damageFraction) {
+    }
+
     public Ranged rangedOrThrow() {
         return this.ranged.orElseThrow(() -> new IllegalStateException(this.id + " has no ranged attack"));
     }
@@ -135,6 +151,10 @@ public record UnitStat(
 
     public Blast blastOrThrow() {
         return this.blast.orElseThrow(() -> new IllegalStateException(this.id + " does not detonate"));
+    }
+
+    public Splash splashOrThrow() {
+        return this.splash.orElseThrow(() -> new IllegalStateException(this.id + " does not splash"));
     }
 
     public double attackDamageOrThrow() {
@@ -163,6 +183,7 @@ public record UnitStat(
         private Optional<Detection> detection = Optional.empty();
         private Optional<Bounce> bounce = Optional.empty();
         private Optional<Blast> blast = Optional.empty();
+        private Optional<Splash> splash = Optional.empty();
         private double antiAirBonus;           // 0.0 == hits air and ground for the same damage
         private int attackAnimTicks;
         private int buildTicks;                // required iff the cost is purchasable
@@ -244,6 +265,15 @@ public record UnitStat(
             return this;
         }
 
+        /**
+         * Makes this unit's hit splash: every other enemy within {@code radius} of the target takes
+         * {@code damageFraction} of what the target took.
+         */
+        public Builder splash(float radius, float damageFraction) {
+            this.splash = Optional.of(new Splash(radius, damageFraction));
+            return this;
+        }
+
         /** Flat extra damage against air targets, on top of {@link #attackDamage}. */
         public Builder antiAirBonus(double v) {
             this.antiAirBonus = v;
@@ -298,6 +328,23 @@ public record UnitStat(
                             + " on the tick the unit armed, with no window to escape it");
                 }
             });
+            this.splash.ifPresent(sp -> {
+                if (this.attackDamage.isEmpty()) {
+                    throw new IllegalStateException(this.id
+                            + ": a splash needs an attackDamage to take a fraction of");
+                }
+                if (sp.radius() <= 0.0f) {
+                    throw new IllegalStateException(this.id
+                            + ": a splash needs a positive radius — at zero it is an ordinary"
+                            + " single-target hit that only looks like a splash");
+                }
+                if (sp.damageFraction() <= 0.0f || sp.damageFraction() > 1.0f) {
+                    throw new IllegalStateException(this.id
+                            + ": a splash's damageFraction must be in (0, 1] — it is the falloff"
+                            + " onto bystanders, so above 1 they would outrank the target that was"
+                            + " actually aimed at");
+                }
+            });
             this.detection.ifPresent(d -> {
                 if (d.radius() <= 0.0 || d.sweepInterval() <= 0 || d.revealTicks() <= 0) {
                     throw new IllegalStateException(this.id
@@ -317,7 +364,7 @@ public record UnitStat(
             return new UnitStat(this.id, this.maxHealth, this.armor, this.movementSpeed,
                     this.knockbackResistance, this.stepHeight, this.followRange, this.shield,
                     this.attackDamage, this.ranged, this.flight, this.detection, this.bounce,
-                    this.blast,
+                    this.blast, this.splash,
                     this.antiAirBonus,
                     this.attackAnimTicks,
                     this.buildTicks, this.cost);

@@ -14,7 +14,9 @@
 #   Units: Zealot (melee), Dragoon (ranged), Scout (air), Dark Templar (permanently cloaked
 #          melee — nothing without a detector can shoot back), Observer (air, no attack and
 #          permanently cloaked — a flying detector that nothing without a detector of its own can
-#          shoot at), Probe (worker).
+#          shoot at), Archon (short-ranged, splashes onto everything standing near what it hits and
+#          sets that target alight — the answer to a clump, and the priciest thing the race
+#          trains), Probe (worker).
 #
 # The AI waits until it can afford each unit, so a wave only leaves once fully trained. Each unit
 # also takes its own build time, so adding one lengthens a wave.
@@ -57,6 +59,8 @@ Wait 220
 
 Defence: 1 Dark Templar
 
-Wave: 2-8 Zealot, 2-5 Dragoon, 1-4 Scout, 1-2 Dark Templar, 1 Observer
+# Late enough that the economy can stand 300 wood a head: one Archon walks in with each push, and a
+# player who has learned to clump against the Zealots is exactly who it punishes.
+Wave: 2-8 Zealot, 2-5 Dragoon, 1-4 Scout, 1-2 Dark Templar, 1 Archon, 1 Observer
 Wait 220
 Repeat 2

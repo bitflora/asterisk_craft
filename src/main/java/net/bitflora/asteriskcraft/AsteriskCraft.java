@@ -30,6 +30,7 @@ import net.bitflora.asteriskcraft.command.UnitGroupSyncPacket;
 import net.bitflora.asteriskcraft.combat.ShieldAttachments;
 import net.bitflora.asteriskcraft.faction.DetectionAttachments;
 import net.bitflora.asteriskcraft.combat.RegenAttachments;
+import net.bitflora.asteriskcraft.entity.protoss.ArchonEntity;
 import net.bitflora.asteriskcraft.entity.protoss.DarkTemplarEntity;
 import net.bitflora.asteriskcraft.entity.protoss.DragoonEntity;
 import net.bitflora.asteriskcraft.entity.zerg.DroneEntity;
@@ -542,6 +543,27 @@ public class AsteriskCraft {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id("dark_templar"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<ArchonEntity>> ARCHON =
+            ENTITY_TYPES.register("archon", () -> EntityType.Builder.of(ArchonEntity::new, MobCategory.MONSTER)
+                    // The Zealot's argument, and for the same reason: floor(width + 1) means
+                    // anything 1.0 or wider takes two pathfinding nodes, and the Dragoon and the
+                    // Ultralisk are the two exceptions the mod has decided to live with. The box
+                    // stays one node so an Archon moves with the Zealots it fights beside.
+                    //
+                    // 1.99 rather than a flat 2.0 for the clearance reason spelled out on the
+                    // Zealot: at 2.0 the pathfinder demands three blocks of head-room.
+                    //
+                    // Both numbers are a floor rather than a fit, and this is the one unit in the
+                    // mod where that is true on the *vertical* axis too: the renderer draws it at
+                    // 1.95, so ~2.9 blocks of ball and figure stand in a 1.99-block box. The
+                    // overhang is not free — the top of the ball cannot be shot at — and it is
+                    // still the right trade, because every way of closing it either costs the unit
+                    // doorways (height >= 2.0) or makes it the third two-node-wide unit in the mod.
+                    // See client/protoss/ArchonRenderer.scale.
+                    .sized(0.9f, 1.99f)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id("archon"))));
+
     public static final DeferredHolder<EntityType<?>, EntityType<DroneEntity>> DRONE =
             ENTITY_TYPES.register("drone", () -> EntityType.Builder.of(DroneEntity::new, MobCategory.CREATURE)
                     // Squat and wide, matching its carapace: broader than it is tall. Still under 1.0
@@ -730,6 +752,11 @@ public class AsteriskCraft {
             props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, FactionSpawnEggItem.Side.ALLY));
     public static final DeferredItem<FactionSpawnEggItem> DARK_TEMPLAR_SPAWN_EGG_ENEMY = ITEMS.registerItem("dark_templar_spawn_egg_enemy",
             props -> new FactionSpawnEggItem(props, DARK_TEMPLAR, FactionSpawnEggItem.Side.ENEMY));
+
+    public static final DeferredItem<FactionSpawnEggItem> ARCHON_SPAWN_EGG_ALLY = ITEMS.registerItem("archon_spawn_egg_ally",
+            props -> new FactionSpawnEggItem(props, ARCHON, FactionSpawnEggItem.Side.ALLY));
+    public static final DeferredItem<FactionSpawnEggItem> ARCHON_SPAWN_EGG_ENEMY = ITEMS.registerItem("archon_spawn_egg_enemy",
+            props -> new FactionSpawnEggItem(props, ARCHON, FactionSpawnEggItem.Side.ENEMY));
 
     public static final DeferredItem<FactionSpawnEggItem> DRONE_SPAWN_EGG_ALLY = ITEMS.registerItem("drone_spawn_egg_ally",
             props -> new FactionSpawnEggItem(props, DRONE, FactionSpawnEggItem.Side.ALLY));
@@ -977,6 +1004,17 @@ public class AsteriskCraft {
             SOUND_EVENTS.register("entity.dark_templar.attack",
                     () -> SoundEvent.createVariableRangeEvent(id("entity.dark_templar.attack")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> ARCHON_AMBIENT =
+            SOUND_EVENTS.register("entity.archon.ambient",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.archon.ambient")));
+    // No hurt event: the ported clips carry no hurt bark, so it keeps vanilla's (as the Dark Templar does).
+    public static final DeferredHolder<SoundEvent, SoundEvent> ARCHON_DEATH =
+            SOUND_EVENTS.register("entity.archon.death",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.archon.death")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> ARCHON_ATTACK =
+            SOUND_EVENTS.register("entity.archon.attack",
+                    () -> SoundEvent.createVariableRangeEvent(id("entity.archon.attack")));
+
     // --- Creative tab ---
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ASTERISKCRAFT_TAB = CREATIVE_MODE_TABS.register("asteriskcraft_tab", () -> CreativeModeTab.builder()
@@ -1039,6 +1077,8 @@ public class AsteriskCraft {
                 output.accept(OBSERVER_SPAWN_EGG_ENEMY.get());
             output.accept(DARK_TEMPLAR_SPAWN_EGG_ALLY.get());
             output.accept(DARK_TEMPLAR_SPAWN_EGG_ENEMY.get());
+            output.accept(ARCHON_SPAWN_EGG_ALLY.get());
+            output.accept(ARCHON_SPAWN_EGG_ENEMY.get());
                 output.accept(DRONE_SPAWN_EGG_ALLY.get());
                 output.accept(DRONE_SPAWN_EGG_ENEMY.get());
                 output.accept(ZERGLING_SPAWN_EGG_ALLY.get());
@@ -1127,6 +1167,7 @@ public class AsteriskCraft {
         event.put(SCOUT.get(), ScoutEntity.createAttributes().build());
         event.put(OBSERVER.get(), ObserverEntity.createAttributes().build());
         event.put(DARK_TEMPLAR.get(), DarkTemplarEntity.createAttributes().build());
+        event.put(ARCHON.get(), ArchonEntity.createAttributes().build());
         event.put(DRONE.get(), DroneEntity.createAttributes().build());
         event.put(ZERGLING.get(), ZerglingEntity.createAttributes().build());
         event.put(ULTRALISK.get(), UltraliskEntity.createAttributes().build());
