@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 import java.util.EnumSet;
 import java.util.function.BooleanSupplier;
@@ -79,9 +80,10 @@ public class SiegeBlockGoal extends Goal {
     }
 
     /**
-     * @param reach how close the unit must be to a building before it starts hitting it. An air unit
-     *              hovering above the battlefield can never satisfy the melee default, so it passes
-     *              its own attack range instead and batters the building from where it flies.
+     * @param reach how close the unit must be to a building before it starts hitting it, measured
+     *              as {@link #withinReach} describes. An air unit hovering above the battlefield can
+     *              never satisfy the melee default, so it passes its own attack range instead and
+     *              batters the building from where it flies.
      */
     public SiegeBlockGoal(Mob mob, double reach) {
         this(mob, reach, () -> false);
@@ -186,7 +188,7 @@ public class SiegeBlockGoal extends Goal {
         }
         BlockPos pos = this.buildingPos;
         this.mob.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        if (pos.distToCenterSqr(this.mob.position()) > this.reachSqr) {
+        if (!withinReach(pos)) {
             this.mob.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 1.1);
             return;
         }
@@ -200,6 +202,26 @@ public class SiegeBlockGoal extends Goal {
                 && serverLevel.getBlockEntity(pos) instanceof SiegeTarget target) {
             target.damageBuilding(SIEGE_DAMAGE_PER_HIT, serverLevel, pos);
         }
+    }
+
+    /**
+     * Whether the unit can put its weapon on {@code pos} from where it stands: the gap between its
+     * <b>eye</b> and the <b>block's box</b>, not between its feet and the block's centre.
+     *
+     * <p>Both halves of that matter, and a core that does not sit on the ground is what proves it.
+     * A template anchors on its core column and the designer is free to put that column anywhere
+     * inside the box ({@code building/BuildingTemplates.Footprint}), so a core routinely floats
+     * clear of the surface a unit can stand on — the Spire's sits three layers above its base slab,
+     * with nothing but air around it. Measured feet-to-centre, a unit standing directly beneath such
+     * a core is 2.69 blocks from it and so can never satisfy the melee default of 2.5, however close
+     * it walks: every unit in the game would pile up under the Spire and stare at it, ranged ones
+     * included, because reach is what stops the approach and it was never being met. Measured from
+     * the eye to the box, the same unit is about 0.6 away if it is human-sized and 1.3 if it is a
+     * Zergling, and both hit it — which is also the metric a player's own block reach uses, so
+     * "close enough to touch" means the same thing for a unit as it does for the player.
+     */
+    private boolean withinReach(BlockPos pos) {
+        return new AABB(pos).distanceToSqr(this.mob.getEyePosition()) <= this.reachSqr;
     }
 
     private void tickDig() {
