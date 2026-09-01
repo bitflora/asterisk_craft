@@ -300,6 +300,13 @@ Amounts are **item counts** in the army's shared bank, extracted atomically by
 `cobblestone` and `any` as `resources` — those are the same resources under their player-facing
 labels.
 
+**Only the player pays a cost by kind.** The computer reads the same cell as a flat quantity —
+`UnitCost.flatTotal()`, the cheapest alternative's lines summed with each line's resource ignored, so
+a Ghost costs the AI 103 of anything and a Marine 50 — and pays it through `CostPayment.payFlat`.
+`director/AiDirector` never opens a command card, so making it hunt its bank for the specific logs a
+Zealot names only ever stalls a build script beside a pile of cobblestone. That is a second *reading*
+of one table, not a second table: an AI-only column would let the two prices drift.
+
 **Alternative order is load-bearing.** It is the order of the buttons on a base's command card: the
 Probe's `wood 50 | stone 50` is what makes option 0 the Wood button and option 1 the Stone button.
 `UnitStatsTest.probeCostIsWoodThenStoneInThatOrder` pins it.

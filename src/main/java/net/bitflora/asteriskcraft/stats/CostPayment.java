@@ -25,6 +25,24 @@ public final class CostPayment {
     }
 
     /**
+     * Pays a cost as a flat quantity of anything — {@link UnitCost#flatTotal()} taken out of the
+     * container without regard to what kind of item covers it. This is how the computer buys: the
+     * {@code director.AiDirector} never opens a command card and never chooses between a cost's
+     * alternatives, so making it hunt its bank for the specific logs a Zealot names only ever
+     * stalls a build script beside a pile of cobblestone it is standing on. The player still pays
+     * {@link #pay} and {@link #payAny}, kind by kind.
+     *
+     * <p>False if the cost isn't purchasable at all, or the container can't cover the total.
+     */
+    public static boolean payFlat(Container container, UnitCost cost) {
+        int total = cost.flatTotal();
+        if (total < 0) {
+            return false;
+        }
+        return ResourceBank.extract(container, Resource.ANY.matches(), total);
+    }
+
+    /**
      * Pays one specific alternative — for a building whose UI gives the player one button per
      * alternative (e.g. the Nexus's Wood/Stone Probe buttons).
      */

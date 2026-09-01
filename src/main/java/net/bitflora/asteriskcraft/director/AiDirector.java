@@ -117,7 +117,7 @@ public final class AiDirector {
         int current = countWorkers(level, bases, faction);
         while (current < target) {
             BaseBlockEntity base = randomAwakeBase(level, bases);
-            if (base == null || !CostPayment.payAny(base, profile.worker().cost())) {
+            if (base == null || !CostPayment.payFlat(base, profile.worker().cost())) {
                 break; // no awake base, or can't afford another worker right now
             }
             Mob unit = UnitSpawns.spawn(level, base.getBlockPos(), profile.worker().type(), faction,
@@ -195,7 +195,7 @@ public final class AiDirector {
             if (TechCensus.missing(this.level, this.aiFaction, def.get()) != null) {
                 return SpawnResult.UNAFFORDABLE;
             }
-            if (!CostPayment.payAny(spawnBase, def.get().cost())) {
+            if (!CostPayment.payFlat(spawnBase, def.get().cost())) {
                 return SpawnResult.UNAFFORDABLE;
             }
             BlockPos basePos = spawnBase.getBlockPos();

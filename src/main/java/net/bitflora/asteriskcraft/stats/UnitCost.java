@@ -70,6 +70,31 @@ public record UnitCost(List<List<ResourceAmount>> alternatives) {
     }
 
     /**
+     * The cost as a flat quantity of anything: the cheapest alternative's lines summed, the kind of
+     * each ignored. This is the reading the {@code director.AiDirector} pays a unit at — the
+     * computer spends one undifferentiated pile the way a Zerg cost already does, rather than
+     * hunting its bank for the specific logs a Zealot names — so it is a second way to read one
+     * table, not a second table. -1 for a cost that is not purchasable at all.
+     *
+     * <p>The cheapest alternative rather than the first: alternative order is a command card's
+     * button order (see the class javadoc), which is a fact about the player's UI and means nothing
+     * to a payer that isn't choosing a kind.
+     */
+    public int flatTotal() {
+        int best = -1;
+        for (List<ResourceAmount> bundle : this.alternatives) {
+            int total = 0;
+            for (ResourceAmount line : bundle) {
+                total += line.amount();
+            }
+            if (best < 0 || total < best) {
+                best = total;
+            }
+        }
+        return best;
+    }
+
+    /**
      * Adapter to the payment layer. This is the only place a {@link Resource} predicate is built.
      *
      * <p>{@link Resource#ANY} lines are emitted <b>last</b>, whatever order the bundle was authored
