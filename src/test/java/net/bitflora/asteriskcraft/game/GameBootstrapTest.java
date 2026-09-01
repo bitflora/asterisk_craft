@@ -1,6 +1,8 @@
 package net.bitflora.asteriskcraft.game;
 
+import net.bitflora.asteriskcraft.building.BuildingTemplates;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.Blocks;
 import org.junit.jupiter.api.Test;
 
@@ -182,5 +184,43 @@ class GameBootstrapTest {
         assertFalse(GameBootstrap.isGround(Blocks.JUNGLE_LEAVES.defaultBlockState()));
         assertFalse(GameBootstrap.isGround(Blocks.AIR.defaultBlockState()));
         assertFalse(GameBootstrap.isGround(Blocks.WATER.defaultBlockState()));
+    }
+
+    /**
+     * The clear is shaped like the building, not like a disc around it. This once swept a radius-20
+     * circle around every AI base — ~1250 columns for a structure standing on 56 — which left each
+     * enemy base sitting in the middle of a bald clearing. What comes down now is the template's own
+     * box plus the margin, and nothing beyond it.
+     */
+    @Test
+    void clearCoversTheFootprintPlusMarginAndNothingFurther() {
+        // The Hive's box, whose export is deliberately not square: a clear that assumed one would
+        // spill on one axis and clip on the other.
+        List<GameBootstrap.ColumnPos> columns = GameBootstrap.planClearColumns(new Vec3i(8, 7, 7), 2);
+
+        assertEquals((8 + 4) * (7 + 4), columns.size(),
+                "the clear is the template's own footprint widened by the margin on every side");
+        assertTrue(columns.contains(new GameBootstrap.ColumnPos(0, 0)),
+                "the template's own min corner must be cleared");
+        assertTrue(columns.contains(new GameBootstrap.ColumnPos(7, 6)),
+                "so must its far corner");
+        assertTrue(columns.contains(new GameBootstrap.ColumnPos(-2, -2)),
+                "and the margin ring around it, so a trunk is never left flush against a wall");
+        assertTrue(columns.contains(new GameBootstrap.ColumnPos(9, 8)));
+        assertFalse(columns.contains(new GameBootstrap.ColumnPos(-3, 0)),
+                "one column past the margin is terrain the base does not stand on");
+        assertFalse(columns.contains(new GameBootstrap.ColumnPos(10, 0)));
+
+        // How far the clear actually reaches, measured from the core — which is what the mineral
+        // field, the tech-building ring and the creep disc are all centred on, and what the old
+        // radius-20 sweep was measured in. The Hive's core sits at (4, ·, 3) inside its own box.
+        BlockPos core = BuildingTemplates.HIVE_FOOTPRINT.coreOffset();
+        int reach = columns.stream()
+                .mapToInt(column -> Math.max(Math.abs(column.dx() - core.getX()),
+                        Math.abs(column.dz() - core.getZ())))
+                .max()
+                .orElseThrow();
+        assertTrue(reach < MineralField.INNER_RADIUS,
+                "the clear must stop short of the mineral field, which clears its own columns");
     }
 }

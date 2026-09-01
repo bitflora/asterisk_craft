@@ -27,7 +27,8 @@ public final class MineralField {
 
     /**
      * Inner edge, the radius the old stone ring sat at: outside the base's own footprint and inside
-     * the ground-cover disc, so the field lands on ground the base has already cleared.
+     * the ground-cover disc. The base's clear stops at its own walls, so the field clears the columns
+     * it stands in for itself — see {@code GameBootstrap.seedMineralField}.
      */
     static final int INNER_RADIUS = 8;
     /** Outer edge — one block further out than the ring reached. */

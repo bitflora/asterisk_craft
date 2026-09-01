@@ -112,10 +112,24 @@ public final class BuildingTemplates {
                 .setLiquidSettings(LiquidSettings.IGNORE_WATERLOGGING);
     }
 
-    /** The template's size, or null if it failed to load (a broken install, so it is logged). */
-    public static @Nullable Vec3i size(ServerLevel level, Identifier template) {
+    /**
+     * The loaded template's real size and core offset, or null if it is missing or holds no core
+     * block (a broken install either way, so both are logged).
+     *
+     * <p>This is what {@link #place} works out for itself and only reports back afterwards, in
+     * {@link Placed}. A caller that has to prepare the ground <i>before</i> the stamp — the world
+     * generator, which clears the trees standing where the building is about to go — needs the same
+     * two numbers up front, and {@link Footprint#minCorner} turns them into the world-space corner
+     * the box is anchored at. The declared {@code *_FOOTPRINT} constants are the same record, but
+     * they are the client's copy and deliberately never consulted by the server.
+     */
+    public static @Nullable Footprint footprintOf(ServerLevel level, Identifier template, Block coreBlock) {
         StructureTemplate structure = load(level, template);
-        return structure == null ? null : structure.getSize();
+        if (structure == null) {
+            return null;
+        }
+        BlockPos coreOffset = coreOffset(structure, template, coreBlock);
+        return coreOffset == null ? null : new Footprint(structure.getSize(), coreOffset);
     }
 
     /** Rough horizontal reach of a template's footprint, for sizing the ground work around it. */

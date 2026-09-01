@@ -57,9 +57,11 @@ import java.util.function.Supplier;
 public final class GameBootstrap {
     private static final int PLAYER_BASE_OFFSET = 6;
     private static final int INITIAL_WORKERS = 4;
-    // How far past the player base's own footprint to clear trees, so the starting base is never
-    // stamped into — or left standing under — a tree, just like the AI's.
-    private static final int PLAYER_BASE_CLEAR_MARGIN = 2;
+    // How far past a structure's own footprint the trees come down, so nothing is stamped into —
+    // or left standing under — a tree, and a trunk is never left flush against a wall. Every
+    // bootstrap-placed structure on both sides clears exactly this much and no more: the clear is
+    // shaped like the buildings, not like a disc around them.
+    private static final int STRUCTURE_CLEAR_MARGIN = 2;
 
     // Each AI base is planted in its own random direction around the player's, at a random distance
     // in this range. The max stays inside typical simulation distance so wave units and workers
@@ -85,11 +87,14 @@ public final class GameBootstrap {
     private static final int INITIAL_WORKERS_PER_AI_BASE = 2;
     // How far Zerg creep reaches around a new base: every
     // exposed natural-ground surface block within this radius is overrun. A race that lays none
-    // (RaceProfile.creep) skips the sweep entirely.
+    // (RaceProfile.creep) skips the sweep entirely. This recolours the surface and clears nothing
+    // — what comes down is decided per structure (see clearFootprint) — and it is CreepField.RADIUS,
+    // the range a Zerg building may be placed in, so it is a rule and not a look.
     private static final int CREEP_RADIUS = 20;
     // How far out from a computer-controlled base its tech buildings are planted. Outside
     // MineralField.OUTER_RADIUS so they never land on the worker line, and comfortably inside
-    // CREEP_RADIUS so they stand on ground clearTrees and coverGround have already swept.
+    // CREEP_RADIUS so they stand on ground coverGround has already swept. Each clears its own site;
+    // the woodland between them and the base is left standing.
     private static final int TECH_BUILDING_RADIUS = 14;
 
     /**
@@ -189,21 +194,21 @@ public final class GameBootstrap {
         int x = player.blockPosition().getX() + PLAYER_BASE_OFFSET;
         int z = player.blockPosition().getZ() + PLAYER_BASE_OFFSET;
         // The base's footprint comes from its structure template, so redesigning the building in
-        // Blockbench/a structure block automatically widens the ground work below.
-        Vec3i size = BuildingTemplates.size(level, profile.baseTemplate());
-        if (size == null) {
+        // Blockbench/a structure block automatically moves the ground work below with it.
+        BuildingTemplates.Footprint box = BuildingTemplates.footprintOf(level, profile.baseTemplate(),
+                profile.coreBlock().get());
+        if (box == null) {
             // A missing template is a broken install, not a crash: bail before touching the terrain
             // and leave the world un-bootstrapped, so a fixed jar still places the base on the next join.
             AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the starting base");
             return;
         }
-        int footprint = BuildingTemplates.footprintRadius(size);
+        int footprint = BuildingTemplates.footprintRadius(box.size());
         // Scan past any tree canopy to the real ground (WORLD_SURFACE counts leaves/logs as the surface,
-        // which used to leave the base perched high up in a tree) and clear the trees over the footprint.
-        // The clear has to reach past the mineral field as well, or the player's columns get stamped
-        // through tree trunks the narrower footprint sweep left standing. That lands on the same
-        // radius the AI's own clear uses.
-        clearTrees(level, x, z, Math.max(footprint + PLAYER_BASE_CLEAR_MARGIN, MineralField.OUTER_RADIUS + 1));
+        // which used to leave the base perched high up in a tree) and clear the trees standing where
+        // the base itself is about to go — and nowhere else. The mineral field clears its own columns
+        // when it is laid, so the clear has no reason to reach out to it.
+        clearFootprint(level, box.minCorner(new BlockPos(x, 0, z)), box.size(), STRUCTURE_CLEAR_MARGIN);
         // Ground cover first, building second, same as the AI's own base: coverGround rewrites
         // exposed surface blocks, and the Hive's own template has dirt speckled through its
         // mycelium that the sweep would otherwise eat. A race that lays no cover (Protoss) skips
@@ -282,12 +287,15 @@ public final class GameBootstrap {
         // base location is itself seed-derived), instead of drawing from the level's shared,
         // non-reproducible RNG.
         RandomSource random = RandomSource.create(level.getSeed() ^ AI_BASE_PLACEMENT_SALT);
-        Vec3i baseSize = BuildingTemplates.size(level, profile.baseTemplate());
-        if (baseSize == null) {
+        // Loaded once here rather than per base: every one of them stamps the same template, and
+        // placeAiBaseAt needs the box to clear its own site before the stamp.
+        BuildingTemplates.Footprint box = BuildingTemplates.footprintOf(level, profile.baseTemplate(),
+                profile.coreBlock().get());
+        if (box == null) {
             AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the {} bases", profile.race());
             return;
         }
-        int footprint = BuildingTemplates.footprintRadius(baseSize);
+        int footprint = BuildingTemplates.footprintRadius(box.size());
         List<BlockPos> cores = new ArrayList<>();
         for (int i = 0; i < AI_BASE_COUNT; i++) {
             BlockPos chosen = null;
@@ -321,7 +329,7 @@ public final class GameBootstrap {
                 chosen = fallback; // never null: fallback is set on the first iteration
             }
             BlockPos core = placeAiBaseAt(level, chosen.getX(), chosen.getY(), chosen.getZ(),
-                    profile, setup.aiFaction());
+                    box, profile, setup.aiFaction());
             if (core != null) {
                 cores.add(core);
             }
@@ -346,7 +354,7 @@ public final class GameBootstrap {
         int from = Math.max(y, groundHeight(level, x, z));
         for (int dy = 2; dy <= SURFACE_CLEARANCE; dy++) {
             // Trees and undergrowth overhead are fine — they get cleared before the mound is stamped
-            // (see clearTrees) — so only a real solid overhang (cave/ravine roof) rejects the spot.
+            // (see clearFootprint) — so only a real solid overhang (cave/ravine roof) rejects the spot.
             if (isGround(level.getBlockState(new BlockPos(x, from + dy, z)))) {
                 return false;
             }
@@ -399,40 +407,71 @@ public final class GameBootstrap {
     }
 
     /**
-     * Clears everything standing between the ground and the sky in the creep disc around a Hive, so
-     * the mound is never stamped into a tree and no canopy is left floating over the finished base.
-     * Called from {@link #placeHive} before the layout is placed. It clears anything that isn't
-     * {@link #isGround} — logs and leaves, but also the vines and cocoa a jungle drapes over them,
-     * which a logs-and-leaves-only sweep left dangling in mid-air over a cleared base. Genuine solid
-     * overhangs are ground, so they survive; the column's own floor is below the band and untouched.
+     * Clears the trees standing where one structure is about to be stamped — its own template box
+     * plus {@code margin} — and nothing else. Every bootstrap-placed structure on both sides calls
+     * this for itself (the base, each tech building; the mineral field clears its columns through
+     * {@link #clearColumn} directly), which is what keeps a base nestled in the terrain it landed in
+     * rather than sitting in a bald disc: what comes down is shaped like the buildings.
+     *
+     * <p>Clipped at the box rather than following whole trees out of it, so a canopy overhanging the
+     * edge can be left hanging until vanilla leaf decay catches up. That is the accepted cost of
+     * clearing only what is built on.
+     *
+     * @param min the template's own bottom-layer min corner
+     *            ({@link BuildingTemplates.Footprint#minCorner}); only its X and Z are read, since
+     *            the sweep finds each column's own ground for itself
+     */
+    private static void clearFootprint(ServerLevel level, BlockPos min, Vec3i size, int margin) {
+        for (ColumnPos column : planClearColumns(size, margin)) {
+            clearColumn(level, min.getX() + column.dx(), min.getZ() + column.dz());
+        }
+    }
+
+    /**
+     * The columns {@link #clearFootprint} sweeps, as offsets from the template's min corner. Pure and
+     * level-free so the shape of the clear is unit-testable, same pattern as {@link MineralField#plan}
+     * and {@link net.bitflora.asteriskcraft.building.BuildingTemplates#planSitePrep} — and this
+     * geometry in particular is what once spread out into a radius-20 disc, so it is worth pinning.
+     */
+    static List<ColumnPos> planClearColumns(Vec3i size, int margin) {
+        List<ColumnPos> columns = new ArrayList<>();
+        for (int dx = -margin; dx < size.getX() + margin; dx++) {
+            for (int dz = -margin; dz < size.getZ() + margin; dz++) {
+                columns.add(new ColumnPos(dx, dz));
+            }
+        }
+        return columns;
+    }
+
+    /** One column of a clear, as an offset from the structure's min corner. */
+    record ColumnPos(int dx, int dz) {
+    }
+
+    /**
+     * Clears everything standing between the ground and the sky in one column, so nothing is ever
+     * stamped into a tree and no canopy is left floating over what was stamped. It clears anything
+     * that isn't {@link #isGround} — logs and leaves, but also the vines and cocoa a jungle drapes
+     * over them, which a logs-and-leaves-only sweep left dangling in mid-air. Genuine solid overhangs
+     * are ground, so they survive; the column's own floor is below the band and untouched.
      *
      * <p>{@link #isSurfaceCover Water and ice} survive too, and that carve-out is load-bearing rather
-     * than cosmetic: neither is {@link #isGround}, so this sweep used to drain a lake to its bed
-     * across the whole disc — and on the player's base it runs <em>before</em> the height is measured,
-     * so {@link #surfaceHeight} then found nothing left to climb and reported the bed. A base on a
+     * than cosmetic: neither is {@link #isGround}, so this sweep used to drain a lake to its bed —
+     * and on the player's base it runs <em>before</em> the height is measured, so
+     * {@link #surfaceHeight} then found nothing left to climb and reported the bed. A base on a
      * frozen lake was stamped at the bottom of it. Whatever this clears must be terrain a building
      * would stand over, never terrain it is meant to stand <i>on</i>.
      */
-    private static void clearTrees(ServerLevel level, int cx, int cz, int radius) {
+    private static void clearColumn(ServerLevel level, int x, int z) {
         BlockState air = Blocks.AIR.defaultBlockState();
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz > radius * radius) {
-                    continue;
-                }
-                int x = cx + dx;
-                int z = cz + dz;
-                // WORLD_SURFACE, not the ground scan's MOTION_BLOCKING_NO_LEAVES: the leaves and
-                // vines this is here to remove are exactly what the latter heightmap looks past.
-                int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
-                int ground = groundHeight(level, x, z);
-                for (int cy = top; cy > ground; cy--) {
-                    BlockPos pos = new BlockPos(x, cy, z);
-                    BlockState state = level.getBlockState(pos);
-                    if (!state.isAir() && !isGround(state) && !isSurfaceCover(level, pos)) {
-                        level.setBlock(pos, air, Block.UPDATE_ALL);
-                    }
-                }
+        // WORLD_SURFACE, not the ground scan's MOTION_BLOCKING_NO_LEAVES: the leaves and
+        // vines this is here to remove are exactly what the latter heightmap looks past.
+        int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+        int ground = groundHeight(level, x, z);
+        for (int cy = top; cy > ground; cy--) {
+            BlockPos pos = new BlockPos(x, cy, z);
+            BlockState state = level.getBlockState(pos);
+            if (!state.isAir() && !isGround(state) && !isSurfaceCover(level, pos)) {
+                level.setBlock(pos, air, Block.UPDATE_ALL);
             }
         }
     }
@@ -499,7 +538,7 @@ public final class GameBootstrap {
      * {@link #scanToGround} and
      * {@link net.bitflora.asteriskcraft.building.BuildingTemplates#planSitePrep}. The probe is called
      * with footprint-relative offsets and walks the full square, matching the square the template is
-     * actually stamped over rather than the disc {@link #clearTrees} sweeps.
+     * actually stamped over.
      */
     static int medianGround(int radius, IntBinaryOperator columnHeight) {
         int span = 2 * radius + 1;
@@ -640,9 +679,11 @@ public final class GameBootstrap {
     }
 
     private static @Nullable BlockPos placeAiBaseAt(ServerLevel level, int x, int y, int z,
-            RaceProfile profile, Faction faction) {
+            BuildingTemplates.Footprint box, RaceProfile profile, Faction faction) {
         BlockPos origin = new BlockPos(x, y, z);
-        clearTrees(level, x, z, CREEP_RADIUS);
+        // Only the ground the base itself covers: the tech buildings and the mineral field each
+        // clear their own, and the woodland in between is left standing.
+        clearFootprint(level, box.minCorner(origin), box.size(), STRUCTURE_CLEAR_MARGIN);
         // Ground cover first, building second: coverGround rewrites exposed surface blocks, and the
         // Hive's own template has dirt speckled through its mycelium that the sweep would otherwise
         // eat. A race that lays no cover skips this.
@@ -702,16 +743,21 @@ public final class GameBootstrap {
         List<RaceProfile.TechBuilding> tech = profile.techBuildings();
         for (int i = 0; i < tech.size(); i++) {
             RaceProfile.TechBuilding building = tech.get(i);
-            Vec3i size = BuildingTemplates.size(level, building.template());
-            if (size == null) {
+            BuildingTemplates.Footprint box = BuildingTemplates.footprintOf(level, building.template(),
+                    building.coreBlock().get());
+            if (box == null) {
                 AsteriskCraft.LOGGER.error("AsteriskCraft: could not place the {} template", building.template());
                 continue;
             }
             float angle = Mth.TWO_PI * i / tech.size();
             int x = baseX + Math.round(Mth.cos(angle) * TECH_BUILDING_RADIUS);
             int z = baseZ + Math.round(Mth.sin(angle) * TECH_BUILDING_RADIUS);
-            int y = platformHeight(level, x, z, BuildingTemplates.footprintRadius(size));
-            BuildingTemplates.Placed placed = BuildingTemplates.place(level, new BlockPos(x, y, z),
+            int y = platformHeight(level, x, z, BuildingTemplates.footprintRadius(box.size()));
+            BlockPos origin = new BlockPos(x, y, z);
+            // Each clears its own site out here on the ring: the base's clear no longer reaches this
+            // far, so a tech building planted in woodland would otherwise be stamped through a trunk.
+            clearFootprint(level, box.minCorner(origin), box.size(), STRUCTURE_CLEAR_MARGIN);
+            BuildingTemplates.Placed placed = BuildingTemplates.place(level, origin,
                     building.template(), building.coreBlock().get(), support(profile));
             if (placed == null) {
                 AsteriskCraft.LOGGER.error("AsteriskCraft: the {} template holds no core block", building.template());
@@ -775,6 +821,10 @@ public final class GameBootstrap {
         for (MineralField.Column column : MineralField.plan(facing, random, includeIron)) {
             int x = cx + column.dx();
             int z = cz + column.dz();
+            // The field clears the column it is about to stand in, and only that column: the base's
+            // own clear stops at its walls, so a trunk out here would otherwise be left with a
+            // mineral column stamped through the middle of it.
+            clearColumn(level, x, z);
             int ground = groundHeight(level, x, z);
             for (int dy = 1; dy <= column.height(); dy++) {
                 level.setBlock(new BlockPos(x, ground + dy, z), column.block(), Block.UPDATE_ALL);
