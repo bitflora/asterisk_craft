@@ -28,6 +28,8 @@ Workers: 9
 Defence: 3 Zergling
 Wait 165
 
+Workers: 15
+
 # Escalating pushes.
 Wave: 2 Zergling
 Wait 160

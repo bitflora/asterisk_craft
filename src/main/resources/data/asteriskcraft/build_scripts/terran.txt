@@ -44,14 +44,14 @@ Wait 200
 # The mix starts here, and it is what the race did not have before. A defender who has answered the
 # waves above by massing cheap melee is now walking that mass into a flamethrower.
 Defence: 2 Marine, 1 Firebat
-Wave: 8-10 Marine, 2 Firebat
+Wave: 5-10 Marine, 2 Firebat
 Wait 200
 
 # The Ghost arrives last and in ones, which is what its price says it should: 50 seconds and the
 # only iron the race spends. It out-ranges everything the waves above walk into, and it cloaks the
 # moment something reaches it — so a defender with no detector loses whichever Ghost got shot at
 # first, rather than killing it.
-Wave: 8-10 Marine, 2 Firebat, 1 Ghost
+Wave: 5-10 Marine, 2 Firebat, 1 Ghost
 Wait 200
 
 # The Wraith arrives after the Ghost and for a steeper price still: 50 seconds, 150 wood, 100
@@ -60,7 +60,7 @@ Wait 200
 # are what finally lets the race answer a Mutalisk flock or a Scout, since nothing else it fields
 # reaches a flyer holding altitude except a turret bolted to the floor. Against ground troops a
 # Wraith is nearly harmless (2.5 a shot), so it is escort, not a push on its own.
-Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith
+Wave: 5-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith
 Wait 200
 
 # The Goliath comes out of the same Starport, and it is what stops a defender simply massing air.
@@ -68,7 +68,7 @@ Wait 200
 # shot at anything walking and ten at anything flying, on legs, from four blocks under whatever it
 # is shooting at. Two of them in a wave means the push no longer stops for a Mutalisk flock, and
 # they are cheap enough (no iron, 40 seconds) to arrive in pairs rather than in ones.
-Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath
+Wave: 5-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath
 Wait 200
 
 # The Science Vessel is the last thing off the Starport and the most expensive unit the race fields:
@@ -78,7 +78,7 @@ Wait 200
 # escorting it. Every 45 seconds it also poisons whatever is nearest, or, seeing nothing, throws a
 # defensive matrix over one of the units around it. One per wave: it is an enabler, and two of them
 # is 450 wood not spent on the army they are enabling.
-Wave: 8-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath, 1 Science Vessel
+Wave: 5-10 Marine, 2 Firebat, 1 Ghost, 2 Wraith, 2 Goliath, 1 Science Vessel
 Wait 200
 
 # Endless combined pushes from here on: rifles to hold the range, Firebats to break whatever closes

@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * Wood/Stone pair). Each button is otherwise empty (vanilla draws just its background); the
  * icon, live training progress bar, and queued count are all drawn manually over it from the
  * menu's synced data slots. Buttons carry no visible name — the icon identifies the unit and
- * the tooltip gives its cost.
+ * the tooltip names it, describes it in a line, and gives its cost.
  *
  * <p>Uses this version's render-state extraction pipeline: {@code extractBackground} draws
  * behind everything in absolute coordinates, {@code extractLabels} draws the foreground in
@@ -59,8 +59,8 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
      * {@link Tooltip} is immutable and swapping between two references costs nothing per frame.
      */
     private final List<Tooltip> lockedTooltips = new ArrayList<>();
-    /** Per option, its ordinary cost tooltip — the one a button carries whenever it is not locked. */
-    private final List<Tooltip> costTooltips = new ArrayList<>();
+    /** Per option, its ordinary tooltip — the one a button carries whenever it is not locked. */
+    private final List<Tooltip> tooltips = new ArrayList<>();
 
     public ProductionScreen(ProductionMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title, ProductionMenu.IMAGE_WIDTH, ProductionMenu.IMAGE_HEIGHT);
@@ -100,7 +100,7 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         super.init();
         this.optionButtons.clear();
         this.lockedTooltips.clear();
-        this.costTooltips.clear();
+        this.tooltips.clear();
         ProductionKind kind = this.menu.getKind();
         List<ProductionKind.OptionView> options = kind.options();
         List<Placement> placements = layOutOptions(kind);
@@ -111,13 +111,13 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
             int bx = this.leftPos + placement.x();
             int by = this.topPos + placement.y();
             // Empty label: buttons show no name, just the icon drawn manually in extractLabels.
-            Tooltip costTooltip = Tooltip.create(option.costTooltip());
+            Tooltip tooltip = Tooltip.create(option.tooltip());
             Button button = Button.builder(Component.empty(), b -> onTrain(optionIndex))
                     .bounds(bx, by, ProductionMenu.BUTTON_W, ProductionMenu.BUTTON_H)
-                    .tooltip(costTooltip)
+                    .tooltip(tooltip)
                     .build();
             this.optionButtons.add(button);
-            this.costTooltips.add(costTooltip);
+            this.tooltips.add(tooltip);
             this.lockedTooltips.add(lockedTooltip(option));
             addRenderableWidget(button);
         }
@@ -142,7 +142,8 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
         UnitRoster.UnitDef def = Races.of(race).roster().resolve(rosterId).orElse(null);
         Block requires = def == null ? null : def.requires();
         return requires == null ? null
-                : Tooltip.create(Component.translatable("gui.asteriskcraft.requires", requires.getName()));
+                : Tooltip.create(option.lockedTooltip(
+                        Component.translatable("gui.asteriskcraft.requires", requires.getName())));
     }
 
     private void onTrain(int optionIndex) {
@@ -181,7 +182,7 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
             // Say what the button is waiting for while it is greyed out, since a disabled button
             // cannot answer with the action-bar message the server would have sent.
             Tooltip lockedTooltip = this.lockedTooltips.get(i);
-            button.setTooltip(locked && lockedTooltip != null ? lockedTooltip : this.costTooltips.get(i));
+            button.setTooltip(locked && lockedTooltip != null ? lockedTooltip : this.tooltips.get(i));
         }
 
         int x = this.leftPos;
@@ -223,7 +224,7 @@ public class ProductionScreen extends AbstractContainerScreen<ProductionMenu> {
             int centerX = bx + ProductionMenu.BUTTON_W / 2;
 
             // Icon centered in the space above the progress bar — no name label; the icon
-            // identifies the unit and the resource it pays with is only in the hover tooltip.
+            // identifies the unit and its name, description and cost are only in the hover tooltip.
             int iconTop = by + (ProductionMenu.BUTTON_H - PROGRESS_BAR_HEIGHT - ICON_SIZE) / 2;
             drawIcon(graphics, options.get(i).icon(), centerX, iconTop);
 
